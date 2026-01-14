@@ -3094,6 +3094,9 @@ enum e_match_types_enum {
   """
   Duel
 
+  """Community captains, player drafts, and intense 5v5 competition"""
+  Mix
+
   """Team up with a friend and compete in fast-paced 2v2 matches"""
   Wingman
 }

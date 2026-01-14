@@ -41,6 +41,7 @@ export class DiscordBotService {
     Duel: undefined,
     Wingman: undefined,
     Competitive: undefined,
+    Mix: undefined,
   };
 
   constructor(
@@ -183,6 +184,9 @@ export class DiscordBotService {
             .setDescription(
               "Link your Discord account to 5stack.gg for stat tracking",
             ),
+          new SlashCommandBuilder()
+            .setName(ChatCommands.ScheduleMix)
+            .setDescription("Creates a Mix Match"),
         ],
       });
 

@@ -28,7 +28,7 @@
     "hasura:console": "yarn hasura console",
     "hasura:migrate": "yarn hasura migrate",
     "hasura:rollback": "yarn hasura migrate apply --down 1",
-    "codegen": ". ./.env && genql --endpoint $HASURA_GRAPHQL_ENDPOINT/v1/graphql --output ./generated -H 'x-hasura-admin-secret:'$HASURA_GRAPHQL_ADMIN_SECRET''",
+    "codegen": ". ./.env.local && genql --endpoint $HASURA_GRAPHQL_ENDPOINT/v1/graphql --output ./generated -H 'x-hasura-admin-secret:'$HASURA_GRAPHQL_ADMIN_SECRET''",
     "postinstall": "patch-package"
   },
   "dependencies": {
