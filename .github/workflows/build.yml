@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "banana-server"
   workflow_dispatch:
 
 concurrency:
@@ -24,6 +25,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
       - name: Build and push AMD64 image
         uses: docker/build-push-action@v6
         with:
@@ -34,7 +38,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/api:buildcache-amd64
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/api:buildcache-amd64,mode=max
           tags: |
-            ghcr.io/${{ github.repository_owner }}/api:latest-amd64
+            ghcr.io/${{ github.repository_owner }}/api:${{ steps.extract_branch.outputs.branch }}-amd64
             ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }}-amd64
   build-arm64:
     runs-on: ubuntu-24.04-arm
@@ -49,6 +53,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
       - name: Build and push ARM64 image
         uses: docker/build-push-action@v6
         with:
@@ -59,12 +66,15 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/api:buildcache-arm64
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/api:buildcache-arm64,mode=max
           tags: |
-            ghcr.io/${{ github.repository_owner }}/api:latest-arm64
+            ghcr.io/${{ github.repository_owner }}/api:${{ steps.extract_branch.outputs.branch }}-arm64
             ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }}-arm64
   merge:
     needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
     steps:
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v3
         with:
@@ -73,9 +83,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Create manifest list and push
         run: |
-          docker buildx imagetools create -t ghcr.io/${{ github.repository_owner }}/api:latest \
-            ghcr.io/${{ github.repository_owner }}/api:latest-amd64 \
-            ghcr.io/${{ github.repository_owner }}/api:latest-arm64
+          docker buildx imagetools create -t ghcr.io/${{ github.repository_owner }}/api:${{ steps.extract_branch.outputs.branch }} \
+            ghcr.io/${{ github.repository_owner }}/api:${{ steps.extract_branch.outputs.branch }}-amd64 \
+            ghcr.io/${{ github.repository_owner }}/api:${{ steps.extract_branch.outputs.branch }}-arm64
           docker buildx imagetools create -t ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }} \
             ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }}-amd64 \
             ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }}-arm64
