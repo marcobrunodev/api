@@ -229,12 +229,17 @@ export class MatchesController {
     match.is_lan = match.server.server_region.is_lan;
     delete match.server;
 
+    const cfgTypes = ["Lan"];
+    if (match.options.type !== "Mix") {
+      cfgTypes.push(match.options.type);
+    }
+
     const { match_type_cfgs } = await this.hasura.query({
       match_type_cfgs: {
         __args: {
           where: {
             type: {
-              _in: ["Lan", match.options.type],
+              _in: cfgTypes,
             },
           },
         },

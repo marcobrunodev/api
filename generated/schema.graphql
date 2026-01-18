@@ -2377,6 +2377,9 @@ enum e_map_pool_types_enum {
   """1 vs 1"""
   Duel
 
+  """5 vs 5"""
+  Mix
+
   """2 vs 2"""
   Wingman
 }
