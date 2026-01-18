@@ -15,6 +15,7 @@ import {
   servers_set_input,
   game_server_nodes_set_input,
   match_lineup_players_set_input,
+  e_game_cfg_types_enum,
 } from "../../generated";
 import { ConfigService } from "@nestjs/config";
 import { AppConfig } from "src/configs/types/AppConfig";
@@ -229,9 +230,9 @@ export class MatchesController {
     match.is_lan = match.server.server_region.is_lan;
     delete match.server;
 
-    const cfgTypes = ["Lan"];
+    const cfgTypes: e_game_cfg_types_enum[] = ["Lan"];
     if (match.options.type !== "Mix") {
-      cfgTypes.push(match.options.type);
+      cfgTypes.push(match.options.type as e_game_cfg_types_enum);
     }
 
     const { match_type_cfgs } = await this.hasura.query({
