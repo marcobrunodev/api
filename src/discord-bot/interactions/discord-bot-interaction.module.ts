@@ -9,6 +9,7 @@ import UpdateMatchStatus from "./UpdateMatchStatus";
 import { loggerFactory } from "../../utilities/LoggerFactory";
 import { CacheModule } from "src/cache/cache.module";
 import LinkDiscord from "./LinkDiscord";
+import ScheduleMix from "./ScheduleMix";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import LinkDiscord from "./LinkDiscord";
   exports: [
     LinkDiscord,
     ScheduleMatch,
+    ScheduleMix,
     UpdateMapStatus,
     UpdateMatchStatus,
     VetoPick,
@@ -27,6 +29,7 @@ import LinkDiscord from "./LinkDiscord";
   providers: [
     LinkDiscord,
     ScheduleMatch,
+    ScheduleMix,
     UpdateMapStatus,
     UpdateMatchStatus,
     VetoPick,
