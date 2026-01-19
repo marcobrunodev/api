@@ -9,6 +9,8 @@ export function getVotesByMessage(messageId: string) {
   return votesByMessage.get(messageId);
 }
 
+export const getMaxVotesPerUser = () => 1;
+
 @BotButtonInteraction(ButtonActions.VoteCaptain)
 export default class VoteCaptain extends DiscordInteraction {
   public async handler(interaction: ButtonInteraction) {
@@ -21,7 +23,7 @@ export default class VoteCaptain extends DiscordInteraction {
     }
 
     const votes = votesByMessage.get(messageId);
-    const maxVotesPerUser = 1;
+    const maxVotesPerUser = getMaxVotesPerUser();
 
     if (!votes.has(userId)) {
       votes.set(userId, new Set());
@@ -29,17 +31,17 @@ export default class VoteCaptain extends DiscordInteraction {
 
     const userVotes = votes.get(userId);
 
-    if (userVotes.size >= maxVotesPerUser) {
+    if (userVotes.has(fruit)) {
       await interaction.reply({
-        content: `❌ You already voted ${maxVotesPerUser} time(s)! Maximum votes reached.`,
+        content: `❌ You already voted for ${fruit}!`,
         ephemeral: true
       });
       return;
     }
 
-    if (userVotes.has(fruit)) {
+    if (userVotes.size >= maxVotesPerUser) {
       await interaction.reply({
-        content: `❌ You already voted for ${fruit}!`,
+        content: `❌ You already voted ${maxVotesPerUser} time(s)! Maximum votes reached.`,
         ephemeral: true
       });
       return;

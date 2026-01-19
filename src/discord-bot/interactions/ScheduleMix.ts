@@ -121,12 +121,12 @@ ${playersList}
       });
 
       setTimeout(async () => {
-        const { getVotesByMessage } = await import('./VoteCaptain');
+        const { getVotesByMessage, getMaxVotesPerUser } = await import('./VoteCaptain');
         const votes = getVotesByMessage(voteMessage.id);
 
         if (!votes) return;
 
-        const maxVotesPerUser = 2;
+        const maxVotesPerUser = getMaxVotesPerUser();
         const playersWhoDidntCompleteVotes = Array.from(players.keys()).filter(
           playerId => {
             const userVotes = votes.get(playerId);

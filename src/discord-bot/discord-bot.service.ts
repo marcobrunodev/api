@@ -64,6 +64,9 @@ export class DiscordBotService {
       .on(Events.ClientReady, () => {
         this.logger.log(`logged in as ${this.client.user.tag}!`);
       })
+      .on(Events.VoiceStateUpdate, async (oldState, newState) => {
+        await this.handleVoiceStateUpdate(oldState, newState);
+      })
       .on(Events.InteractionCreate, async (interaction) => {
         if (interaction.isAutocomplete()) {
           const autocompleteInteraction =
@@ -141,6 +144,40 @@ export class DiscordBotService {
       });
 
     await this.client.login(this.discordConfig.token);
+  }
+
+  private async handleVoiceStateUpdate(oldState: any, newState: any) {
+    try {
+      const channelLeft = oldState.channel;
+      if (!channelLeft) return;
+
+      const category = channelLeft.parent;
+      if (!category) return;
+
+      if (!category.name.startsWith('Banana Mix')) return;
+
+      const voiceChannels = category.children.cache.filter(
+        (channel: any) => channel.type === ChannelType.GuildVoice
+      );
+
+      const hasMembers = voiceChannels.some(
+        (channel: any) => channel.members && channel.members.size > 0
+      );
+
+      if (!hasMembers) {
+        this.logger.log(`Cleaning up empty Banana Mix category: ${category.name}`);
+
+        for (const [_, channel] of category.children.cache) {
+          await channel.delete('No users in Banana Mix voice channels');
+        }
+
+        await category.delete('No users in Banana Mix voice channels');
+
+        this.logger.log(`Successfully deleted category: ${category.name}`);
+      }
+    } catch (error) {
+      this.logger.error('Error handling voice state update:', error);
+    }
   }
 
   public async setup() {
