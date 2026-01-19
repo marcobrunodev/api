@@ -11,6 +11,8 @@ import { loggerFactory } from "../../utilities/LoggerFactory";
 import { CacheModule } from "src/cache/cache.module";
 import LinkDiscord from "./LinkDiscord";
 import VoteCaptain from "./VoteCaptain";
+import TestVote from "./TestVote";
+import TestAutoVote from "./TestAutoVote";
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import VoteCaptain from "./VoteCaptain";
     UpdateMatchStatus,
     VetoPick,
     VoteCaptain,
+    TestVote,
+    TestAutoVote,
   ],
   providers: [
     LinkDiscord,
@@ -36,6 +40,8 @@ import VoteCaptain from "./VoteCaptain";
     UpdateMatchStatus,
     VetoPick,
     VoteCaptain,
+    TestVote,
+    TestAutoVote,
     loggerFactory(),
   ],
 })

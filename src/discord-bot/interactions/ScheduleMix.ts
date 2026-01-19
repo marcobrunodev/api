@@ -8,7 +8,6 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ComponentType
 } from "discord.js";
 import { ButtonActions } from "../enums/ButtonActions";
 import { customAlphabet } from 'nanoid';
@@ -90,6 +89,20 @@ export default class ScheduleMix extends DiscordInteraction {
 
       const usedFruits = shuffledFruits.slice(0, players.size);
 
+      const buttons = usedFruits.map(fruit =>
+        new ButtonBuilder()
+          .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
+          .setLabel(fruit)
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+      for (let i = 0; i < buttons.length; i += 5) {
+        const row = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(buttons.slice(i, i + 5));
+        rows.push(row);
+      }
+
       const voteMessage = await picksBans.send({
         embeds: [{
           title: 'Step 1: Vote for Captains',
@@ -107,18 +120,12 @@ ${playersList}
             text: 'From BananaServer.xyz with 🍌',
           }
         }],
-        components: [
-          new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-              usedFruits.map(fruit =>
-                new ButtonBuilder()
-                  .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
-                  .setLabel(fruit)
-                  .setStyle(ButtonStyle.Secondary)
-              )
-            )
-        ]
+        components: rows
       });
+
+      // Initialize voting session
+      const { initializeVotingSession } = await import('./VoteCaptain');
+      initializeVotingSession(voteMessage.id);
 
       setTimeout(async () => {
         const { getVotesByMessage, getMaxVotesPerUser } = await import('./VoteCaptain');

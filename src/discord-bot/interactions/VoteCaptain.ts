@@ -9,6 +9,13 @@ export function getVotesByMessage(messageId: string) {
   return votesByMessage.get(messageId);
 }
 
+export function initializeVotingSession(messageId: string) {
+  if (!votesByMessage.has(messageId)) {
+    votesByMessage.set(messageId, new Map());
+  }
+  return votesByMessage.get(messageId);
+}
+
 export const getMaxVotesPerUser = () => 1;
 
 @BotButtonInteraction(ButtonActions.VoteCaptain)

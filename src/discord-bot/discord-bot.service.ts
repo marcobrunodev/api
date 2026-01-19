@@ -199,32 +199,69 @@ export class DiscordBotService {
     const rest = new REST({ version: "10" }).setToken(this.discordConfig.token);
 
     try {
-      await rest.put(Routes.applicationCommands(this.discordConfig.clientId), {
-        body: [
-          await this.addBaseOptions(
-            new SlashCommandBuilder()
-              .setName(ChatCommands.ScheduleComp)
-              .setDescription("Creates a Competitive Match"),
-          ),
-          await this.addBaseOptions(
-            new SlashCommandBuilder()
-              .setName(ChatCommands.ScheduleWingMan)
-              .setDescription("Creates a Wingman Match"),
-          ),
-          await this.addBaseOptions(
-            new SlashCommandBuilder()
-              .setName(ChatCommands.ScheduleDuel)
-              .setDescription("Creates a Duel Match"),
-          ),
+      const commands: any[] = [
+        await this.addBaseOptions(
           new SlashCommandBuilder()
-            .setName(ChatCommands.LinkDiscord)
-            .setDescription(
-              "Link your Discord account to 5stack.gg for stat tracking",
+            .setName(ChatCommands.ScheduleComp)
+            .setDescription("Creates a Competitive Match"),
+        ),
+        await this.addBaseOptions(
+          new SlashCommandBuilder()
+            .setName(ChatCommands.ScheduleWingMan)
+            .setDescription("Creates a Wingman Match"),
+        ),
+        await this.addBaseOptions(
+          new SlashCommandBuilder()
+            .setName(ChatCommands.ScheduleDuel)
+            .setDescription("Creates a Duel Match"),
+        ),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.LinkDiscord)
+          .setDescription(
+            "Link your Discord account to 5stack.gg for stat tracking",
+          ),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.ScheduleMix)
+          .setDescription("Creates a Mix Match"),
+      ];
+
+      if (process.env.NODE_ENV === 'development') {
+        commands.push(
+          new SlashCommandBuilder()
+            .setName(ChatCommands.TestVote)
+            .setDescription("[TEST ONLY] Simulate a vote for captain selection")
+            .addStringOption((option) =>
+              option
+                .setName("message_id")
+                .setDescription("The ID of the voting message")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("user_id")
+                .setDescription("The user ID to vote as")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("fruit")
+                .setDescription("The fruit emoji to vote for")
+                .setRequired(true),
             ),
           new SlashCommandBuilder()
-            .setName(ChatCommands.ScheduleMix)
-            .setDescription("Creates a Mix Match"),
-        ],
+            .setName(ChatCommands.TestAutoVote)
+            .setDescription("[TEST ONLY] Auto-simulate random votes for all players")
+            .addStringOption((option) =>
+              option
+                .setName("message_id")
+                .setDescription("The ID of the voting message")
+                .setRequired(true),
+            ),
+        );
+      }
+
+      await rest.put(Routes.applicationCommands(this.discordConfig.clientId), {
+        body: commands,
       });
 
       await this.login();
