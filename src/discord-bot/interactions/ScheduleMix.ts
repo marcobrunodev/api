@@ -11,6 +11,9 @@ import {
   ComponentType
 } from "discord.js";
 import { ButtonActions } from "../enums/ButtonActions";
+import { customAlphabet } from 'nanoid';
+
+const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 
 @BotChatCommand(ChatCommands.ScheduleMix)
 export default class ScheduleMix extends DiscordInteraction {
@@ -34,8 +37,9 @@ export default class ScheduleMix extends DiscordInteraction {
         return;
       }
 
+      const shortCode = nanoid();
       const category = await guild.channels.create({
-        name: `Banana Mix - ${new Date().toLocaleString()}`,
+        name: `Banana Mix - #${shortCode}`,
         type: ChannelType.GuildCategory,
       });
 

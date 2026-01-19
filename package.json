@@ -58,6 +58,7 @@
     "jsonwebtoken": "^9.0.2",
     "minio": "^8.0.1",
     "minisearch": "^7.1.0",
+    "nanoid": "^5.1.6",
     "oauth": "^0.10.0",
     "openpgp": "^6.1.1",
     "passport": "^0.7.0",
