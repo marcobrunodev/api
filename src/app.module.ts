@@ -92,6 +92,7 @@ import { K8sModule } from "./k8s/k8s.module";
     ConfigModule.forRoot({
       isGlobal: true,
       load: configs,
+      envFilePath: ['.env'],
     }),
     ClientsModule.registerAsync({
       isGlobal: true,

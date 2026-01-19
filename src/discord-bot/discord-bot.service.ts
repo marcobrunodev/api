@@ -61,8 +61,9 @@ export class DiscordBotService {
     });
 
     this.client
-      .on(Events.ClientReady, () => {
+      .on(Events.ClientReady, async () => {
         this.logger.log(`logged in as ${this.client.user.tag}!`);
+        await this.ensureBananaServerCategory();
       })
       .on(Events.VoiceStateUpdate, async (oldState, newState) => {
         await this.handleVoiceStateUpdate(oldState, newState);
@@ -144,6 +145,43 @@ export class DiscordBotService {
       });
 
     await this.client.login(this.discordConfig.token);
+  }
+
+  private async ensureBananaServerCategory() {
+    try {
+      const guilds = this.client.guilds.cache;
+
+      for (const [_, guild] of guilds) {
+        const existingCategory = guild.channels.cache.find(
+          (channel) =>
+            channel.type === ChannelType.GuildCategory &&
+            channel.name === '🍌 BananaServer.xyz Mix'
+        );
+
+        if (!existingCategory) {
+          this.logger.log(`Creating BananaServer.xyz Mix category in guild: ${guild.name}`);
+
+          const category = await guild.channels.create({
+            name: '🍌 BananaServer.xyz Mix',
+            type: ChannelType.GuildCategory,
+          });
+
+          await category.setPosition(0);
+
+          await guild.channels.create({
+            name: '🍌 Waiting Room',
+            type: ChannelType.GuildVoice,
+            parent: category.id,
+          });
+
+          this.logger.log(`Successfully created category and waiting room in guild: ${guild.name}`);
+        } else {
+          this.logger.log(`BananaServer.xyz Mix category already exists in guild: ${guild.name}`);
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error ensuring BananaServer.xyz Mix category:', error);
+    }
   }
 
   private async handleVoiceStateUpdate(oldState: any, newState: any) {

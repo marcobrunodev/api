@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction } from "discord.js";
 import { ChatCommands } from "../enums/ChatCommands";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotChatCommand } from "./interactions";
-import { getVotesByMessage } from "./VoteCaptain";
+import { getVotesByMessage, updateVoteMessageById } from "./VoteCaptain";
 
 /**
  * Test Auto Vote Command
@@ -18,7 +18,7 @@ export default class TestAutoVote extends DiscordInteraction {
     await interaction.deferReply({ ephemeral: true });
 
     // Only allow in development/testing environments
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV !== 'development') {
       await interaction.editReply({
         content: '❌ This command is disabled in production.'
       });
@@ -159,6 +159,9 @@ export default class TestAutoVote extends DiscordInteraction {
         .sort((a, b) => b[1] - a[1])
         .map(([fruit, count]) => `${fruit}: ${count} vote(s)`)
         .join('\n');
+
+      // Update the vote message to reflect the new votes
+      await updateVoteMessageById(message);
 
       await interaction.editReply({
         content: `✅ Auto-voting complete (bots only)!\n\n` +

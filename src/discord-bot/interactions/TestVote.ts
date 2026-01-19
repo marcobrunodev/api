@@ -18,7 +18,7 @@ export default class TestVote extends DiscordInteraction {
     await interaction.deferReply({ ephemeral: true });
 
     // Only allow in development/testing environments
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV !== 'development') {
       await interaction.editReply({
         content: '❌ This command is disabled in production.'
       });

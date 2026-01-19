@@ -1,4 +1,3 @@
-import { e_map_pool_types_enum, e_match_types_enum } from "generated";
 import { ChatCommands } from "../enums/ChatCommands";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotChatCommand } from "./interactions";
@@ -37,10 +36,27 @@ export default class ScheduleMix extends DiscordInteraction {
       }
 
       const shortCode = nanoid();
+
+      await guild.channels.fetch();
+
+      const bananaServerCategory = guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildCategory &&
+          channel.name === '🍌 BananaServer.xyz Mix'
+      );
+
       const category = await guild.channels.create({
         name: `Banana Mix - #${shortCode}`,
         type: ChannelType.GuildCategory,
       });
+
+      if (bananaServerCategory && 'position' in bananaServerCategory) {
+        const targetPosition = (bananaServerCategory as any).position + 1;
+        console.log(`🍌 BananaServer.xyz Mix position: ${(bananaServerCategory as any).position}`);
+        console.log(`Moving new category to position: ${targetPosition}`);
+
+        await category.setPosition(targetPosition, { relative: false });
+      }
 
       const picksBans = await guild.channels.create({
         name: 'picks-bans',
@@ -82,9 +98,12 @@ export default class ScheduleMix extends DiscordInteraction {
 
       const fruitEmojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝'];
       const shuffledFruits = [...fruitEmojis].sort(() => Math.random() - 0.5);
+
+      const fruitToPlayer = new Map<string, string>();
       const playersList = Array.from(players.values()).map((p, index) => {
-      const fruit = shuffledFruits[index % shuffledFruits.length];
-        return `${fruit} <@${p.id}>`;
+        const fruit = shuffledFruits[index % shuffledFruits.length];
+        fruitToPlayer.set(fruit, p.id);
+        return `[0] \`${fruit}\` <@${p.id}>`;
       }).join('\n');
 
       const usedFruits = shuffledFruits.slice(0, players.size);
@@ -123,9 +142,8 @@ ${playersList}
         components: rows
       });
 
-      // Initialize voting session
       const { initializeVotingSession } = await import('./VoteCaptain');
-      initializeVotingSession(voteMessage.id);
+      initializeVotingSession(voteMessage.id, fruitToPlayer);
 
       setTimeout(async () => {
         const { getVotesByMessage, getMaxVotesPerUser } = await import('./VoteCaptain');
