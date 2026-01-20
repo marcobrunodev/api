@@ -169,7 +169,7 @@ export class DiscordBotService {
           await category.setPosition(0);
 
           await guild.channels.create({
-            name: '🍌 Waiting Room',
+            name: '🍌 Queue Mix',
             type: ChannelType.GuildVoice,
             parent: category.id,
           });
@@ -282,13 +282,13 @@ export class DiscordBotService {
 
       if (!member) return;
 
-      const isJoiningWaitingRoom = newChannel?.name === '🍌 Waiting Room';
-      const isLeavingWaitingRoom = oldChannel?.name === '🍌 Waiting Room';
+      const isJoiningWaitingRoom = newChannel?.name === '🍌 Queue Mix';
+      const isLeavingWaitingRoom = oldChannel?.name === '🍌 Queue Mix';
 
       this.logger.log(`Voice state update: ${member.user.tag} | Old: ${oldChannel?.name || 'none'} | New: ${newChannel?.name || 'none'}`);
 
       if (isJoiningWaitingRoom && !isLeavingWaitingRoom) {
-        this.logger.log(`${member.user.tag} is joining Waiting Room`);
+        this.logger.log(`${member.user.tag} is joining Queue Mix`);
 
         const guild = member.guild;
 
@@ -343,7 +343,7 @@ export class DiscordBotService {
       }
 
       if (isLeavingWaitingRoom && !isJoiningWaitingRoom) {
-        this.logger.log(`${member.user.tag} is leaving Waiting Room`);
+        this.logger.log(`${member.user.tag} is leaving Queue Mix`);
 
         await this.removeAllQueueRoles(member);
 
