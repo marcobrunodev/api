@@ -22,8 +22,8 @@ export class DiscordBotController {
     }
 
     // https://discordapi.com/permissions.html
-    // https://discordlookup.com/permissions-calculator/326434581584
-    const permissions = `326434581584`;
+    // https://discordlookup.com/permissions-calculator/326568799312
+    const permissions = `326568799312`;
 
     return response.redirect(
       302,

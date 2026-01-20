@@ -184,8 +184,14 @@ export class DiscordBotService {
     }
   }
 
+  private queueRoles = new Map<string, Map<number, any>>();
+  private waitingRoomJoinOrder = new Map<string, number>();
+  private nextJoinOrderNumber = 0;
+
   private async handleVoiceStateUpdate(oldState: any, newState: any) {
     try {
+      await this.handleWaitingRoomNicknames(oldState, newState);
+
       const channelLeft = oldState.channel;
       if (!channelLeft) return;
 
@@ -215,6 +221,184 @@ export class DiscordBotService {
       }
     } catch (error) {
       this.logger.error('Error handling voice state update:', error);
+    }
+  }
+
+  private async getOrCreateQueueRole(guild: any, position: number): Promise<any> {
+    const guildId = guild.id;
+
+    if (!this.queueRoles.has(guildId)) {
+      this.queueRoles.set(guildId, new Map());
+    }
+
+    const guildRoles = this.queueRoles.get(guildId);
+
+    if (guildRoles.has(position)) {
+      return guildRoles.get(position);
+    }
+
+    const roleName = `Queue-${position.toString().padStart(2, '0')}`;
+
+    let role = guild.roles.cache.find((r: any) => r.name === roleName);
+
+    if (!role) {
+      role = await guild.roles.create({
+        name: roleName,
+        color: 0x95a5a6,
+        mentionable: false,
+        hoist: false,
+      });
+      this.logger.log(`Created queue role: ${roleName} in guild: ${guild.name}`);
+    }
+
+    guildRoles.set(position, role);
+    return role;
+  }
+
+  private async removeAllQueueRoles(member: any): Promise<void> {
+    const queueRoles = member.roles.cache.filter((role: any) => role.name.startsWith('Queue-'));
+
+    for (const [_, role] of queueRoles) {
+      await member.roles.remove(role).catch((error: any) => {
+        this.logger.warn(`Failed to remove queue role ${role.name} from ${member.user.tag}: ${error.message}`);
+      });
+    }
+  }
+
+  private getPositionFromRoles(member: any): number | null {
+    const queueRole = member.roles.cache.find((role: any) => role.name.startsWith('Queue-'));
+
+    if (!queueRole) return null;
+
+    const match = queueRole.name.match(/Queue-(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+  }
+
+  private async handleWaitingRoomNicknames(oldState: any, newState: any) {
+    try {
+      const oldChannel = oldState.channel;
+      const newChannel = newState.channel;
+      const member = newState.member || oldState.member;
+
+      if (!member) return;
+
+      const isJoiningWaitingRoom = newChannel?.name === '🍌 Waiting Room';
+      const isLeavingWaitingRoom = oldChannel?.name === '🍌 Waiting Room';
+
+      this.logger.log(`Voice state update: ${member.user.tag} | Old: ${oldChannel?.name || 'none'} | New: ${newChannel?.name || 'none'}`);
+
+      if (isJoiningWaitingRoom && !isLeavingWaitingRoom) {
+        this.logger.log(`${member.user.tag} is joining Waiting Room`);
+
+        const guild = member.guild;
+
+        if (!this.waitingRoomJoinOrder.has(member.id)) {
+          this.waitingRoomJoinOrder.set(member.id, this.nextJoinOrderNumber++);
+          this.logger.log(`Assigned join order ${this.waitingRoomJoinOrder.get(member.id)} to ${member.user.tag}`);
+        }
+
+        const allMembersInChannel = Array.from(newChannel.members.values());
+
+        this.logger.log(`Members in channel: ${allMembersInChannel.map((m: any) => `${m.user.tag}(order:${this.waitingRoomJoinOrder.get(m.id) ?? 'none'})`).join(', ')}`);
+
+        allMembersInChannel.sort((a: any, b: any) => {
+          const aOrder = this.waitingRoomJoinOrder.get(a.id) ?? 999999;
+          const bOrder = this.waitingRoomJoinOrder.get(b.id) ?? 999999;
+          return aOrder - bOrder;
+        });
+
+        this.logger.log(`Members after sort: ${allMembersInChannel.map((m: any) => `${m.user.tag}(order:${this.waitingRoomJoinOrder.get(m.id)})`).join(', ')}`);
+
+        for (let i = 0; i < allMembersInChannel.length; i++) {
+          const currentMember = allMembersInChannel[i] as any;
+          const currentPosition = this.getPositionFromRoles(currentMember);
+
+          this.logger.log(`Processing ${currentMember.user.tag}: targetPosition=${i}, currentPosition=${currentPosition}`);
+
+          if (i !== currentPosition) {
+            this.logger.log(`Assigning position ${i} to ${currentMember.user.tag} (was: ${currentPosition})`);
+
+            await this.removeAllQueueRoles(currentMember);
+
+            const queueRole = await this.getOrCreateQueueRole(guild, i);
+            await currentMember.roles.add(queueRole).catch((error: any) => {
+              this.logger.warn(`Failed to add queue role to ${currentMember.user.tag}: ${error.message}`);
+            });
+
+            this.logger.log(`Added queue role Queue-${i.toString().padStart(2, '0')} to ${currentMember.user.tag}`);
+
+            const currentNickname = currentMember.nickname || currentMember.user.username;
+            const cleanNickname = currentNickname.replace(/^\d{2} \| /, '');
+            const prefix = i.toString().padStart(2, '0');
+
+            await currentMember.setNickname(`${prefix} | ${cleanNickname}`).catch((error: any) => {
+              this.logger.warn(`Failed to set nickname for ${currentMember.user.tag}: ${error.message}`);
+            });
+
+            this.logger.log(`✅ Updated ${currentMember.user.tag} to position ${i} with role Queue-${prefix}`);
+          } else {
+            this.logger.log(`✓ ${currentMember.user.tag} already has correct position ${i}`);
+          }
+        }
+      }
+
+      if (isLeavingWaitingRoom && !isJoiningWaitingRoom) {
+        this.logger.log(`${member.user.tag} is leaving Waiting Room`);
+
+        await this.removeAllQueueRoles(member);
+
+        this.waitingRoomJoinOrder.delete(member.id);
+        this.logger.log(`Removed join order for ${member.user.tag}`);
+
+        const currentNickname = member.nickname || member.user.username;
+        const cleanNickname = currentNickname.replace(/^\d{2} \| /, '');
+
+        this.logger.log(`Restoring nickname for ${member.user.tag}: "${currentNickname}" -> "${cleanNickname}"`);
+
+        if (cleanNickname !== currentNickname) {
+          await member.setNickname(cleanNickname).catch((error: any) => {
+            this.logger.warn(`Failed to restore nickname for ${member.user.tag}: ${error.message}`);
+          });
+        }
+
+        if (oldChannel && oldChannel.members.size > 0) {
+          const guild = member.guild;
+          const remainingMembers = Array.from(oldChannel.members.values())
+            .sort((a: any, b: any) => {
+              const orderA = this.waitingRoomJoinOrder.get(a.id) ?? 999999;
+              const orderB = this.waitingRoomJoinOrder.get(b.id) ?? 999999;
+              return orderA - orderB;
+            });
+
+          this.logger.log(`Reordering remaining members: ${remainingMembers.map((m: any) => `${m.user.tag}(order:${this.waitingRoomJoinOrder.get(m.id)})`).join(', ')}`);
+
+          for (let i = 0; i < remainingMembers.length; i++) {
+            const existingMember = remainingMembers[i] as any;
+            const currentPosition = this.getPositionFromRoles(existingMember);
+
+            if (currentPosition !== i) {
+              this.logger.log(`Reassigning ${existingMember.user.tag} from position ${currentPosition} to ${i}`);
+
+              await this.removeAllQueueRoles(existingMember);
+
+              const newRole = await this.getOrCreateQueueRole(guild, i);
+              await existingMember.roles.add(newRole).catch((error: any) => {
+                this.logger.warn(`Failed to reassign queue role for ${existingMember.user.tag}: ${error.message}`);
+              });
+
+              const memberNickname = existingMember.nickname || existingMember.user.username;
+              const memberCleanNickname = memberNickname.replace(/^\d{2} \| /, '');
+              const newPrefix = i.toString().padStart(2, '0');
+
+              await existingMember.setNickname(`${newPrefix} | ${memberCleanNickname}`).catch((error: any) => {
+                this.logger.warn(`Failed to update nickname for ${existingMember.user.tag}: ${error.message}`);
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error handling waiting room nicknames:', error);
     }
   }
 
