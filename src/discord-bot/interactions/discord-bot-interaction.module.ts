@@ -17,6 +17,12 @@ import TestAutoReady from "./TestAutoReady";
 import Init from "./Init";
 import Queue from "./Queue";
 import ReadyCheck from "./ReadyCheck";
+import LeaveGuild from "./LeaveGuild";
+import RegisterSteamId from "./RegisterSteamId";
+import RegisterSteamIdModal from "./RegisterSteamIdModal";
+import ConfirmSteamId from "./ConfirmSteamId";
+import CancelSteamId from "./CancelSteamId";
+import KickPlayer from "./KickPlayer";
 
 @Module({
   imports: [
@@ -29,6 +35,7 @@ import ReadyCheck from "./ReadyCheck";
     LinkDiscord,
     Init,
     Queue,
+    KickPlayer,
     ScheduleMatch,
     ScheduleMix,
     UpdateMapStatus,
@@ -39,11 +46,17 @@ import ReadyCheck from "./ReadyCheck";
     TestVote,
     TestAutoVote,
     TestAutoReady,
+    LeaveGuild,
+    RegisterSteamId,
+    RegisterSteamIdModal,
+    ConfirmSteamId,
+    CancelSteamId,
   ],
   providers: [
     LinkDiscord,
     Init,
     Queue,
+    KickPlayer,
     ScheduleMatch,
     ScheduleMix,
     UpdateMapStatus,
@@ -54,6 +67,11 @@ import ReadyCheck from "./ReadyCheck";
     TestVote,
     TestAutoVote,
     TestAutoReady,
+    LeaveGuild,
+    RegisterSteamId,
+    RegisterSteamIdModal,
+    ConfirmSteamId,
+    CancelSteamId,
     loggerFactory(),
   ],
 })

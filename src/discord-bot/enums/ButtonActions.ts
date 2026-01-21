@@ -4,4 +4,6 @@ export enum ButtonActions {
   MatchStatus = "ms",
   VoteCaptain = "vc",
   ReadyCheck = "rc",
+  ConfirmSteamId = "confirm_steamid",
+  CancelSteamId = "cancel_steamid",
 }

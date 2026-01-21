@@ -139,6 +139,23 @@ export class DiscordBotService {
 
           return await discordInteraction.handler(interaction);
         }
+
+        if (interaction.isModalSubmit()) {
+          const DiscordInteraction =
+            interactions.modals[interaction.customId];
+
+          if (!DiscordInteraction) {
+            this.logger.warn(`No modal handler found for: ${interaction.customId}`);
+            return;
+          }
+
+          const discordInteraction =
+            await this.moduleRef.create<DiscordInteraction>(
+              DiscordInteraction as unknown as Type<DiscordInteraction>,
+            );
+
+          return await discordInteraction.handler(interaction);
+        }
       })
       .on(Events.Error, (error) => {
         this.logger.warn("unhandled error", error);
@@ -265,6 +282,9 @@ export class DiscordBotService {
             "Link your Discord account to 5stack.gg for stat tracking",
           ),
         new SlashCommandBuilder()
+          .setName(ChatCommands.RegisterSteamId)
+          .setDescription("Register your SteamID and create an account"),
+        new SlashCommandBuilder()
           .setName(ChatCommands.ScheduleMix)
           .setDescription("Creates a Mix Match"),
         new SlashCommandBuilder()
@@ -273,6 +293,15 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.Queue)
           .setDescription("Show the Queue Mix player order"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.KickPlayer)
+          .setDescription("Kick a player from the queue")
+          .addUserOption((option) =>
+            option
+              .setName("player")
+              .setDescription("The player to kick from the queue")
+              .setRequired(true),
+          ),
       ];
 
       if (process.env.NODE_ENV === 'development') {
@@ -316,6 +345,9 @@ export class DiscordBotService {
                 .setDescription("The ID of the ready check message")
                 .setRequired(true),
             ),
+          new SlashCommandBuilder()
+            .setName(ChatCommands.LeaveGuild)
+            .setDescription("[TEST ONLY] Make the bot leave the current Discord server"),
         );
       }
 
@@ -466,6 +498,11 @@ export class DiscordBotService {
 
   public getQueueMixOrder(memberId: string): number | null {
     return this.queueMixJoinOrder.get(memberId) ?? null;
+  }
+
+  public removeFromQueueMixOrder(memberId: string): void {
+    this.queueMixJoinOrder.delete(memberId);
+    this.logger.log(`Removed ${memberId} from queue mix order`);
   }
 
   public async movePlayersToMix(queueMixChannel: any, players: any[], mixVoiceChannel: any): Promise<any[]> {

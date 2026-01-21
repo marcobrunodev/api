@@ -1,4 +1,4 @@
-import { ButtonInteraction, ChatInputCommandInteraction } from "discord.js";
+import { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from "discord.js";
 import { MatchAssistantService } from "../../../matches/match-assistant/match-assistant.service";
 import { DiscordBotService } from "../../discord-bot.service";
 import { DiscordBotVoiceChannelsService } from "../../discord-bot-voice-channels/discord-bot-voice-channels.service";
@@ -27,6 +27,6 @@ export default abstract class DiscordInteraction {
   ) {}
 
   public abstract handler(
-    interaction: ChatInputCommandInteraction | ButtonInteraction,
+    interaction: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction,
   ): Promise<void>;
 }
