@@ -12,7 +12,7 @@ import { getVotesByMessage, updateVoteMessageById } from "./VoteCaptain";
  *
  * Usage: /test-auto-vote <message_id>
  */
-@BotChatCommand(ChatCommands.TestAutoVote)
+@BotChatCommand(ChatCommands.TestAutoVoteCaptains)
 export default class TestAutoVote extends DiscordInteraction {
   public async handler(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ ephemeral: true });

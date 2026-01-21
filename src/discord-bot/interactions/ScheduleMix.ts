@@ -7,6 +7,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits,
 } from "discord.js";
 import { ButtonActions } from "../enums/ButtonActions";
 import { customAlphabet } from 'nanoid';
@@ -35,6 +36,14 @@ export default class ScheduleMix extends DiscordInteraction {
         return;
       }
 
+      if (!players || players.size < 10) {
+        await interaction.editReply(
+          `❌ You need at least 10 players to start a mix.\n` +
+          `Current players: ${players?.size || 0}/10`
+        );
+        return;
+      }
+
       const shortCode = nanoid();
 
       await guild.channels.fetch();
@@ -44,6 +53,12 @@ export default class ScheduleMix extends DiscordInteraction {
           channel.type === ChannelType.GuildCategory &&
           channel.name === '🍌 BananaServer.xyz Mix'
       );
+
+      const queueMixChannel = voiceChannel.name === '🍌 Queue Mix' ? voiceChannel : null;
+      const playersArray = Array.from(players.values());
+
+      console.log('Fetching bot member...');
+      const botMember = await guild.members.fetch(interaction.client.user.id);
 
       const category = await guild.channels.create({
         name: `Banana Mix - #${shortCode}`,
@@ -58,36 +73,107 @@ export default class ScheduleMix extends DiscordInteraction {
         await category.setPosition(targetPosition, { relative: false });
       }
 
-      const picksBans = await guild.channels.create({
-        name: 'picks-bans',
-        type: ChannelType.GuildText,
-        parent: category.id,
-      });
-
       const mixVoiceChannel = await guild.channels.create({
         name: 'Mix Voice',
         type: ChannelType.GuildVoice,
         parent: category.id,
+        permissionOverwrites: [
+          {
+            id: botMember.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.Connect,
+              PermissionFlagsBits.Speak,
+              PermissionFlagsBits.ManageChannels,
+              PermissionFlagsBits.MoveMembers,
+            ],
+          },
+          {
+            id: guild.id,
+            allow: [PermissionFlagsBits.ViewChannel],
+            deny: [PermissionFlagsBits.Connect],
+          },
+        ],
       });
 
-      for (const [id, member] of players) {
-        await member.voice.setChannel(mixVoiceChannel.id);
+      let movedPlayers: any[];
+
+      if (queueMixChannel) {
+        movedPlayers = await this.bot.movePlayersToMix(queueMixChannel, playersArray, mixVoiceChannel);
+      } else {
+        for (const member of playersArray) {
+          await member.voice.setChannel(mixVoiceChannel.id);
+        }
+        movedPlayers = playersArray;
       }
 
+      console.log('Adding player permissions to Mix Voice channel...');
+      for (const player of movedPlayers) {
+        await mixVoiceChannel.permissionOverwrites.create(player.id, {
+          ViewChannel: true,
+          Connect: true,
+          Speak: true,
+        });
+      }
+
+      console.log('Configuring permissions for picks-bans channel...');
+      const permissionOverwrites: any[] = [
+        {
+          id: botMember.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.AddReactions,
+            PermissionFlagsBits.ManageChannels,
+            PermissionFlagsBits.ManageMessages
+          ],
+        },
+        {
+          id: guild.id,
+          allow: [PermissionFlagsBits.ViewChannel],
+          deny: [
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.AddReactions
+          ],
+        },
+      ];
+
+      for (const player of movedPlayers) {
+        permissionOverwrites.push({
+          id: player.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.AddReactions
+          ],
+        });
+      }
+
+      console.log('Creating picks-bans channel with permissions...');
+      const picksBans = await guild.channels.create({
+        name: 'picks-bans',
+        type: ChannelType.GuildText,
+        parent: category.id,
+        permissionOverwrites: permissionOverwrites,
+      });
+
+      console.log('picks-bans channel created successfully');
       await interaction.editReply(
         `✅ Mix created!\n` +
         `📁 Category: ${category.name}\n` +
         `💬 Chat: ${picksBans}\n` +
-        `🔊 Voice: ${mixVoiceChannel}`
+        `🔊 Voice: ${mixVoiceChannel}\n` +
+        `👥 Players: ${movedPlayers.length}`
       );
 
       await picksBans.send({
         embeds: [{
           title: 'Welcome to the Banana Mix!',
           description: 'We will use this channel for:\n\n' +
-            '1️⃣ **Vote for captains**\n' +
-            '2️⃣ **Captains picking players**\n' +
-            '3️⃣ **Banning maps**',
+            '1️⃣ **Ready check**\n' +
+            '2️⃣ **Vote for captains**\n' +
+            '3️⃣ **Captains picking players**\n' +
+            '4️⃣ **Banning maps**',
           color: 0xFFD700,
           timestamp: new Date().toISOString(),
           footer: {
@@ -96,78 +182,48 @@ export default class ScheduleMix extends DiscordInteraction {
         }]
       });
 
-      const fruitEmojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝'];
-      const shuffledFruits = [...fruitEmojis].sort(() => Math.random() - 0.5);
-
+      const allowedPlayerIds = movedPlayers.map(p => p.id);
       const fruitToPlayer = new Map<string, string>();
-      const playersList = Array.from(players.values()).map((p, index) => {
-        const fruit = shuffledFruits[index % shuffledFruits.length];
-        fruitToPlayer.set(fruit, p.id);
-        return `[0] \`${fruit}\` <@${p.id}>`;
+
+      const playersListReady = movedPlayers.map((p) => {
+        return `⏳ <@${p.id}>`;
       }).join('\n');
 
-      const usedFruits = shuffledFruits.slice(0, players.size);
+      const readyButton = new ButtonBuilder()
+        .setCustomId(ButtonActions.ReadyCheck)
+        .setLabel('✅ Ready')
+        .setStyle(ButtonStyle.Success);
 
-      const buttons = usedFruits.map(fruit =>
-        new ButtonBuilder()
-          .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
-          .setLabel(fruit)
-          .setStyle(ButtonStyle.Secondary)
-      );
+      const readyRow = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(readyButton);
 
-      const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-      for (let i = 0; i < buttons.length; i += 5) {
-        const row = new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(buttons.slice(i, i + 5));
-        rows.push(row);
-      }
-
-      const voteMessage = await picksBans.send({
+      const readyMessage = await picksBans.send({
         embeds: [{
-          title: 'Step 1: Vote for Captains',
+          title: '⏳ Ready Check',
           description: `
-Vote for 2 captains:
+**Players Ready: 0/${movedPlayers.length}**
 
-**Players:**
-${playersList}
+${playersListReady}
 
-**React with the fruits to vote!**
+Click the button below when you're ready!
           `,
-          color: 0x00FFFF,
+          color: 0xFFD700,
           timestamp: new Date().toISOString(),
           footer: {
             text: 'From BananaServer.xyz with 🍌',
           }
         }],
-        components: rows
+        components: [readyRow]
       });
 
-      const { initializeVotingSession } = await import('./VoteCaptain');
-      initializeVotingSession(voteMessage.id, fruitToPlayer);
-
-      setTimeout(async () => {
-        const { getVotesByMessage, getMaxVotesPerUser } = await import('./VoteCaptain');
-        const votes = getVotesByMessage(voteMessage.id);
-
-        if (!votes) return;
-
-        const maxVotesPerUser = getMaxVotesPerUser();
-        const playersWhoDidntCompleteVotes = Array.from(players.keys()).filter(
-          playerId => {
-            const userVotes = votes.get(playerId);
-            return !userVotes || userVotes.size < maxVotesPerUser;
-          }
-        );
-
-        if (playersWhoDidntCompleteVotes.length > 0) {
-          await picksBans.send({
-            content: `⏰ **Reminder!** The following players haven't completed their ${maxVotesPerUser} votes yet:\n${playersWhoDidntCompleteVotes.map(id => `<@${id}>`).join(', ')}`
-          });
-        }
-      }, 10000);
+      const { initializeReadySession } = await import('./ReadyCheck');
+      initializeReadySession(readyMessage.id, allowedPlayerIds, fruitToPlayer, movedPlayers);
     } catch (error) {
       console.error('Erro ao criar mix:', error);
-      await interaction.editReply("❌ Erro ao criar o mix. Verifique se o bot tem permissões adequadas.");
+      console.error('Error details:', error.stack);
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await interaction.editReply(`❌ Erro ao criar o mix: ${errorMessage}\n\nVerifique se o bot tem permissões adequadas.`);
     }
   }
 }

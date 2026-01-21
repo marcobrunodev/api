@@ -32,7 +32,7 @@ export class DiscordBotService {
   private discordConfig: DiscordConfig;
 
   private mapChoices: Record<
-    e_match_types_enum,
+    e_match_types_enum | 'Mix',
     {
       search: MiniSearch;
       maps: { name: string; id: string }[];
@@ -184,13 +184,12 @@ export class DiscordBotService {
     }
   }
 
-  private queueRoles = new Map<string, Map<number, any>>();
-  private waitingRoomJoinOrder = new Map<string, number>();
-  private nextJoinOrderNumber = 0;
+  private queueMixJoinOrder = new Map<string, number>();
+  private nextQueueJoinNumber = 0;
 
   private async handleVoiceStateUpdate(oldState: any, newState: any) {
     try {
-      await this.handleWaitingRoomNicknames(oldState, newState);
+      await this.handleQueueMixTracking(oldState, newState);
 
       const channelLeft = oldState.channel;
       if (!channelLeft) return;
@@ -224,183 +223,6 @@ export class DiscordBotService {
     }
   }
 
-  private async getOrCreateQueueRole(guild: any, position: number): Promise<any> {
-    const guildId = guild.id;
-
-    if (!this.queueRoles.has(guildId)) {
-      this.queueRoles.set(guildId, new Map());
-    }
-
-    const guildRoles = this.queueRoles.get(guildId);
-
-    if (guildRoles.has(position)) {
-      return guildRoles.get(position);
-    }
-
-    const roleName = `Queue-${position.toString().padStart(2, '0')}`;
-
-    let role = guild.roles.cache.find((r: any) => r.name === roleName);
-
-    if (!role) {
-      role = await guild.roles.create({
-        name: roleName,
-        color: 0x95a5a6,
-        mentionable: false,
-        hoist: false,
-      });
-      this.logger.log(`Created queue role: ${roleName} in guild: ${guild.name}`);
-    }
-
-    guildRoles.set(position, role);
-    return role;
-  }
-
-  private async removeAllQueueRoles(member: any): Promise<void> {
-    const queueRoles = member.roles.cache.filter((role: any) => role.name.startsWith('Queue-'));
-
-    for (const [_, role] of queueRoles) {
-      await member.roles.remove(role).catch((error: any) => {
-        this.logger.warn(`Failed to remove queue role ${role.name} from ${member.user.tag}: ${error.message}`);
-      });
-    }
-  }
-
-  private getPositionFromRoles(member: any): number | null {
-    const queueRole = member.roles.cache.find((role: any) => role.name.startsWith('Queue-'));
-
-    if (!queueRole) return null;
-
-    const match = queueRole.name.match(/Queue-(\d+)/);
-    return match ? parseInt(match[1], 10) : null;
-  }
-
-  private async handleWaitingRoomNicknames(oldState: any, newState: any) {
-    try {
-      const oldChannel = oldState.channel;
-      const newChannel = newState.channel;
-      const member = newState.member || oldState.member;
-
-      if (!member) return;
-
-      const isJoiningWaitingRoom = newChannel?.name === '🍌 Queue Mix';
-      const isLeavingWaitingRoom = oldChannel?.name === '🍌 Queue Mix';
-
-      this.logger.log(`Voice state update: ${member.user.tag} | Old: ${oldChannel?.name || 'none'} | New: ${newChannel?.name || 'none'}`);
-
-      if (isJoiningWaitingRoom && !isLeavingWaitingRoom) {
-        this.logger.log(`${member.user.tag} is joining Queue Mix`);
-
-        const guild = member.guild;
-
-        if (!this.waitingRoomJoinOrder.has(member.id)) {
-          this.waitingRoomJoinOrder.set(member.id, this.nextJoinOrderNumber++);
-          this.logger.log(`Assigned join order ${this.waitingRoomJoinOrder.get(member.id)} to ${member.user.tag}`);
-        }
-
-        const allMembersInChannel = Array.from(newChannel.members.values());
-
-        this.logger.log(`Members in channel: ${allMembersInChannel.map((m: any) => `${m.user.tag}(order:${this.waitingRoomJoinOrder.get(m.id) ?? 'none'})`).join(', ')}`);
-
-        allMembersInChannel.sort((a: any, b: any) => {
-          const aOrder = this.waitingRoomJoinOrder.get(a.id) ?? 999999;
-          const bOrder = this.waitingRoomJoinOrder.get(b.id) ?? 999999;
-          return aOrder - bOrder;
-        });
-
-        this.logger.log(`Members after sort: ${allMembersInChannel.map((m: any) => `${m.user.tag}(order:${this.waitingRoomJoinOrder.get(m.id)})`).join(', ')}`);
-
-        for (let i = 0; i < allMembersInChannel.length; i++) {
-          const currentMember = allMembersInChannel[i] as any;
-          const currentPosition = this.getPositionFromRoles(currentMember);
-
-          this.logger.log(`Processing ${currentMember.user.tag}: targetPosition=${i}, currentPosition=${currentPosition}`);
-
-          if (i !== currentPosition) {
-            this.logger.log(`Assigning position ${i} to ${currentMember.user.tag} (was: ${currentPosition})`);
-
-            await this.removeAllQueueRoles(currentMember);
-
-            const queueRole = await this.getOrCreateQueueRole(guild, i);
-            await currentMember.roles.add(queueRole).catch((error: any) => {
-              this.logger.warn(`Failed to add queue role to ${currentMember.user.tag}: ${error.message}`);
-            });
-
-            this.logger.log(`Added queue role Queue-${i.toString().padStart(2, '0')} to ${currentMember.user.tag}`);
-
-            const currentNickname = currentMember.nickname || currentMember.user.username;
-            const cleanNickname = currentNickname.replace(/^\d{2} \| /, '');
-            const prefix = i.toString().padStart(2, '0');
-
-            await currentMember.setNickname(`${prefix} | ${cleanNickname}`).catch((error: any) => {
-              this.logger.warn(`Failed to set nickname for ${currentMember.user.tag}: ${error.message}`);
-            });
-
-            this.logger.log(`✅ Updated ${currentMember.user.tag} to position ${i} with role Queue-${prefix}`);
-          } else {
-            this.logger.log(`✓ ${currentMember.user.tag} already has correct position ${i}`);
-          }
-        }
-      }
-
-      if (isLeavingWaitingRoom && !isJoiningWaitingRoom) {
-        this.logger.log(`${member.user.tag} is leaving Queue Mix`);
-
-        await this.removeAllQueueRoles(member);
-
-        this.waitingRoomJoinOrder.delete(member.id);
-        this.logger.log(`Removed join order for ${member.user.tag}`);
-
-        const currentNickname = member.nickname || member.user.username;
-        const cleanNickname = currentNickname.replace(/^\d{2} \| /, '');
-
-        this.logger.log(`Restoring nickname for ${member.user.tag}: "${currentNickname}" -> "${cleanNickname}"`);
-
-        if (cleanNickname !== currentNickname) {
-          await member.setNickname(cleanNickname).catch((error: any) => {
-            this.logger.warn(`Failed to restore nickname for ${member.user.tag}: ${error.message}`);
-          });
-        }
-
-        if (oldChannel && oldChannel.members.size > 0) {
-          const guild = member.guild;
-          const remainingMembers = Array.from(oldChannel.members.values())
-            .sort((a: any, b: any) => {
-              const orderA = this.waitingRoomJoinOrder.get(a.id) ?? 999999;
-              const orderB = this.waitingRoomJoinOrder.get(b.id) ?? 999999;
-              return orderA - orderB;
-            });
-
-          this.logger.log(`Reordering remaining members: ${remainingMembers.map((m: any) => `${m.user.tag}(order:${this.waitingRoomJoinOrder.get(m.id)})`).join(', ')}`);
-
-          for (let i = 0; i < remainingMembers.length; i++) {
-            const existingMember = remainingMembers[i] as any;
-            const currentPosition = this.getPositionFromRoles(existingMember);
-
-            if (currentPosition !== i) {
-              this.logger.log(`Reassigning ${existingMember.user.tag} from position ${currentPosition} to ${i}`);
-
-              await this.removeAllQueueRoles(existingMember);
-
-              const newRole = await this.getOrCreateQueueRole(guild, i);
-              await existingMember.roles.add(newRole).catch((error: any) => {
-                this.logger.warn(`Failed to reassign queue role for ${existingMember.user.tag}: ${error.message}`);
-              });
-
-              const memberNickname = existingMember.nickname || existingMember.user.username;
-              const memberCleanNickname = memberNickname.replace(/^\d{2} \| /, '');
-              const newPrefix = i.toString().padStart(2, '0');
-
-              await existingMember.setNickname(`${newPrefix} | ${memberCleanNickname}`).catch((error: any) => {
-                this.logger.warn(`Failed to update nickname for ${existingMember.user.tag}: ${error.message}`);
-              });
-            }
-          }
-        }
-      }
-    } catch (error) {
-      this.logger.error('Error handling waiting room nicknames:', error);
-    }
-  }
 
   public async setup() {
     if (!this.discordConfig.token) {
@@ -445,6 +267,12 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.ScheduleMix)
           .setDescription("Creates a Mix Match"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.Init)
+          .setDescription("Initialize BananaServer.xyz Mix category and Queue Mix channel"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.Queue)
+          .setDescription("Show the Queue Mix player order"),
       ];
 
       if (process.env.NODE_ENV === 'development') {
@@ -471,12 +299,21 @@ export class DiscordBotService {
                 .setRequired(true),
             ),
           new SlashCommandBuilder()
-            .setName(ChatCommands.TestAutoVote)
+            .setName(ChatCommands.TestAutoVoteCaptains)
             .setDescription("[TEST ONLY] Auto-simulate random votes for all players")
             .addStringOption((option) =>
               option
                 .setName("message_id")
                 .setDescription("The ID of the voting message")
+                .setRequired(true),
+            ),
+          new SlashCommandBuilder()
+            .setName(ChatCommands.TestAutoReady)
+            .setDescription("[TEST ONLY] Auto-simulate ready confirmations for all bot players")
+            .addStringOption((option) =>
+              option
+                .setName("message_id")
+                .setDescription("The ID of the ready check message")
                 .setRequired(true),
             ),
         );
@@ -593,5 +430,65 @@ export class DiscordBotService {
       maps,
       search: miniSearch,
     });
+  }
+
+  private async handleQueueMixTracking(oldState: any, newState: any) {
+    try {
+      const oldChannel = oldState.channel;
+      const newChannel = newState.channel;
+      const member = newState.member || oldState.member;
+
+      if (!member) return;
+
+      const isJoiningQueueMix = newChannel?.name === '🍌 Queue Mix';
+      const isLeavingQueueMix = oldChannel?.name === '🍌 Queue Mix';
+
+      if (isJoiningQueueMix && !isLeavingQueueMix) {
+        this.queueMixJoinOrder.set(member.id, this.nextQueueJoinNumber++);
+        this.logger.log(`${member.user.tag} joined Queue Mix - position: ${this.queueMixJoinOrder.get(member.id)}`);
+      }
+
+      if (isLeavingQueueMix && !isJoiningQueueMix) {
+        // Só remove da fila se não está indo para um canal de mix
+        const isGoingToMixChannel = newChannel?.name === 'Mix Voice' || newChannel?.parent?.name?.startsWith('Banana Mix');
+
+        if (!isGoingToMixChannel) {
+          this.queueMixJoinOrder.delete(member.id);
+          this.logger.log(`${member.user.tag} left Queue Mix - removed from queue order`);
+        } else {
+          this.logger.log(`${member.user.tag} moved from Queue Mix to Mix Voice - keeping queue position`);
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error handling queue mix tracking:', error);
+    }
+  }
+
+  public getQueueMixOrder(memberId: string): number | null {
+    return this.queueMixJoinOrder.get(memberId) ?? null;
+  }
+
+  public async movePlayersToMix(queueMixChannel: any, players: any[], mixVoiceChannel: any): Promise<any[]> {
+    this.logger.log(`Starting to move ${players.length} players from Queue Mix to mix voice channel`);
+
+    const sortedPlayers = players.sort((a: any, b: any) => {
+      const orderA = this.queueMixJoinOrder.get(a.id) ?? 999999;
+      const orderB = this.queueMixJoinOrder.get(b.id) ?? 999999;
+      return orderA - orderB;
+    });
+
+    const playersToMove = sortedPlayers.slice(0, 10);
+
+    this.logger.log(`Moving first ${playersToMove.length} players (by queue order): ${playersToMove.map((p: any) => `${p.user.tag}(${this.queueMixJoinOrder.get(p.id)})`).join(', ')}`);
+
+    for (const player of playersToMove) {
+      await player.voice.setChannel(mixVoiceChannel.id).catch((error: any) => {
+        this.logger.warn(`Failed to move ${player.user.tag}: ${error.message}`);
+      });
+    }
+
+    this.logger.log(`✅ Successfully moved ${playersToMove.length} players to mix`);
+
+    return playersToMove;
   }
 }

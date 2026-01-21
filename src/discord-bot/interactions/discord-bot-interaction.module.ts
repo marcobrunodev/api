@@ -13,6 +13,10 @@ import LinkDiscord from "./LinkDiscord";
 import VoteCaptain from "./VoteCaptain";
 import TestVote from "./TestVote";
 import TestAutoVote from "./TestAutoVote";
+import TestAutoReady from "./TestAutoReady";
+import Init from "./Init";
+import Queue from "./Queue";
+import ReadyCheck from "./ReadyCheck";
 
 @Module({
   imports: [
@@ -23,25 +27,33 @@ import TestAutoVote from "./TestAutoVote";
   ],
   exports: [
     LinkDiscord,
+    Init,
+    Queue,
     ScheduleMatch,
     ScheduleMix,
     UpdateMapStatus,
     UpdateMatchStatus,
     VetoPick,
     VoteCaptain,
+    ReadyCheck,
     TestVote,
     TestAutoVote,
+    TestAutoReady,
   ],
   providers: [
     LinkDiscord,
+    Init,
+    Queue,
     ScheduleMatch,
     ScheduleMix,
     UpdateMapStatus,
     UpdateMatchStatus,
     VetoPick,
     VoteCaptain,
+    ReadyCheck,
     TestVote,
     TestAutoVote,
+    TestAutoReady,
     loggerFactory(),
   ],
 })

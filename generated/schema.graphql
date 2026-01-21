@@ -2377,9 +2377,6 @@ enum e_map_pool_types_enum {
   """1 vs 1"""
   Duel
 
-  """5 vs 5"""
-  Mix
-
   """2 vs 2"""
   Wingman
 }
@@ -3096,9 +3093,6 @@ enum e_match_types_enum {
   A competitive 1 vs 1 experience, perfect for practicing individual skill
   """
   Duel
-
-  """Community captains, player drafts, and intense 5v5 competition"""
-  Mix
 
   """Team up with a friend and compete in fast-paced 2v2 matches"""
   Wingman

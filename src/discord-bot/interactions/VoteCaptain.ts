@@ -5,17 +5,25 @@ import { BotButtonInteraction } from "./interactions";
 
 const votesByMessage = new Map<string, Map<string, Set<string>>>();
 const fruitToPlayerMap = new Map<string, Map<string, string>>();
+const voteCompleteCallbacks = new Map<string, (votes: Map<string, Set<string>>) => void>();
 
 export function getVotesByMessage(messageId: string) {
   return votesByMessage.get(messageId);
 }
 
-export function initializeVotingSession(messageId: string, fruitPlayerMapping?: Map<string, string>) {
+export function initializeVotingSession(
+  messageId: string,
+  fruitPlayerMapping?: Map<string, string>,
+  onAllVoted?: (votes: Map<string, Set<string>>) => void
+) {
   if (!votesByMessage.has(messageId)) {
     votesByMessage.set(messageId, new Map());
   }
   if (fruitPlayerMapping) {
     fruitToPlayerMap.set(messageId, fruitPlayerMapping);
+  }
+  if (onAllVoted) {
+    voteCompleteCallbacks.set(messageId, onAllVoted);
   }
   return votesByMessage.get(messageId);
 }
@@ -28,6 +36,26 @@ export default class VoteCaptain extends DiscordInteraction {
     const [, fruit] = interaction.customId.split(":");
     const messageId = interaction.message.id;
     const userId = interaction.user.id;
+
+    const fruitMapping = fruitToPlayerMap.get(messageId);
+
+    if (!fruitMapping) {
+      await interaction.reply({
+        content: '❌ Voting session not found.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    const allowedPlayerIds = Array.from(fruitMapping.values());
+
+    if (!allowedPlayerIds.includes(userId)) {
+      await interaction.reply({
+        content: '❌ You are not a player in this mix and cannot vote.',
+        ephemeral: true
+      });
+      return;
+    }
 
     if (!votesByMessage.has(messageId)) {
       votesByMessage.set(messageId, new Map());
@@ -73,6 +101,22 @@ export default class VoteCaptain extends DiscordInteraction {
 
     // Atualizar a mensagem com a contagem de votos
     await updateVoteMessage(interaction);
+
+    // Verificar se todos votaram
+    const allPlayerIds = Array.from(fruitMapping.values());
+    const allVoted = allPlayerIds.every(playerId => {
+      const playerVotes = votes.get(playerId);
+      return playerVotes && playerVotes.size >= maxVotesPerUser;
+    });
+
+    if (allVoted) {
+      const callback = voteCompleteCallbacks.get(messageId);
+      if (callback) {
+        // Limpar o callback para não ser chamado novamente
+        voteCompleteCallbacks.delete(messageId);
+        callback(votes);
+      }
+    }
   }
 }
 

@@ -231,7 +231,7 @@ export class MatchesController {
     delete match.server;
 
     const cfgTypes: e_game_cfg_types_enum[] = ["Lan"];
-    if (match.options.type !== "Mix") {
+    if ((match.options.type as string) !== "Mix") {
       cfgTypes.push(match.options.type as e_game_cfg_types_enum);
     }
 

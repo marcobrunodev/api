@@ -4,6 +4,9 @@ export enum ChatCommands {
   ScheduleDuel = "duel",
   ScheduleMix = "mix",
   LinkDiscord = "link",
+  Init = "init",
+  Queue = "queue",
   TestVote = "test-vote",
-  TestAutoVote = "test-auto-vote",
+  TestAutoVoteCaptains = "test-auto-vote-captains",
+  TestAutoReady = "test-auto-ready",
 }

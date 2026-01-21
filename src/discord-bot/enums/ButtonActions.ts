@@ -3,4 +3,5 @@ export enum ButtonActions {
   MapStatus = "s",
   MatchStatus = "ms",
   VoteCaptain = "vc",
+  ReadyCheck = "rc",
 }

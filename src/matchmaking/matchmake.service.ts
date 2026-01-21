@@ -783,7 +783,7 @@ export class MatchmakeService {
 
     const match = await this.matchAssistant.createMatchBasedOnType(
       type as e_match_types_enum,
-      (type === "Mix" ? "Competitive" : type) as e_map_pool_types_enum,
+      ((type as string) === "Mix" ? "Competitive" : type) as e_map_pool_types_enum,
       {
         mr: type === "Competitive" ? 12 : 8,
         best_of: 1,
