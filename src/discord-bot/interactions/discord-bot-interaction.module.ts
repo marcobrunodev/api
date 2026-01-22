@@ -22,6 +22,7 @@ import RegisterSteamId from "./RegisterSteamId";
 import RegisterSteamIdModal from "./RegisterSteamIdModal";
 import ConfirmSteamId from "./ConfirmSteamId";
 import CancelSteamId from "./CancelSteamId";
+import OpenRegisterSteamIdModal from "./OpenRegisterSteamIdModal";
 import KickPlayer from "./KickPlayer";
 
 @Module({
@@ -51,6 +52,7 @@ import KickPlayer from "./KickPlayer";
     RegisterSteamIdModal,
     ConfirmSteamId,
     CancelSteamId,
+    OpenRegisterSteamIdModal,
   ],
   providers: [
     LinkDiscord,
@@ -72,6 +74,7 @@ import KickPlayer from "./KickPlayer";
     RegisterSteamIdModal,
     ConfirmSteamId,
     CancelSteamId,
+    OpenRegisterSteamIdModal,
     loggerFactory(),
   ],
 })

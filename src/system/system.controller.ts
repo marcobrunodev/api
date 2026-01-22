@@ -1,4 +1,4 @@
-import { Controller } from "@nestjs/common";
+import { Controller, StreamableFile } from "@nestjs/common";
 import { SystemService } from "./system.service";
 import { HasuraAction } from "src/hasura/hasura.controller";
 import { Get } from "@nestjs/common";
@@ -9,6 +9,7 @@ import { HasuraEvent } from "src/hasura/hasura.controller";
 import { HasuraEventData } from "src/hasura/types/HasuraEventData";
 import { settings_set_input } from "generated/schema";
 import { GameServerNodeService } from "src/game-server-node/game-server-node.service";
+import { S3Service } from "src/s3/s3.service";
 
 @Controller("system")
 export class SystemController {

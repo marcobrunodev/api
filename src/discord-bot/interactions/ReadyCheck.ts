@@ -1,4 +1,4 @@
-import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
+import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ModalActionRowComponentBuilder } from "discord.js";
 import { BotButtonInteraction } from "./interactions";
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
@@ -53,6 +53,62 @@ export default class ReadyCheck extends DiscordInteraction {
   if (!session.allowedPlayerIds.includes(userId)) {
     await interaction.reply({
       content: '❌ You are not a player in this mix.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Verificar se o usuário tem SteamID registrado
+  const { players } = await this.hasura.query({
+    players: {
+      __args: {
+        where: {
+          discord_id: {
+            _eq: userId,
+          },
+        },
+      },
+      steam_id: true,
+      name: true,
+    },
+  });
+
+  if (players.length === 0 || !players[0].steam_id) {
+    // Mostrar mensagem com instruções e botão para registrar
+    const registerButton = new ButtonBuilder()
+      .setCustomId(ButtonActions.OpenRegisterSteamIdModal)
+      .setLabel('📝 Register SteamID')
+      .setStyle(ButtonStyle.Primary);
+
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(registerButton);
+
+    const webDomain = this.config.get('app.webDomain');
+    const videoUrl = `${webDomain}/videos/SteamID_BananaServer.mp4`;
+
+    await interaction.reply({
+      content: videoUrl,
+      embeds: [{
+        title: '🎮 SteamID Registration Required',
+        description:
+          '**You need to register your SteamID64 to play!**\n\n' +
+          '**How to find your SteamID64:**\n' +
+          '1. Open your Steam client\n' +
+          '2. Click on your profile name\n' +
+          '3. Click "Account Details"\n' +
+          '4. Your SteamID64 will be shown there\n\n' +
+          '📺 **Watch the video above for a step-by-step guide!**\n\n' +
+          'Click the button below to register!',
+        color: 0xFF9900,
+        thumbnail: {
+          url: 'https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg'
+        },
+        footer: {
+          text: 'From BananaServer.xyz with 🍌',
+        },
+        timestamp: new Date().toISOString(),
+      }],
+      components: [row],
       ephemeral: true,
     });
     return;
