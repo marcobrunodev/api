@@ -290,8 +290,78 @@ ${team2List}
   });
 
   await channel.send({
-    content: `✅ Teams are ready! Map selection coming next...`
+    content: `✅ Teams are ready! Map veto starting now...`
   });
+
+  // Iniciar veto de mapas
+  const { initializeVetoSession } = await import('./MapVeto');
+
+  const COMPETITIVE_MAPS = [
+    "Ancient",
+    "Anubis",
+    "Dust 2",
+    "Inferno",
+    "Mirage",
+    "Nuke",
+    "Overpass"
+  ];
+
+  // Criar botões com os mapas
+  const mapButtons = COMPETITIVE_MAPS.map(map => {
+    return new ButtonBuilder()
+      .setCustomId(`${ButtonActions.VetoMap}:${map}`)
+      .setLabel(map)
+      .setStyle(ButtonStyle.Danger);
+  });
+
+  const mapRows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let i = 0; i < mapButtons.length; i += 5) {
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(mapButtons.slice(i, i + 5));
+    mapRows.push(row);
+  }
+
+  const vetoMessage = await channel.send({
+    embeds: [{
+      title: '🗺️ Map Veto',
+      description: `
+**Current Turn:** 👑 <@${session.captain1Id}> (\`${session.captain1Fruit}\`) - **BAN**
+**Bans remaining:** 6
+
+**Team ${session.captain1Fruit}:**
+${session.team1.map(id => `<@${id}>`).join(', ')}
+
+**Team ${session.captain2Fruit}:**
+${session.team2.map(id => `<@${id}>`).join(', ')}
+
+**Available Maps:**
+${COMPETITIVE_MAPS.map(m => `\`${m}\``).join(', ')}
+
+**Banned Maps:**
+_None yet_
+
+**Click a map button to ban it!**
+      `,
+      color: 0xFF0000,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: 'From BananaServer.xyz with 🍌',
+      }
+    }],
+    components: mapRows
+  });
+
+  initializeVetoSession(
+    vetoMessage.id,
+    session.captain1Id,
+    session.captain2Id,
+    session.captain1Fruit,
+    session.captain2Fruit,
+    session.team1,
+    session.team2,
+    session.guildId,
+    channel.id
+  );
 }
 
 export async function updatePickMessageById(message: any) {

@@ -8,4 +8,5 @@ export enum ButtonActions {
   CancelSteamId = "cancel_steamid",
   OpenRegisterSteamIdModal = "open_register_steamid",
   PickPlayer = "pp",
+  VetoMap = "vm",
 }
