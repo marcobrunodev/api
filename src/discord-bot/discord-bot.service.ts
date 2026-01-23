@@ -447,7 +447,7 @@ export class DiscordBotService {
           ),
       ];
 
-      if (process.env.NODE_ENV === 'development') {
+      // if (process.env.NODE_ENV === 'development') {
         commands.push(
           new SlashCommandBuilder()
             .setName(ChatCommands.TestVote)
@@ -492,7 +492,7 @@ export class DiscordBotService {
             .setName(ChatCommands.LeaveGuild)
             .setDescription("[TEST ONLY] Make the bot leave the current Discord server"),
         );
-      }
+      // }
 
       await rest.put(Routes.applicationCommands(this.discordConfig.clientId), {
         body: commands,
