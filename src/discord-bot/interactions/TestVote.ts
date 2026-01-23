@@ -17,14 +17,6 @@ export default class TestVote extends DiscordInteraction {
   public async handler(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ ephemeral: true });
 
-    // Only allow in development/testing environments
-    if (process.env.NODE_ENV !== 'development') {
-      await interaction.editReply({
-        content: '❌ This command is disabled in production.'
-      });
-      return;
-    }
-
     try {
       const messageId = interaction.options.getString('message_id', true);
       const userId = interaction.options.getString('user_id', true);
