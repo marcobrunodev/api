@@ -9,6 +9,7 @@ import { DiscordBotVetoService } from "./discord-bot-veto/discord-bot-veto.servi
 import { CacheModule } from "../cache/cache.module";
 import { HasuraModule } from "../hasura/hasura.module";
 import { MatchesModule } from "../matches/matches.module";
+import { RedisModule } from "../redis/redis.module";
 import { BullModule } from "@nestjs/bullmq";
 import { BullBoardModule } from "@bull-board/nestjs";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
@@ -21,6 +22,7 @@ import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
 
 @Module({
   imports: [
+    RedisModule,
     CacheModule,
     HasuraModule,
     forwardRef(() => MatchesModule),

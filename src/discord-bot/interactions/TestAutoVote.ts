@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction } from "discord.js";
 import { ChatCommands } from "../enums/ChatCommands";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotChatCommand } from "./interactions";
-import { getVotesByMessage, updateVoteMessageById } from "./VoteCaptain";
+import { getVotesByMessage, updateVoteMessageById, getMaxVotesPerUser } from "./VoteCaptain";
 
 /**
  * Test Auto Vote Command
@@ -113,7 +113,7 @@ export default class TestAutoVote extends DiscordInteraction {
       let votesAdded = 0;
       let botsCount = 0;
       let usersCount = 0;
-      const maxVotesPerUser = 1;
+      const maxVotesPerUser = getMaxVotesPerUser();
 
       for (const [userId, member] of members) {
         // Skip if it's a normal user (not a bot)
@@ -124,15 +124,6 @@ export default class TestAutoVote extends DiscordInteraction {
 
         botsCount++;
 
-        // Skip if already voted
-        const userVotes = votes.get(userId);
-        if (userVotes && userVotes.size >= maxVotesPerUser) {
-          continue;
-        }
-
-        // Pick a random fruit
-        const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
-
         // Initialize if needed
         if (!votes.has(userId)) {
           votes.set(userId, new Set());
@@ -140,10 +131,21 @@ export default class TestAutoVote extends DiscordInteraction {
 
         const userVotesSet = votes.get(userId);
 
-        // Add the vote if not already voted for this fruit
-        if (!userVotesSet.has(randomFruit)) {
-          userVotesSet.add(randomFruit);
-          votesAdded++;
+        // Skip if already voted the maximum
+        if (userVotesSet.size >= maxVotesPerUser) {
+          continue;
+        }
+
+        // Add votes until reaching maxVotesPerUser
+        while (userVotesSet.size < maxVotesPerUser && userVotesSet.size < fruits.length) {
+          // Pick a random fruit
+          const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
+
+          // Add the vote if not already voted for this fruit
+          if (!userVotesSet.has(randomFruit)) {
+            userVotesSet.add(randomFruit);
+            votesAdded++;
+          }
         }
       }
 
@@ -157,7 +159,7 @@ export default class TestAutoVote extends DiscordInteraction {
 
       const resultsText = Array.from(voteCount.entries())
         .sort((a, b) => b[1] - a[1])
-        .map(([fruit, count]) => `${fruit}: ${count} vote(s)`)
+        .map(([fruit, count]) => `\`${fruit}\`: ${count} vote(s)`)
         .join('\n');
 
       // Update the vote message to reflect the new votes

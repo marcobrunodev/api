@@ -23,6 +23,7 @@ import { Queue } from "bullmq";
 import { DiscordBotQueues } from "./enums/DiscordBotQueues";
 import { InjectQueue } from "@nestjs/bullmq";
 import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
+import { RedisManagerService } from "../redis/redis-manager/redis-manager.service";
 
 let client: Client;
 
@@ -50,6 +51,7 @@ export class DiscordBotService {
     private readonly hasura: HasuraService,
     private readonly moduleRef: ModuleRef,
     @InjectQueue(DiscordBotQueues.DiscordBot) private queue: Queue,
+    private readonly redisManager: RedisManagerService,
   ) {
     this.client = client;
     this.discordConfig = config.get<DiscordConfig>("discord");
@@ -64,6 +66,7 @@ export class DiscordBotService {
       .on(Events.ClientReady, async () => {
         this.logger.log(`logged in as ${this.client.user.tag}!`);
         await this.ensureBananaServerCategory();
+        await this.syncQueueMixOnStartup();
       })
       .on(Events.VoiceStateUpdate, async (oldState, newState) => {
         await this.handleVoiceStateUpdate(oldState, newState);
@@ -201,8 +204,117 @@ export class DiscordBotService {
     }
   }
 
-  private queueMixJoinOrder = new Map<string, number>();
-  private nextQueueJoinNumber = 0;
+  /**
+   * Sync Queue Mix members from Discord to Redis on startup
+   * Handles members who joined/left during bot downtime
+   *
+   * IMPORTANT: Members who joined during downtime will be added to the end of the queue.
+   * If multiple members joined during downtime, their relative order cannot be determined
+   * (Discord doesn't provide voice channel join timestamps), so they will be added in
+   * the order returned by Discord's cache, which is not guaranteed to be chronological.
+   */
+  private async syncQueueMixOnStartup() {
+    try {
+      this.logger.log('Starting Queue Mix synchronization...');
+
+      for (const [guildId, guild] of this.client.guilds.cache) {
+        const queueChannel = guild.channels.cache.find(
+          (channel) =>
+            channel.type === ChannelType.GuildVoice &&
+            channel.name === '🍌 Queue Mix'
+        );
+
+        if (!queueChannel || queueChannel.type !== ChannelType.GuildVoice) {
+          continue;
+        }
+
+        // Get current members in the Discord channel
+        // NOTE: Order is not guaranteed to be chronological for members who joined during downtime
+        const currentMembers = Array.from(queueChannel.members.keys());
+
+        // Get members currently in Redis queue
+        const redisMembers = await this.getAllQueueMembers(guildId);
+
+        // Find members to add (joined during downtime)
+        const toAdd = currentMembers.filter(id => !redisMembers.includes(id));
+
+        // Find members to remove (left during downtime)
+        const toRemove = redisMembers.filter(id => !currentMembers.includes(id));
+
+        // Add new members (they go to the end of the queue)
+        for (const memberId of toAdd) {
+          await this.addToQueueMix(guildId, memberId);
+          const member = guild.members.cache.get(memberId);
+          this.logger.log(`[Sync] Added ${member?.user?.tag || memberId} to queue (joined during downtime)`);
+        }
+
+        // Remove members who left
+        for (const memberId of toRemove) {
+          await this.removeFromQueueMix(guildId, memberId);
+          this.logger.log(`[Sync] Removed ${memberId} from queue (left during downtime)`);
+        }
+
+        if (toAdd.length > 0 || toRemove.length > 0) {
+          this.logger.log(
+            `[Sync] Guild ${guild.name}: +${toAdd.length} added, -${toRemove.length} removed, ${currentMembers.length} total in queue`
+          );
+        } else {
+          this.logger.log(`[Sync] Guild ${guild.name}: Queue already synchronized (${currentMembers.length} members)`);
+        }
+      }
+
+      this.logger.log('Queue Mix synchronization completed');
+    } catch (error) {
+      this.logger.error('Error during Queue Mix synchronization:', error);
+    }
+  }
+
+  /**
+   * Get Redis key for queue mix
+   */
+  private getQueueMixRedisKey(guildId: string): string {
+    return `discord:queue-mix:${guildId}`;
+  }
+
+  /**
+   * Add member to queue mix in Redis
+   */
+  private async addToQueueMix(guildId: string, memberId: string): Promise<void> {
+    const redis = this.redisManager.getConnection();
+    const key = this.getQueueMixRedisKey(guildId);
+    const timestamp = Date.now() * 1000 + Math.random(); // Microseconds to ensure uniqueness
+    await redis.zadd(key, timestamp, memberId);
+    this.logger.log(`Added ${memberId} to queue mix in guild ${guildId} with timestamp ${timestamp}`);
+  }
+
+  /**
+   * Remove member from queue mix in Redis
+   */
+  private async removeFromQueueMix(guildId: string, memberId: string): Promise<void> {
+    const redis = this.redisManager.getConnection();
+    const key = this.getQueueMixRedisKey(guildId);
+    await redis.zrem(key, memberId);
+    this.logger.log(`Removed ${memberId} from queue mix in guild ${guildId}`);
+  }
+
+  /**
+   * Get member's position in queue (0-indexed)
+   */
+  private async getQueueMixPosition(guildId: string, memberId: string): Promise<number | null> {
+    const redis = this.redisManager.getConnection();
+    const key = this.getQueueMixRedisKey(guildId);
+    const rank = await redis.zrank(key, memberId);
+    return rank !== null ? rank : null;
+  }
+
+  /**
+   * Get all members in queue ordered by join time
+   */
+  private async getAllQueueMembers(guildId: string): Promise<string[]> {
+    const redis = this.redisManager.getConnection();
+    const key = this.getQueueMixRedisKey(guildId);
+    return await redis.zrange(key, 0, -1);
+  }
 
   private async handleVoiceStateUpdate(oldState: any, newState: any) {
     try {
@@ -472,12 +584,16 @@ export class DiscordBotService {
 
       if (!member) return;
 
+      const guild = member.guild;
+      if (!guild) return;
+
       const isJoiningQueueMix = newChannel?.name === '🍌 Queue Mix';
       const isLeavingQueueMix = oldChannel?.name === '🍌 Queue Mix';
 
       if (isJoiningQueueMix && !isLeavingQueueMix) {
-        this.queueMixJoinOrder.set(member.id, this.nextQueueJoinNumber++);
-        this.logger.log(`${member.user.tag} joined Queue Mix - position: ${this.queueMixJoinOrder.get(member.id)}`);
+        await this.addToQueueMix(guild.id, member.id);
+        const position = await this.getQueueMixPosition(guild.id, member.id);
+        this.logger.log(`${member.user.tag} joined Queue Mix - position: ${position}`);
       }
 
       if (isLeavingQueueMix && !isJoiningQueueMix) {
@@ -485,7 +601,7 @@ export class DiscordBotService {
         const isGoingToMixChannel = newChannel?.name === 'Mix Voice' || newChannel?.parent?.name?.startsWith('Banana Mix');
 
         if (!isGoingToMixChannel) {
-          this.queueMixJoinOrder.delete(member.id);
+          await this.removeFromQueueMix(guild.id, member.id);
           this.logger.log(`${member.user.tag} left Queue Mix - removed from queue order`);
         } else {
           this.logger.log(`${member.user.tag} moved from Queue Mix to Mix Voice - keeping queue position`);
@@ -496,27 +612,42 @@ export class DiscordBotService {
     }
   }
 
-  public getQueueMixOrder(memberId: string): number | null {
-    return this.queueMixJoinOrder.get(memberId) ?? null;
+  public async getQueueMixOrder(guildId: string, memberId: string): Promise<number | null> {
+    return await this.getQueueMixPosition(guildId, memberId);
   }
 
-  public removeFromQueueMixOrder(memberId: string): void {
-    this.queueMixJoinOrder.delete(memberId);
-    this.logger.log(`Removed ${memberId} from queue mix order`);
+  public async removeFromQueueMixOrder(guildId: string, memberId: string): Promise<void> {
+    await this.removeFromQueueMix(guildId, memberId);
   }
 
   public async movePlayersToMix(queueMixChannel: any, players: any[], mixVoiceChannel: any): Promise<any[]> {
     this.logger.log(`Starting to move ${players.length} players from Queue Mix to mix voice channel`);
 
+    const guild = queueMixChannel.guild;
+    if (!guild) {
+      this.logger.error('No guild found for queue mix channel');
+      return [];
+    }
+
+    // Get all members from Redis queue ordered by join time
+    const queuedMemberIds = await this.getAllQueueMembers(guild.id);
+
+    // Map player IDs to their queue order
+    const playerOrderMap = new Map<string, number>();
+    queuedMemberIds.forEach((memberId, index) => {
+      playerOrderMap.set(memberId, index);
+    });
+
+    // Sort players by their queue order
     const sortedPlayers = players.sort((a: any, b: any) => {
-      const orderA = this.queueMixJoinOrder.get(a.id) ?? 999999;
-      const orderB = this.queueMixJoinOrder.get(b.id) ?? 999999;
+      const orderA = playerOrderMap.get(a.id) ?? 999999;
+      const orderB = playerOrderMap.get(b.id) ?? 999999;
       return orderA - orderB;
     });
 
     const playersToMove = sortedPlayers.slice(0, 10);
 
-    this.logger.log(`Moving first ${playersToMove.length} players (by queue order): ${playersToMove.map((p: any) => `${p.user.tag}(${this.queueMixJoinOrder.get(p.id)})`).join(', ')}`);
+    this.logger.log(`Moving first ${playersToMove.length} players (by queue order): ${playersToMove.map((p: any) => `${p.user.tag}(${playerOrderMap.get(p.id)})`).join(', ')}`);
 
     for (const player of playersToMove) {
       await player.voice.setChannel(mixVoiceChannel.id).catch((error: any) => {

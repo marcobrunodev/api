@@ -39,9 +39,16 @@ export default class Queue extends DiscordInteraction {
         return;
       }
 
+      // Get queue order from Redis for all members
+      const memberOrderMap = new Map<string, number>();
+      for (const member of members) {
+        const order = await this.bot.getQueueMixOrder(guild.id, member.id);
+        memberOrderMap.set(member.id, order ?? 999999);
+      }
+
       const sortedMembers = members.sort((a: any, b: any) => {
-        const orderA = this.bot.getQueueMixOrder(a.id) ?? 999999;
-        const orderB = this.bot.getQueueMixOrder(b.id) ?? 999999;
+        const orderA = memberOrderMap.get(a.id) ?? 999999;
+        const orderB = memberOrderMap.get(b.id) ?? 999999;
         return orderA - orderB;
       });
 

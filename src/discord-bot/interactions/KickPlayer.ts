@@ -53,7 +53,7 @@ export default class KickPlayer extends DiscordInteraction {
       await targetMember.voice.disconnect();
 
       // Remover da ordem da fila
-      this.bot.removeFromQueueMixOrder(targetUser.id);
+      await this.bot.removeFromQueueMixOrder(guild.id, targetUser.id);
 
       await interaction.editReply(`✅ ${targetUser.username} has been kicked from the queue.`);
 

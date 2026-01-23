@@ -144,7 +144,7 @@ Click the button below when you're ready!
 
         const buttons = usedFruits.map(fruit =>
           new ButtonBuilder()
-            .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
+            .setCustomId(`${ButtonActions.VoteCaptain}:\`${fruit}\``)
             .setLabel(fruit)
             .setStyle(ButtonStyle.Secondary)
         );

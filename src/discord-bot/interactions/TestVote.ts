@@ -50,7 +50,7 @@ export default class TestVote extends DiscordInteraction {
       // Check if already voted for this fruit
       if (userVotes.has(fruit)) {
         await interaction.editReply({
-          content: `⚠️ User <@${userId}> already voted for ${fruit}`
+          content: `⚠️ User <@${userId}> already voted for \`${fruit}\``
         });
         return;
       }
@@ -70,7 +70,7 @@ export default class TestVote extends DiscordInteraction {
       await interaction.editReply({
         content: `✅ Test vote registered!\n\n` +
           `**User:** <@${userId}>\n` +
-          `**Fruit:** ${fruit}\n` +
+          `**Fruit:** \`${fruit}\`\n` +
           `**Total votes:** ${userVotes.size}/${maxVotesPerUser}`
       });
 

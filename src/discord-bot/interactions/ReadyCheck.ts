@@ -1,4 +1,4 @@
-import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ModalActionRowComponentBuilder } from "discord.js";
+import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ModalActionRowComponentBuilder, AttachmentBuilder } from "discord.js";
 import { BotButtonInteraction } from "./interactions";
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
@@ -74,7 +74,6 @@ export default class ReadyCheck extends DiscordInteraction {
   });
 
   if (players.length === 0 || !players[0].steam_id) {
-    // Mostrar mensagem com instruções e botão para registrar
     const registerButton = new ButtonBuilder()
       .setCustomId(ButtonActions.OpenRegisterSteamIdModal)
       .setLabel('📝 Register SteamID')
@@ -83,11 +82,8 @@ export default class ReadyCheck extends DiscordInteraction {
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(registerButton);
 
-    const webDomain = this.config.get('app.webDomain');
-    const videoUrl = `${webDomain}/videos/SteamID_BananaServer.mp4`;
-
+    // Enviar mensagem ephemeral com botão de registro
     await interaction.reply({
-      content: videoUrl,
       embeds: [{
         title: '🎮 SteamID Registration Required',
         description:
@@ -97,12 +93,8 @@ export default class ReadyCheck extends DiscordInteraction {
           '2. Click on your profile name\n' +
           '3. Click "Account Details"\n' +
           '4. Your SteamID64 will be shown there\n\n' +
-          '📺 **Watch the video above for a step-by-step guide!**\n\n' +
           'Click the button below to register!',
         color: 0xFF9900,
-        thumbnail: {
-          url: 'https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg'
-        },
         footer: {
           text: 'From BananaServer.xyz with 🍌',
         },
@@ -111,6 +103,14 @@ export default class ReadyCheck extends DiscordInteraction {
       components: [row],
       ephemeral: true,
     });
+
+    const channel = interaction.channel;
+    if (channel && 'send' in channel) {
+      await channel.send({
+        content: `<@${userId}> 
+📺 **Video Tutorial to find your SteamID64:**\nhttps://youtu.be/DHFmBEL-s1I`,
+      });
+    }
     return;
   }
 
@@ -132,7 +132,6 @@ export default class ReadyCheck extends DiscordInteraction {
     ephemeral: true,
   });
 
-  // Atualizar a mensagem com o status
   const playersList = session.movedPlayers.map((p) => {
     const isReady = session.readyPlayers.has(p.id);
     const status = isReady ? '✅' : '⏳';
@@ -158,17 +157,15 @@ Click the button below when you're ready!
     components: interaction.message.components,
   });
 
-  // Se todos estão prontos, iniciar votação de capitães
   if (readyCount === totalCount) {
     await interaction.message.edit({
-      components: [], // Remove o botão de ready
+      components: [],
     });
 
     const channel = interaction.channel;
     if (!channel || !('send' in channel)) return;
 
-    // Iniciar votação de capitães
-    const fruitEmojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝'];
+    const fruitEmojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🥒', '🍆', '🌶️', '🌽'];
     const shuffledFruits = [...fruitEmojis].sort(() => Math.random() - 0.5);
     const usedFruits = shuffledFruits.slice(0, session.movedPlayers.length);
 
@@ -177,6 +174,8 @@ Click the button below when you're ready!
       session.fruitToPlayer.set(fruit, p.id);
       return `[0] \`${fruit}\` <@${p.id}>`;
     }).join('\n');
+
+    const waitingForVotesList = session.movedPlayers.map(p => `<@${p.id}>`).join(', ');
 
     const buttons = usedFruits.map(fruit =>
       new ButtonBuilder()
@@ -200,6 +199,9 @@ Vote for 2 captains:
 
 **Players:**
 ${playersList}
+
+**Waiting for votes:**
+${waitingForVotesList}
 
 **React with the fruits to vote!**
         `,
@@ -229,7 +231,6 @@ ${playersList}
       const sortedFruits = Array.from(fruitVotes.entries())
         .sort((a, b) => b[1] - a[1]);
 
-      // Se não houver votos suficientes, selecionar aleatoriamente
       let captain1Fruit: string;
       let captain2Fruit: string;
       let topTwoFruits: [string, number][];
@@ -240,13 +241,13 @@ ${playersList}
         captain2Fruit = topTwoFruits[1][0];
       } else if (sortedFruits.length === 1) {
         captain1Fruit = sortedFruits[0][0];
-        // Selecionar um segundo capitão aleatório
+        
         const allFruits = Array.from(session.fruitToPlayer.keys());
         const remainingFruits = allFruits.filter(f => f !== captain1Fruit);
         captain2Fruit = remainingFruits[Math.floor(Math.random() * remainingFruits.length)];
         topTwoFruits = [[captain1Fruit, sortedFruits[0][1]], [captain2Fruit, 0]];
       } else {
-        // Nenhum voto - selecionar 2 aleatórios
+      
         const allFruits = Array.from(session.fruitToPlayer.keys());
         const shuffled = [...allFruits].sort(() => Math.random() - 0.5);
         captain1Fruit = shuffled[0];
@@ -287,14 +288,11 @@ ${updatedPlayersList}
         content: `🎉 Captains have been selected! <@${captain1Id}> and <@${captain2Id}> will now pick their teams.`
       });
 
-      // Limpar a sessão de ready
       deleteReadySession(messageId);
     };
 
-    // Inicializar votação com callback
     initializeVotingSession(voteMessage.id, session.fruitToPlayer, onAllVoted);
 
-    // Reminder after 10 seconds
     setTimeout(async () => {
       const { getVotesByMessage, getMaxVotesPerUser } = await import('./VoteCaptain');
       const votes = getVotesByMessage(voteMessage.id);
@@ -314,7 +312,7 @@ ${updatedPlayersList}
           content: `⏰ **Reminder!** The following players haven't voted yet:\n${playersWhoDidntCompleteVotes.map(id => `<@${id}>`).join(', ')}`
         });
       }
-    }, 10 * 1000); // Reminder after 10 seconds
+    }, 10 * 1000);
   }
   }
 }

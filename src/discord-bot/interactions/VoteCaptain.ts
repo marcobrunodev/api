@@ -28,7 +28,7 @@ export function initializeVotingSession(
   return votesByMessage.get(messageId);
 }
 
-export const getMaxVotesPerUser = () => 1;
+export const getMaxVotesPerUser = () => 2;
 
 @BotButtonInteraction(ButtonActions.VoteCaptain)
 export default class VoteCaptain extends DiscordInteraction {
@@ -71,15 +71,13 @@ export default class VoteCaptain extends DiscordInteraction {
     const userVotes = votes.get(userId);
 
     if (userVotes.has(fruit)) {
-      // Remover o voto
       userVotes.delete(fruit);
 
       await interaction.reply({
-        content: `🗑️ You removed your vote for ${fruit}! (${userVotes.size}/${maxVotesPerUser} votes used)`,
+        content: `🗑️ You removed your vote for \`${fruit}\`! (${userVotes.size}/${maxVotesPerUser} votes used)`,
         ephemeral: true
       });
 
-      // Atualizar a mensagem com a contagem de votos
       await updateVoteMessage(interaction);
       return;
     }
@@ -95,14 +93,12 @@ export default class VoteCaptain extends DiscordInteraction {
     userVotes.add(fruit);
 
     await interaction.reply({
-      content: `✅ You voted for ${fruit}! (${userVotes.size}/${maxVotesPerUser} votes used)`,
+      content: `✅ You voted for \`${fruit}\`! (${userVotes.size}/${maxVotesPerUser} votes used)`,
       ephemeral: true
     });
 
-    // Atualizar a mensagem com a contagem de votos
     await updateVoteMessage(interaction);
 
-    // Verificar se todos votaram
     const allPlayerIds = Array.from(fruitMapping.values());
     const allVoted = allPlayerIds.every(playerId => {
       const playerVotes = votes.get(playerId);
@@ -112,7 +108,6 @@ export default class VoteCaptain extends DiscordInteraction {
     if (allVoted) {
       const callback = voteCompleteCallbacks.get(messageId);
       if (callback) {
-        // Limpar o callback para não ser chamado novamente
         voteCompleteCallbacks.delete(messageId);
         callback(votes);
       }
@@ -127,7 +122,6 @@ async function updateVoteMessage(interaction: ButtonInteraction) {
 
   if (!votes || !fruitMapping) return;
 
-  // Contar votos por fruta
   const voteCount = new Map<string, number>();
   for (const userVotes of votes.values()) {
     for (const fruit of userVotes) {
@@ -135,7 +129,6 @@ async function updateVoteMessage(interaction: ButtonInteraction) {
     }
   }
 
-  // Criar lista de jogadores com contagem de votos
   const playersList = Array.from(fruitMapping.entries())
     .map(([fruit, playerId]) => {
       const count = voteCount.get(fruit) || 0;
@@ -143,7 +136,19 @@ async function updateVoteMessage(interaction: ButtonInteraction) {
     })
     .join('\n');
 
-  // Atualizar a mensagem
+  const maxVotesPerUser = getMaxVotesPerUser();
+  const playersWhoHaventVoted = Array.from(fruitMapping.entries())
+    .filter(([fruit, playerId]) => {
+      const playerVotes = votes.get(playerId);
+      return !playerVotes || playerVotes.size < maxVotesPerUser;
+    })
+    .map(([fruit, playerId]) => `<@${playerId}>`)
+    .join(', ');
+
+  const waitingForVotesText = playersWhoHaventVoted
+    ? `\n**Waiting for votes:**\n${playersWhoHaventVoted}\n`
+    : '';
+
   const originalEmbed = interaction.message.embeds[0];
   await interaction.message.edit({
     embeds: [{
@@ -153,7 +158,7 @@ Vote for 2 captains:
 
 **Players:**
 ${playersList}
-
+${waitingForVotesText}
 **React with the fruits to vote!**
       `,
       color: originalEmbed.color,
@@ -171,7 +176,6 @@ export async function updateVoteMessageById(message: any) {
 
   if (!votes || !fruitMapping) return;
 
-  // Contar votos por fruta
   const voteCount = new Map<string, number>();
   for (const userVotes of votes.values()) {
     for (const fruit of userVotes) {
@@ -179,7 +183,6 @@ export async function updateVoteMessageById(message: any) {
     }
   }
 
-  // Criar lista de jogadores com contagem de votos
   const playersList = Array.from(fruitMapping.entries())
     .map(([fruit, playerId]) => {
       const count = voteCount.get(fruit) || 0;
@@ -187,7 +190,19 @@ export async function updateVoteMessageById(message: any) {
     })
     .join('\n');
 
-  // Atualizar a mensagem
+  const maxVotesPerUser = getMaxVotesPerUser();
+  const playersWhoHaventVoted = Array.from(fruitMapping.entries())
+    .filter(([fruit, playerId]) => {
+      const playerVotes = votes.get(playerId);
+      return !playerVotes || playerVotes.size < maxVotesPerUser;
+    })
+    .map(([fruit, playerId]) => `<@${playerId}>`)
+    .join(', ');
+
+  const waitingForVotesText = playersWhoHaventVoted
+    ? `\n**Waiting for votes:**\n${playersWhoHaventVoted}\n`
+    : '';
+
   const originalEmbed = message.embeds[0];
   await message.edit({
     embeds: [{
@@ -197,7 +212,7 @@ Vote for 2 captains:
 
 **Players:**
 ${playersList}
-
+${waitingForVotesText}
 **React with the fruits to vote!**
       `,
       color: originalEmbed.color,
