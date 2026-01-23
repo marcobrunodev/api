@@ -9,6 +9,7 @@ import { MatchAssistantService } from "./match-assistant/match-assistant.service
 import { DiscordBotOverviewService } from "../discord-bot/discord-bot-overview/discord-bot-overview.service";
 import { DiscordBotMessagingService } from "../discord-bot/discord-bot-messaging/discord-bot-messaging.service";
 import { DiscordBotVoiceChannelsService } from "../discord-bot/discord-bot-voice-channels/discord-bot-voice-channels.service";
+import { DiscordBotService } from "../discord-bot/discord-bot.service";
 import {
   match_map_veto_picks_set_input,
   matches_set_input,
@@ -46,6 +47,7 @@ export class MatchesController {
     private readonly discordBotMessaging: DiscordBotMessagingService,
     private readonly discordMatchOverview: DiscordBotOverviewService,
     private readonly discordBotVoiceChannels: DiscordBotVoiceChannelsService,
+    private readonly discordBotService: DiscordBotService,
     private readonly notifications: NotificationsService,
     private readonly chatService: ChatService,
     @InjectQueue(MatchQueues.EloCalculation) private eloCalculationQueue: Queue,
@@ -331,6 +333,9 @@ export class MatchesController {
       this.matchRelayService.removeBroadcast(matchId);
       await this.removeDiscordIntegration(matchId);
       await this.matchmaking.cancelMatchMakingByMatchId(matchId);
+
+      // Processar fim de partida do Discord Mix
+      await this.discordBotService.handleMixMatchEnd(matchId, data.new.winning_lineup_id);
 
       await this.eloCalculationQueue.add(EloCalculation.name, {
         matchId,

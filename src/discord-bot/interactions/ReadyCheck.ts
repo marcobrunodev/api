@@ -199,35 +199,8 @@ async function handleTimeout(messageId: string, bot: any, channel: any) {
             );
 
             if (replacementPlayers.length > 0) {
-              // Criar um mapa de playerId -> fruit dos players AFK antes de remover
-              const afkPlayerFruits = new Map<string, string>();
-              for (const [fruit, playerId] of session.fruitToPlayer.entries()) {
-                if (notReadyPlayers.includes(playerId)) {
-                  afkPlayerFruits.set(playerId, fruit);
-                }
-              }
-
-              // Remover frutas dos players AFK do mapeamento
-              for (const [playerId, fruit] of afkPlayerFruits.entries()) {
-                session.fruitToPlayer.delete(fruit);
-              }
-
-              // Atribuir frutas para os novos players
-              const fruitsToReuse = Array.from(afkPlayerFruits.values());
-              for (let i = 0; i < replacementPlayers.length; i++) {
-                const playerId = replacementPlayers[i].id;
-
-                // Se o player substituto for o mesmo que foi AFK, reutilizar SUA própria fruta
-                let fruitToAssign: string;
-                if (afkPlayerFruits.has(playerId)) {
-                  fruitToAssign = afkPlayerFruits.get(playerId)!;
-                } else {
-                  // Caso contrário, pegar a próxima fruta disponível
-                  fruitToAssign = fruitsToReuse[i];
-                }
-
-                session.fruitToPlayer.set(fruitToAssign, playerId);
-              }
+              // Não precisamos reatribuir frutas aqui porque elas só serão
+              // atribuídas DEPOIS que todos derem ready pela primeira vez
 
               // Adicionar permissões para os novos players
               for (const player of replacementPlayers) {
@@ -562,8 +535,15 @@ ${waitingForVotesList}
 
     // Callback quando todos votarem
     const onAllVoted = async (votes: Map<string, Set<string>>) => {
-      if (!votes) return;
+      console.log('🎯 [CAPTAIN VOTE CALLBACK] Triggered! All players have voted.');
+      console.log(`🎯 [CAPTAIN VOTE CALLBACK] Votes map size: ${votes?.size}`);
 
+      if (!votes) {
+        console.log('❌ [CAPTAIN VOTE CALLBACK] Votes is null/undefined, aborting');
+        return;
+      }
+
+      console.log('🎯 [CAPTAIN VOTE CALLBACK] Processing votes...');
       const fruitVotes = new Map<string, number>();
       for (const [, votedFruits] of votes.entries()) {
         for (const fruit of votedFruits) {
@@ -632,9 +612,16 @@ ${updatedPlayersList}
       });
 
       // Criar canais de voz para os times
+      console.log('🎯 [CAPTAIN VOTE CALLBACK] Checking session data...');
+      console.log(`🎯 [CAPTAIN VOTE CALLBACK] Guild ID: ${session.guildId}`);
+      console.log(`🎯 [CAPTAIN VOTE CALLBACK] Category ID: ${session.categoryChannelId}`);
+      console.log(`🎯 [CAPTAIN VOTE CALLBACK] Original Channel ID: ${session.originalChannelId}`);
+
       if (session.guildId && session.categoryChannelId && session.originalChannelId) {
+        console.log('🎯 [CAPTAIN VOTE CALLBACK] All session data present, creating voice channels...');
         try {
           const guild = await this.bot.client.guilds.fetch(session.guildId);
+          console.log(`🎯 [CAPTAIN VOTE CALLBACK] Guild fetched: ${guild.name}`);
 
           // Criar permissões para os canais de voz
           // Todos os 10 players devem poder entrar em ambas as salas
@@ -672,20 +659,24 @@ ${updatedPlayersList}
           });
 
           // Criar canal para Team 1 (captain1)
+          console.log(`🎯 [CAPTAIN VOTE CALLBACK] Creating Team ${captain1Fruit} voice channel...`);
           const team1Channel = await guild.channels.create({
             name: `Team ${captain1Fruit}`,
             type: ChannelType.GuildVoice,
             parent: session.categoryChannelId,
             permissionOverwrites: voicePermissions,
           });
+          console.log(`🎯 [CAPTAIN VOTE CALLBACK] Team ${captain1Fruit} channel created: ${team1Channel.id}`);
 
           // Criar canal para Team 2 (captain2)
+          console.log(`🎯 [CAPTAIN VOTE CALLBACK] Creating Team ${captain2Fruit} voice channel...`);
           const team2Channel = await guild.channels.create({
             name: `Team ${captain2Fruit}`,
             type: ChannelType.GuildVoice,
             parent: session.categoryChannelId,
             permissionOverwrites: voicePermissions,
           });
+          console.log(`🎯 [CAPTAIN VOTE CALLBACK] Team ${captain2Fruit} channel created: ${team2Channel.id}`);
 
           // Mover capitão 1
           const captain1Member = await guild.members.fetch(captain1Id);
@@ -778,7 +769,8 @@ ${availablePlayers.map(p => {
             team1Channel.id,
             team2Channel.id,
             session.fruitToPlayer,
-            session.guildId
+            session.guildId,
+            session.categoryChannelId
           );
 
         } catch (error) {

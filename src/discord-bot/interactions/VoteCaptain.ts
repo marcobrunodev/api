@@ -20,14 +20,21 @@ export function initializeVotingSession(
   fruitPlayerMapping?: Map<string, string>,
   onAllVoted?: (votes: Map<string, Set<string>>) => void
 ) {
+  console.log(`🔧 [INIT VOTING] Initializing voting session for message: ${messageId}`);
+  console.log(`🔧 [INIT VOTING] Fruit mapping size: ${fruitPlayerMapping?.size || 0}`);
+  console.log(`🔧 [INIT VOTING] Has callback: ${!!onAllVoted}`);
+
   if (!votesByMessage.has(messageId)) {
     votesByMessage.set(messageId, new Map());
+    console.log(`🔧 [INIT VOTING] Created new votes map for message ${messageId}`);
   }
   if (fruitPlayerMapping) {
     fruitToPlayerMap.set(messageId, fruitPlayerMapping);
+    console.log(`🔧 [INIT VOTING] Stored fruit mapping for ${fruitPlayerMapping.size} players`);
   }
   if (onAllVoted) {
     voteCompleteCallbacks.set(messageId, onAllVoted);
+    console.log(`🔧 [INIT VOTING] Registered callback for message ${messageId}`);
   }
   return votesByMessage.get(messageId);
 }
@@ -127,16 +134,29 @@ export default class VoteCaptain extends DiscordInteraction {
     await updateVoteMessage(interaction);
 
     const allPlayerIds = Array.from(fruitMapping.values());
+    console.log(`🔍 [VOTE CAPTAIN] Checking if all voted. Total players: ${allPlayerIds.length}`);
+
     const allVoted = allPlayerIds.every(playerId => {
       const playerVotes = votes.get(playerId);
-      return playerVotes && playerVotes.size >= maxVotesPerUser;
+      const hasVoted = playerVotes && playerVotes.size >= maxVotesPerUser;
+      console.log(`🔍 [VOTE CAPTAIN] Player ${playerId}: ${playerVotes?.size || 0}/${maxVotesPerUser} votes - ${hasVoted ? '✅' : '❌'}`);
+      return hasVoted;
     });
 
+    console.log(`🔍 [VOTE CAPTAIN] All voted: ${allVoted}`);
+
     if (allVoted) {
+      console.log(`🔍 [VOTE CAPTAIN] All players have voted! Checking for callback...`);
       const callback = voteCompleteCallbacks.get(messageId);
+      console.log(`🔍 [VOTE CAPTAIN] Callback exists: ${!!callback}`);
+
       if (callback) {
+        console.log(`🔍 [VOTE CAPTAIN] Executing callback and removing from map...`);
         voteCompleteCallbacks.delete(messageId);
         callback(votes);
+        console.log(`🔍 [VOTE CAPTAIN] Callback executed successfully!`);
+      } else {
+        console.log(`❌ [VOTE CAPTAIN] No callback found for message ${messageId}!`);
       }
     }
   }

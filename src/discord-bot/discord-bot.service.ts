@@ -45,6 +45,14 @@ export class DiscordBotService {
     Mix: undefined,
   };
 
+  // Mapa para rastrear partidas criadas pelo Discord Mix
+  private mixMatches = new Map<string, {
+    guildId: string;
+    categoryId: string;
+    team1PlayerIds: string[];
+    team2PlayerIds: string[];
+  }>();
+
   constructor(
     readonly config: ConfigService,
     private readonly logger: Logger,
@@ -744,5 +752,94 @@ export class DiscordBotService {
     this.logger.log(`✅ Successfully moved ${playersToMove.length} players to mix`);
 
     return playersToMove;
+  }
+
+  /**
+   * Registra uma partida criada pelo Discord Mix
+   */
+  public registerMixMatch(matchId: string, guildId: string, categoryId: string, team1PlayerIds: string[], team2PlayerIds: string[]) {
+    this.mixMatches.set(matchId, {
+      guildId,
+      categoryId,
+      team1PlayerIds,
+      team2PlayerIds,
+    });
+    this.logger.log(`[Mix Match] Registered match ${matchId} for guild ${guildId}`);
+  }
+
+  /**
+   * Processa o fim de uma partida do Discord Mix
+   */
+  public async handleMixMatchEnd(matchId: string, winningLineupId?: string) {
+    const mixMatch = this.mixMatches.get(matchId);
+
+    if (!mixMatch) {
+      // Não é uma partida do mix, ignorar
+      return;
+    }
+
+    this.logger.log(`[Mix Match] Processing end of match ${matchId}`);
+
+    const { guildId, categoryId, team1PlayerIds, team2PlayerIds } = mixMatch;
+
+    try {
+      // Buscar qual lineup venceu
+      const { matches_by_pk } = await this.hasura.query({
+        matches_by_pk: {
+          __args: {
+            id: matchId
+          },
+          winning_lineup_id: true,
+          lineup_1_id: true,
+          lineup_2_id: true,
+        }
+      });
+
+      if (!matches_by_pk) {
+        this.logger.warn(`[Mix Match] Match ${matchId} not found in database`);
+        return;
+      }
+
+      const actualWinningLineupId = winningLineupId || matches_by_pk.winning_lineup_id;
+
+      // Determinar quais players venceram
+      let winningPlayerIds: string[];
+      let losingPlayerIds: string[];
+
+      if (actualWinningLineupId === matches_by_pk.lineup_1_id) {
+        winningPlayerIds = team1PlayerIds;
+        losingPlayerIds = team2PlayerIds;
+        this.logger.log(`[Mix Match] Team 1 won`);
+      } else if (actualWinningLineupId === matches_by_pk.lineup_2_id) {
+        winningPlayerIds = team2PlayerIds;
+        losingPlayerIds = team1PlayerIds;
+        this.logger.log(`[Mix Match] Team 2 won`);
+      } else {
+        // Empate ou sem vencedor - mover todos para o topo
+        winningPlayerIds = [...team1PlayerIds, ...team2PlayerIds];
+        losingPlayerIds = [];
+        this.logger.log(`[Mix Match] No winner (tie/canceled) - moving all players to top`);
+      }
+
+      // Mover vencedores para o topo da fila
+      for (const playerId of winningPlayerIds) {
+        await this.addPlayerToTopOfQueue(guildId, playerId);
+      }
+
+      // Mover perdedores para o final da fila
+      for (const playerId of losingPlayerIds) {
+        await this.addPenaltyToPlayer(guildId, playerId);
+      }
+
+      // Deletar categoria e canais do Discord
+      await this.deleteMatchCategory(guildId, categoryId);
+
+      this.logger.log(`[Mix Match] Successfully processed end of match ${matchId}`);
+    } catch (error) {
+      this.logger.error(`[Mix Match] Error processing end of match ${matchId}:`, error);
+    } finally {
+      // Remover da lista de partidas ativas
+      this.mixMatches.delete(matchId);
+    }
   }
 }

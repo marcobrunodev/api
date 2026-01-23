@@ -14,6 +14,17 @@ const COMPETITIVE_MAPS = [
   "Overpass"
 ];
 
+// Mapeamento de nomes amigáveis para nomes técnicos do banco de dados
+const MAP_DISPLAY_TO_DB: Record<string, string> = {
+  "Ancient": "de_ancient",
+  "Anubis": "de_anubis",
+  "Dust 2": "de_dust2",
+  "Inferno": "de_inferno",
+  "Mirage": "de_mirage",
+  "Nuke": "de_nuke",
+  "Overpass": "de_overpass"
+};
+
 // Sessões de veto de mapas
 const vetoSessions = new Map<string, {
   captain1Id: string;
@@ -28,6 +39,7 @@ const vetoSessions = new Map<string, {
   currentVetoIndex: number;
   guildId: string;
   channelId: string;
+  categoryId?: string;
 }>();
 
 export function initializeVetoSession(
@@ -39,7 +51,8 @@ export function initializeVetoSession(
   team1: string[],
   team2: string[],
   guildId: string,
-  channelId: string
+  channelId: string,
+  categoryId?: string
 ) {
   // Ordem de vetos: 1,2,1,2,1,2 (6 bans) = 1 mapa restante
   const vetoOrder = [1, 2, 1, 2, 1, 2];
@@ -57,6 +70,7 @@ export function initializeVetoSession(
     currentVetoIndex: 0,
     guildId,
     channelId,
+    categoryId,
   });
 
   return vetoSessions.get(messageId);
@@ -135,8 +149,263 @@ export default class MapVeto extends DiscordInteraction {
 
     // Verificar se todos os vetos foram feitos
     if (session.currentVetoIndex >= session.vetoOrder.length) {
-      await finalizeVeto(interaction, session);
+      await this.finalizeVeto(interaction, session);
       deleteVetoSession(messageId);
+    }
+  }
+
+  private async finalizeVeto(interaction: ButtonInteraction, session: ReturnType<typeof getVetoSession>) {
+    const channel = interaction.channel;
+    if (!channel || !('send' in channel)) return;
+
+    // Desabilitar todos os botões
+    await interaction.message.edit({
+      components: []
+    });
+
+    const finalMap = session.availableMaps[0];
+
+    const bannedMapsList = session.bannedMaps.map((map, index) => {
+      const bannedBy = index % 2 === 0 ? session.captain1Fruit : session.captain2Fruit;
+      return `~~${map}~~ (${bannedBy})`;
+    }).join('\n');
+
+    await interaction.message.edit({
+      embeds: [{
+        title: '✅ Map Selected!',
+        description: `
+**Playing Map:** 🎮 **${finalMap}**
+
+**Team ${session.captain1Fruit}:**
+${session.team1.map((id: string) => `<@${id}>`).join(', ')}
+
+**Team ${session.captain2Fruit}:**
+${session.team2.map((id: string) => `<@${id}>`).join(', ')}
+
+**Banned Maps:**
+${bannedMapsList}
+
+**Starting competitive match...**
+      `,
+        color: 0x00FF00,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: 'From BananaServer.xyz with 🍌',
+        }
+      }]
+    });
+
+    await channel.send({
+      content: `🎮 Map selected: **${finalMap}**! Starting match...`
+    });
+
+    // Criar partida competitiva
+    try {
+      await this.createCompetitiveMatch(session, finalMap, channel);
+    } catch (error) {
+      const errorMsg = 'Error creating competitive match:';
+      if (this.logger) {
+        this.logger.error(errorMsg, error);
+      } else {
+        console.error(errorMsg, error);
+      }
+      await channel.send({
+        content: `❌ Error creating match. Please contact an administrator.`
+      });
+    }
+  }
+
+  private async createCompetitiveMatch(session: ReturnType<typeof getVetoSession>, selectedMap: string, channel: any) {
+    // Converter nome amigável para nome técnico do banco
+    const dbMapName = MAP_DISPLAY_TO_DB[selectedMap];
+
+    if (!dbMapName) {
+      throw new Error(`Map ${selectedMap} not found in map display mapping`);
+    }
+
+    console.log(`🎮 [MAP VETO] Searching for map: "${selectedMap}" (DB name: "${dbMapName}")`);
+
+    const { maps } = await this.hasura.query({
+      maps: {
+        __args: {
+          where: {
+            name: {
+              _eq: dbMapName
+            },
+            type: {
+              _eq: "Competitive"
+            }
+          }
+        },
+        id: true,
+        name: true,
+      }
+    });
+
+    if (!maps || maps.length === 0) {
+      throw new Error(`Map ${selectedMap} (${dbMapName}) not found in database`);
+    }
+
+    const mapId = maps[0].id;
+
+    // Criar match no banco
+    const match = await this.matchAssistant.createMatchBasedOnType(
+      "Competitive",
+      "Competitive",
+      {
+        mr: 12,
+        best_of: 1,
+        knife: true,
+        map: mapId,
+        overtime: true,
+        maps: [],
+      }
+    );
+
+    const matchId = match.id;
+    console.log(`🎮 [MAP VETO] [${matchId}] Match created for map ${selectedMap}`);
+
+    // Registrar partida do mix para processamento quando terminar
+    if (session.categoryId) {
+      this.bot.registerMixMatch(
+        matchId,
+        session.guildId,
+        session.categoryId,
+        session.team1,
+        session.team2
+      );
+    }
+
+    await this.addPlayersAndStartMatch(session, matchId, match, selectedMap, channel);
+  }
+
+  private async addPlayersAndStartMatch(session: any, matchId: string, match: any, selectedMap: string, channel: any) {
+
+    // Buscar todos os players (team1 + team2)
+    const allPlayerIds = [...session.team1, ...session.team2];
+    const guild = await this.bot.client.guilds.fetch(session.guildId);
+
+    const allPlayers = [];
+    for (const playerId of allPlayerIds) {
+      try {
+        const user = await guild.members.fetch(playerId);
+        allPlayers.push(user.user);
+      } catch (error) {
+        console.warn(`⚠️ [MAP VETO] Failed to fetch user ${playerId}:`, error);
+      }
+    }
+
+    // Adicionar players aos lineups
+    for (const playerId of session.team1) {
+      try {
+        const user = await guild.members.fetch(playerId);
+        await this.discordPickPlayer.addDiscordUserToLineup(
+          matchId,
+          match.lineup_1_id,
+          user.user
+        );
+      } catch (error) {
+        console.error(`❌ [MAP VETO] Error adding player ${playerId} to lineup 1:`, error);
+      }
+    }
+
+    for (const playerId of session.team2) {
+      try {
+        const user = await guild.members.fetch(playerId);
+        await this.discordPickPlayer.addDiscordUserToLineup(
+          matchId,
+          match.lineup_2_id,
+          user.user
+        );
+      } catch (error) {
+        console.error(`❌ [MAP VETO] Error adding player ${playerId} to lineup 2:`, error);
+      }
+    }
+
+    // Iniciar partida (vai atribuir servidor automaticamente)
+    await this.discordPickPlayer.startMatch(matchId);
+
+    console.log(`🎮 [MAP VETO] [${matchId}] Match started, server assignment in progress`);
+
+    // Aguardar um pouco para dar tempo do servidor ser atribuído
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Buscar informações da partida com servidor
+    const { matches_by_pk } = await this.hasura.query({
+      matches_by_pk: {
+        __args: {
+          id: matchId
+        },
+        id: true,
+        status: true,
+        server: {
+          host: true,
+          port: true,
+          gotv_port: true,
+          game_server_node: {
+            node_ip: true,
+          }
+        }
+      }
+    });
+
+    if (matches_by_pk?.server) {
+      const server = matches_by_pk.server;
+      const serverIp = server.game_server_node?.node_ip || server.host;
+      const connectCommand = `connect ${serverIp}:${server.port}`;
+      const gotvCommand = `connect ${serverIp}:${server.gotv_port}`;
+
+      await channel.send({
+        embeds: [{
+          title: '🎮 Match Ready!',
+          description: `
+**Match ID:** \`${matchId}\`
+**Map:** ${selectedMap}
+**Status:** ${matches_by_pk.status}
+
+**Connect to Server:**
+\`\`\`
+${connectCommand}
+\`\`\`
+
+**GOTV (Spectate):**
+\`\`\`
+${gotvCommand}
+\`\`\`
+
+**Team ${session.captain1Fruit}:**
+${session.team1.map((id: string) => `<@${id}>`).join(', ')}
+
+**Team ${session.captain2Fruit}:**
+${session.team2.map((id: string) => `<@${id}>`).join(', ')}
+
+Good luck and have fun! 🍌
+        `,
+          color: 0x00FF00,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: 'From BananaServer.xyz with 🍌',
+          }
+        }]
+      });
+    } else {
+      await channel.send({
+        embeds: [{
+          title: '⏳ Match Created',
+          description: `
+**Match ID:** \`${matchId}\`
+**Map:** ${selectedMap}
+**Status:** Waiting for server...
+
+The server is being prepared. You'll receive connection details shortly!
+        `,
+          color: 0xFFA500,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: 'From BananaServer.xyz with 🍌',
+          }
+        }]
+      });
     }
   }
 }
@@ -200,10 +469,10 @@ async function updateVetoMessage(interaction: ButtonInteraction) {
 **Bans remaining:** ${vetosRemaining}
 
 **Team ${session.captain1Fruit}:**
-${session.team1.map(id => `<@${id}>`).join(', ')}
+${session.team1.map((id: string) => `<@${id}>`).join(', ')}
 
 **Team ${session.captain2Fruit}:**
-${session.team2.map(id => `<@${id}>`).join(', ')}
+${session.team2.map((id: string) => `<@${id}>`).join(', ')}
 
 **Available Maps:**
 ${availableMapsList}
@@ -218,52 +487,6 @@ ${bannedMapsList}
       footer: originalEmbed.footer
     }],
     components: rows
-  });
-}
-
-async function finalizeVeto(interaction: ButtonInteraction, session: ReturnType<typeof getVetoSession>) {
-  const channel = interaction.channel;
-  if (!channel || !('send' in channel)) return;
-
-  // Desabilitar todos os botões
-  await interaction.message.edit({
-    components: []
-  });
-
-  const finalMap = session.availableMaps[0];
-
-  const bannedMapsList = session.bannedMaps.map((map, index) => {
-    const bannedBy = index % 2 === 0 ? session.captain1Fruit : session.captain2Fruit;
-    return `~~${map}~~ (${bannedBy})`;
-  }).join('\n');
-
-  await interaction.message.edit({
-    embeds: [{
-      title: '✅ Map Selected!',
-      description: `
-**Playing Map:** 🎮 **${finalMap}**
-
-**Team ${session.captain1Fruit}:**
-${session.team1.map(id => `<@${id}>`).join(', ')}
-
-**Team ${session.captain2Fruit}:**
-${session.team2.map(id => `<@${id}>`).join(', ')}
-
-**Banned Maps:**
-${bannedMapsList}
-
-**Get ready to play on ${finalMap}!**
-      `,
-      color: 0x00FF00,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'From BananaServer.xyz with 🍌',
-      }
-    }]
-  });
-
-  await channel.send({
-    content: `🎮 Map selected: **${finalMap}**! Both teams get ready!`
   });
 }
 
@@ -313,10 +536,10 @@ export async function updateVetoMessageById(message: any) {
 **Bans remaining:** ${vetosRemaining}
 
 **Team ${session.captain1Fruit}:**
-${session.team1.map(id => `<@${id}>`).join(', ')}
+${session.team1.map((id: string) => `<@${id}>`).join(', ')}
 
 **Team ${session.captain2Fruit}:**
-${session.team2.map(id => `<@${id}>`).join(', ')}
+${session.team2.map((id: string) => `<@${id}>`).join(', ')}
 
 **Available Maps:**
 ${availableMapsList}

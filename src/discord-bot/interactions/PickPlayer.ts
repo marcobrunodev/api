@@ -18,6 +18,7 @@ const pickSessions = new Map<string, {
   pickOrder: number[]; // 1 ou 2, representa qual capitão escolhe
   currentPickIndex: number;
   guildId: string;
+  categoryId?: string;
 }>();
 
 export function initializePickSession(
@@ -29,7 +30,8 @@ export function initializePickSession(
   team1ChannelId: string,
   team2ChannelId: string,
   fruitToPlayer: Map<string, string>,
-  guildId: string
+  guildId: string,
+  categoryId?: string
 ) {
   // Ordem de picks: 1,2,2,1,1,2,2,1 (total 8 picks para 10 players - 2 são capitães)
   const pickOrder = [1, 2, 2, 1, 1, 2, 2, 1];
@@ -51,6 +53,7 @@ export function initializePickSession(
     pickOrder,
     currentPickIndex: 0,
     guildId,
+    categoryId,
   });
 
   return pickSessions.get(messageId);
@@ -71,15 +74,21 @@ export default class PickPlayer extends DiscordInteraction {
     const messageId = interaction.message.id;
     const userId = interaction.user.id;
 
+    console.log(`🎮 [PICK PLAYER] Button clicked - Fruit: ${fruit}, User: ${userId}, Message: ${messageId}`);
+
     const session = pickSessions.get(messageId);
 
     if (!session) {
+      console.log(`❌ [PICK PLAYER] Session not found for message ${messageId}`);
       await interaction.reply({
         content: '❌ Pick session not found.',
         ephemeral: true
       });
       return;
     }
+
+    console.log(`🎮 [PICK PLAYER] Session found. Current pick: ${session.currentPickIndex}/${session.pickOrder.length}`);
+    console.log(`🎮 [PICK PLAYER] Team1 channel: ${session.team1ChannelId}, Team2 channel: ${session.team2ChannelId}`);
 
     // Verificar se é a vez do capitão correto
     const currentCaptain = session.pickOrder[session.currentPickIndex];
@@ -134,24 +143,43 @@ export default class PickPlayer extends DiscordInteraction {
       ephemeral: true
     });
 
-    // Atualizar a mensagem
-    await updatePickMessage(interaction);
-
-    // Mover o player para o canal de voz do time
+    // Mover o player para o canal de voz do time ANTES de atualizar a mensagem
     try {
+      console.log(`🎮 [PICK PLAYER] Fetching guild ${session.guildId}...`);
       const guild = await this.bot.client.guilds.fetch(session.guildId);
+      console.log(`🎮 [PICK PLAYER] Fetching member ${pickedPlayerId}...`);
       const member = await guild.members.fetch(pickedPlayerId);
       const targetChannelId = currentCaptain === 1 ? session.team1ChannelId : session.team2ChannelId;
 
+      console.log(`🎮 [PICK PLAYER] [Pick ${session.currentPickIndex}/${session.pickOrder.length}] Attempting to move player ${pickedPlayerId} to team ${currentCaptain}`);
+      console.log(`🎮 [PICK PLAYER] Target channel ID: ${targetChannelId}`);
+
       if (member.voice.channel) {
+        console.log(`🎮 [PICK PLAYER] Player ${pickedPlayerId} is in voice channel ${member.voice.channel.id}, moving to ${targetChannelId}`);
         await member.voice.setChannel(targetChannelId);
+        console.log(`🎮 [PICK PLAYER] ✓ Successfully moved player ${pickedPlayerId} to team ${currentCaptain} voice channel`);
+      } else {
+        console.log(`🎮 [PICK PLAYER] ⚠ Player ${pickedPlayerId} is not in a voice channel, cannot move`);
       }
     } catch (error) {
-      this.logger.error('Error moving player to team channel:', error);
+      const errorMsg = `✗ Error moving player ${pickedPlayerId} to team channel:`;
+      if (this.logger) {
+        this.logger.error(errorMsg, error);
+      } else {
+        console.error(errorMsg, error);
+      }
     }
 
     // Verificar se todos os picks foram feitos
-    if (session.currentPickIndex >= session.pickOrder.length) {
+    const isLastPick = session.currentPickIndex >= session.pickOrder.length;
+
+    // Atualizar a mensagem
+    if (!isLastPick) {
+      await updatePickMessage(interaction);
+    }
+
+    // Se foi o último pick, finalizar
+    if (isLastPick) {
       await finalizePicks(interaction, session);
       deletePickSession(messageId);
     }
@@ -380,7 +408,8 @@ _None yet_
     session.team1,
     session.team2,
     session.guildId,
-    channel.id
+    channel.id,
+    session.categoryId
   );
 }
 
