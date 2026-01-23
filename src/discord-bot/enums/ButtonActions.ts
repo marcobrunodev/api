@@ -7,4 +7,5 @@ export enum ButtonActions {
   ConfirmSteamId = "confirm_steamid",
   CancelSteamId = "cancel_steamid",
   OpenRegisterSteamIdModal = "open_register_steamid",
+  PickPlayer = "pp",
 }

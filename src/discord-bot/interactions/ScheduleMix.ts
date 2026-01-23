@@ -217,7 +217,15 @@ Click the button below when you're ready!
       });
 
       const { initializeReadySession } = await import('./ReadyCheck');
-      initializeReadySession(readyMessage.id, allowedPlayerIds, fruitToPlayer, movedPlayers);
+      initializeReadySession(
+        readyMessage.id,
+        allowedPlayerIds,
+        fruitToPlayer,
+        movedPlayers,
+        guild.id,
+        category.id,
+        mixVoiceChannel.id
+      );
     } catch (error) {
       console.error('Erro ao criar mix:', error);
       console.error('Error details:', error.stack);

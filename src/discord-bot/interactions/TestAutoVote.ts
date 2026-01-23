@@ -2,15 +2,18 @@ import { ChatInputCommandInteraction } from "discord.js";
 import { ChatCommands } from "../enums/ChatCommands";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotChatCommand } from "./interactions";
-import { getVotesByMessage, updateVoteMessageById, getMaxVotesPerUser } from "./VoteCaptain";
+import { getVotesByMessage, updateVoteMessageById, getMaxVotesPerUser, checkAndTriggerVoteComplete, getFruitToPlayerMap } from "./VoteCaptain";
 
 /**
  * Test Auto Vote Command
  *
- * This is a TESTING-ONLY command to automatically simulate random votes
- * for all players in a captain voting session.
+ * This is a TESTING-ONLY command to automatically simulate votes
+ * for bots only (skips real users) in a captain voting session.
+ * Bots will prioritize voting for real users (80% chance) over other bots (20% chance)
+ * to increase the likelihood of real players becoming captains.
+ * It will also trigger the onAllVoted callback if all players have completed voting.
  *
- * Usage: /test-auto-vote <message_id>
+ * Usage: /test-auto-vote-captains <message_id>
  */
 @BotChatCommand(ChatCommands.TestAutoVoteCaptains)
 export default class TestAutoVote extends DiscordInteraction {
@@ -109,14 +112,38 @@ export default class TestAutoVote extends DiscordInteraction {
         return;
       }
 
-      // Simulate votes for each member (bots only, skip normal users)
+      // Simulate votes for each member (bots only, skip real users)
       let votesAdded = 0;
       let botsCount = 0;
       let usersCount = 0;
       const maxVotesPerUser = getMaxVotesPerUser();
 
+      // Get fruit to player mapping to identify real users
+      const fruitMapping = getFruitToPlayerMap(messageId);
+      if (!fruitMapping) {
+        await interaction.editReply({
+          content: `❌ No fruit mapping found for message ID: ${messageId}`
+        });
+        return;
+      }
+
+      // Separate fruits by real users vs bots
+      const realUserFruits: string[] = [];
+      const botFruits: string[] = [];
+
+      for (const [fruit, playerId] of fruitMapping.entries()) {
+        const member = members.get(playerId);
+        if (member) {
+          if (member.user.bot) {
+            botFruits.push(fruit);
+          } else {
+            realUserFruits.push(fruit);
+          }
+        }
+      }
+
       for (const [userId, member] of members) {
-        // Skip if it's a normal user (not a bot)
+        // Skip real users - only vote for bots
         if (!member.user.bot) {
           usersCount++;
           continue;
@@ -137,13 +164,23 @@ export default class TestAutoVote extends DiscordInteraction {
         }
 
         // Add votes until reaching maxVotesPerUser
+        // Prioritize voting for real users (80% chance) over bots (20% chance)
         while (userVotesSet.size < maxVotesPerUser && userVotesSet.size < fruits.length) {
-          // Pick a random fruit
-          const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
+          let selectedFruit: string;
+
+          // 80% chance to vote for a real user if there are any
+          if (realUserFruits.length > 0 && Math.random() < 0.8) {
+            selectedFruit = realUserFruits[Math.floor(Math.random() * realUserFruits.length)];
+          } else if (botFruits.length > 0) {
+            selectedFruit = botFruits[Math.floor(Math.random() * botFruits.length)];
+          } else {
+            // Fallback to any random fruit
+            selectedFruit = fruits[Math.floor(Math.random() * fruits.length)];
+          }
 
           // Add the vote if not already voted for this fruit
-          if (!userVotesSet.has(randomFruit)) {
-            userVotesSet.add(randomFruit);
+          if (!userVotesSet.has(selectedFruit)) {
+            userVotesSet.add(selectedFruit);
             votesAdded++;
           }
         }
@@ -165,12 +202,16 @@ export default class TestAutoVote extends DiscordInteraction {
       // Update the vote message to reflect the new votes
       await updateVoteMessageById(message);
 
+      // Check if all players have voted and trigger callback
+      const voteCompleted = checkAndTriggerVoteComplete(messageId);
+
       await interaction.editReply({
-        content: `✅ Auto-voting complete (bots only)!\n\n` +
-          `**Bots voted:** ${votesAdded}\n` +
+        content: `✅ Auto-voting complete!\n\n` +
+          `**Votes added:** ${votesAdded}\n` +
           `**Total bots:** ${botsCount}\n` +
-          `**Users (skipped):** ${usersCount}\n` +
-          `**Total players who voted:** ${votes.size}\n\n` +
+          `**Total users:** ${usersCount}\n` +
+          `**Total players who voted:** ${votes.size}\n` +
+          `**Vote completed:** ${voteCompleted ? '✅ Yes' : '❌ No'}\n\n` +
           `**Vote results:**\n${resultsText}`
       });
 

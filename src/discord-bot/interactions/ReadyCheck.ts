@@ -1,4 +1,4 @@
-import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ModalActionRowComponentBuilder, AttachmentBuilder } from "discord.js";
+import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ModalActionRowComponentBuilder, AttachmentBuilder, ChannelType, PermissionFlagsBits } from "discord.js";
 import { BotButtonInteraction } from "./interactions";
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
@@ -9,13 +9,19 @@ const readySessions = new Map<string, {
   allowedPlayerIds: string[];
   fruitToPlayer: Map<string, string>;
   movedPlayers: any[];
+  guildId?: string;
+  categoryChannelId?: string;
+  originalChannelId?: string;
 }>();
 
 export function initializeReadySession(
   messageId: string,
   allowedPlayerIds: string[],
   fruitToPlayer: Map<string, string>,
-  movedPlayers: any[]
+  movedPlayers: any[],
+  guildId?: string,
+  categoryChannelId?: string,
+  originalChannelId?: string
 ) {
   readySessions.set(messageId, {
     readyPlayers: new Set(),
@@ -23,6 +29,9 @@ export function initializeReadySession(
     allowedPlayerIds,
     fruitToPlayer,
     movedPlayers,
+    guildId,
+    categoryChannelId,
+    originalChannelId,
   });
 }
 
@@ -218,7 +227,6 @@ ${waitingForVotesList}
 
     // Callback quando todos votarem
     const onAllVoted = async (votes: Map<string, Set<string>>) => {
-
       if (!votes) return;
 
       const fruitVotes = new Map<string, number>();
@@ -287,6 +295,154 @@ ${updatedPlayersList}
       await channel.send({
         content: `🎉 Captains have been selected! <@${captain1Id}> and <@${captain2Id}> will now pick their teams.`
       });
+
+      // Criar canais de voz para os times
+      if (session.guildId && session.categoryChannelId && session.originalChannelId) {
+        try {
+          const guild = await this.bot.client.guilds.fetch(session.guildId);
+
+          // Criar permissões para os canais de voz
+          // Todos os 10 players devem poder entrar em ambas as salas
+          const voicePermissions: any[] = session.movedPlayers.map(player => ({
+            id: player.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.Connect,
+              PermissionFlagsBits.Speak,
+            ],
+          }));
+
+          // Adicionar permissão para o bot
+          const botMember = await guild.members.fetchMe();
+          voicePermissions.push({
+            id: botMember.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.Connect,
+              PermissionFlagsBits.Speak,
+              PermissionFlagsBits.MoveMembers,
+              PermissionFlagsBits.ManageChannels,
+            ],
+          });
+
+          // @everyone pode ver mas não pode conectar
+          voicePermissions.push({
+            id: guild.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+            ],
+            deny: [
+              PermissionFlagsBits.Connect,
+            ],
+          });
+
+          // Criar canal para Team 1 (captain1)
+          const team1Channel = await guild.channels.create({
+            name: `Team ${captain1Fruit}`,
+            type: ChannelType.GuildVoice,
+            parent: session.categoryChannelId,
+            permissionOverwrites: voicePermissions,
+          });
+
+          // Criar canal para Team 2 (captain2)
+          const team2Channel = await guild.channels.create({
+            name: `Team ${captain2Fruit}`,
+            type: ChannelType.GuildVoice,
+            parent: session.categoryChannelId,
+            permissionOverwrites: voicePermissions,
+          });
+
+          // Mover capitão 1
+          const captain1Member = await guild.members.fetch(captain1Id);
+          if (captain1Member.voice.channel) {
+            await captain1Member.voice.setChannel(team1Channel.id);
+          }
+
+          // Mover capitão 2
+          const captain2Member = await guild.members.fetch(captain2Id);
+          if (captain2Member.voice.channel) {
+            await captain2Member.voice.setChannel(team2Channel.id);
+          }
+
+          await channel.send({
+            content: `🔊 Voice channels created!\n👑 <@${captain1Id}> → ${team1Channel.name}\n👑 <@${captain2Id}> → ${team2Channel.name}`
+          });
+
+          // Criar mensagem de pick de players
+          const { initializePickSession } = await import('./PickPlayer');
+
+          // Pegar apenas os players disponíveis (excluindo os capitães)
+          const availablePlayers = session.movedPlayers.filter(
+            p => p.id !== captain1Id && p.id !== captain2Id
+          );
+
+          // Criar botões com as frutas dos players disponíveis
+          const buttons = availablePlayers.map(player => {
+            const fruit = Array.from(session.fruitToPlayer.entries())
+              .find(([, id]) => id === player.id)?.[0] || '❓';
+            return new ButtonBuilder()
+              .setCustomId(`${ButtonActions.PickPlayer}:${fruit}`)
+              .setLabel(fruit)
+              .setStyle(ButtonStyle.Secondary);
+          });
+
+          const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+          for (let i = 0; i < buttons.length; i += 5) {
+            const row = new ActionRowBuilder<ButtonBuilder>()
+              .addComponents(buttons.slice(i, i + 5));
+            rows.push(row);
+          }
+
+          const pickMessage = await channel.send({
+            embeds: [{
+              title: '⚔️ Team Selection',
+              description: `
+**Current Turn:** 👑 <@${captain1Id}> (\`${captain1Fruit}\`)
+**Picks remaining:** 8
+
+**Team ${captain1Fruit}:**
+👑 \`${captain1Fruit}\` <@${captain1Id}>
+
+**Team ${captain2Fruit}:**
+👑 \`${captain2Fruit}\` <@${captain2Id}>
+
+**Available Players:**
+${availablePlayers.map(p => {
+  const fruit = Array.from(session.fruitToPlayer.entries())
+    .find(([, id]) => id === p.id)?.[0] || '❓';
+  return `\`${fruit}\` <@${p.id}>`;
+}).join('\n')}
+
+**Click the fruit button to pick a player!**
+              `,
+              color: 0x00FFFF,
+              timestamp: new Date().toISOString(),
+              footer: {
+                text: 'From BananaServer.xyz with 🍌',
+              }
+            }],
+            components: rows
+          });
+
+          initializePickSession(
+            pickMessage.id,
+            captain1Id,
+            captain2Id,
+            captain1Fruit,
+            captain2Fruit,
+            team1Channel.id,
+            team2Channel.id,
+            session.fruitToPlayer,
+            session.guildId
+          );
+
+        } catch (error) {
+          this.logger.error('Error creating voice channels:', error);
+          await channel.send({
+            content: '⚠️ Failed to create voice channels or move captains.'
+          });
+        }
+      }
 
       deleteReadySession(messageId);
     };

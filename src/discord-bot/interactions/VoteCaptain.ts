@@ -11,6 +11,10 @@ export function getVotesByMessage(messageId: string) {
   return votesByMessage.get(messageId);
 }
 
+export function getFruitToPlayerMap(messageId: string) {
+  return fruitToPlayerMap.get(messageId);
+}
+
 export function initializeVotingSession(
   messageId: string,
   fruitPlayerMapping?: Map<string, string>,
@@ -26,6 +30,29 @@ export function initializeVotingSession(
     voteCompleteCallbacks.set(messageId, onAllVoted);
   }
   return votesByMessage.get(messageId);
+}
+
+export function checkAndTriggerVoteComplete(messageId: string) {
+  const votes = votesByMessage.get(messageId);
+  const fruitMapping = fruitToPlayerMap.get(messageId);
+  const callback = voteCompleteCallbacks.get(messageId);
+
+  if (!votes || !fruitMapping || !callback) return false;
+
+  const maxVotesPerUser = getMaxVotesPerUser();
+  const allPlayerIds = Array.from(fruitMapping.values());
+  const allVoted = allPlayerIds.every(playerId => {
+    const playerVotes = votes.get(playerId);
+    return playerVotes && playerVotes.size >= maxVotesPerUser;
+  });
+
+  if (allVoted) {
+    voteCompleteCallbacks.delete(messageId);
+    callback(votes);
+    return true;
+  }
+
+  return false;
 }
 
 export const getMaxVotesPerUser = () => 2;
