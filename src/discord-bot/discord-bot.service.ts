@@ -194,9 +194,32 @@ export class DiscordBotService {
             parent: category.id,
           });
 
-          this.logger.log(`Successfully created category and waiting room in guild: ${guild.name}`);
+          await guild.channels.create({
+            name: '💤 AFK',
+            type: ChannelType.GuildVoice,
+            parent: category.id,
+          });
+
+          this.logger.log(`Successfully created category, queue and AFK rooms in guild: ${guild.name}`);
         } else {
           this.logger.log(`BananaServer.xyz Mix category already exists in guild: ${guild.name}`);
+
+          // Verificar se a sala AFK existe
+          const afkChannel = guild.channels.cache.find(
+            (channel) =>
+              channel.type === ChannelType.GuildVoice &&
+              channel.name === '💤 AFK' &&
+              channel.parentId === existingCategory.id
+          );
+
+          if (!afkChannel) {
+            this.logger.log(`Creating AFK channel in guild: ${guild.name}`);
+            await guild.channels.create({
+              name: '💤 AFK',
+              type: ChannelType.GuildVoice,
+              parent: existingCategory.id,
+            });
+          }
         }
       }
     } catch (error) {
@@ -618,6 +641,69 @@ export class DiscordBotService {
 
   public async removeFromQueueMixOrder(guildId: string, memberId: string): Promise<void> {
     await this.removeFromQueueMix(guildId, memberId);
+  }
+
+  public async addPenaltyToPlayer(guildId: string, memberId: string): Promise<void> {
+    // Remove da posição atual e adiciona novamente no final da fila
+    await this.removeFromQueueMix(guildId, memberId);
+    await this.addToQueueMix(guildId, memberId);
+    this.logger.log(`Added penalty to ${memberId} in guild ${guildId} - moved to end of queue`);
+  }
+
+  public async addPlayerToTopOfQueue(guildId: string, memberId: string): Promise<void> {
+    const redis = this.redisManager.getConnection();
+    const key = this.getQueueMixRedisKey(guildId);
+
+    // Remove da posição atual se já estiver na fila
+    await redis.zrem(key, memberId);
+
+    // Pegar o menor timestamp atual na fila
+    const lowestScoreMember = await redis.zrange(key, 0, 0, 'WITHSCORES');
+    let newTimestamp: number;
+
+    if (lowestScoreMember.length > 0) {
+      // Se há membros, usar um timestamp menor que o primeiro
+      const lowestScore = parseFloat(lowestScoreMember[1]);
+      newTimestamp = lowestScore - 1000; // 1 milissegundo antes
+    } else {
+      // Se não há membros, usar timestamp atual
+      newTimestamp = Date.now() * 1000;
+    }
+
+    await redis.zadd(key, newTimestamp, memberId);
+    this.logger.log(`Added ${memberId} to top of queue in guild ${guildId} with timestamp ${newTimestamp}`);
+  }
+
+  public async deleteMatchCategory(guildId: string, categoryChannelId: string): Promise<void> {
+    try {
+      const guild = await this.client.guilds.fetch(guildId);
+      const category = guild.channels.cache.get(categoryChannelId);
+
+      if (!category) {
+        this.logger.error(`Category ${categoryChannelId} not found in guild ${guildId}`);
+        return;
+      }
+
+      // Deletar todos os canais filhos da categoria
+      if ('children' in category) {
+        const children = category.children.cache;
+        for (const [, child] of children) {
+          try {
+            await child.delete();
+            this.logger.log(`Deleted channel ${child.name} from category ${category.name}`);
+          } catch (error) {
+            this.logger.error(`Failed to delete channel ${child.name}:`, error);
+          }
+        }
+      }
+
+      // Deletar a categoria
+      await category.delete();
+      this.logger.log(`Deleted category ${category.name} in guild ${guildId}`);
+    } catch (error) {
+      this.logger.error(`Error deleting match category ${categoryChannelId}:`, error);
+      throw error;
+    }
   }
 
   public async movePlayersToMix(queueMixChannel: any, players: any[], mixVoiceChannel: any): Promise<any[]> {

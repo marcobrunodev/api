@@ -181,6 +181,16 @@ async function updateVetoMessage(interaction: ButtonInteraction) {
     rows.push(row);
   }
 
+  // Adicionar botão de remake em uma linha separada
+  const remakeButton = new ButtonBuilder()
+    .setCustomId(ButtonActions.RequestRemake)
+    .setLabel('🔄 Request Remake')
+    .setStyle(ButtonStyle.Danger);
+
+  const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(remakeButton);
+  rows.push(remakeRow);
+
   const originalEmbed = interaction.message.embeds[0];
   await interaction.message.edit({
     embeds: [{

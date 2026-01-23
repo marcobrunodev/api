@@ -215,6 +215,16 @@ async function updatePickMessage(interaction: ButtonInteraction) {
     rows.push(row);
   }
 
+  // Adicionar botão de remake em uma linha separada
+  const remakeButton = new ButtonBuilder()
+    .setCustomId(ButtonActions.RequestRemake)
+    .setLabel('🔄 Request Remake')
+    .setStyle(ButtonStyle.Danger);
+
+  const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(remakeButton);
+  rows.push(remakeRow);
+
   const originalEmbed = interaction.message.embeds[0];
   await interaction.message.edit({
     embeds: [{
@@ -320,6 +330,16 @@ ${team2List}
       .addComponents(mapButtons.slice(i, i + 5));
     mapRows.push(row);
   }
+
+  // Adicionar botão de remake em uma linha separada
+  const remakeButton = new ButtonBuilder()
+    .setCustomId(ButtonActions.RequestRemake)
+    .setLabel('🔄 Request Remake')
+    .setStyle(ButtonStyle.Danger);
+
+  const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(remakeButton);
+  mapRows.push(remakeRow);
 
   const vetoMessage = await channel.send({
     embeds: [{

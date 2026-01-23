@@ -216,7 +216,7 @@ Click the button below when you're ready!
         components: [readyRow]
       });
 
-      const { initializeReadySession } = await import('./ReadyCheck');
+      const { initializeReadySession, startCountdown } = await import('./ReadyCheck');
       initializeReadySession(
         readyMessage.id,
         allowedPlayerIds,
@@ -224,8 +224,13 @@ Click the button below when you're ready!
         movedPlayers,
         guild.id,
         category.id,
-        mixVoiceChannel.id
+        mixVoiceChannel.id,
+        queueMixChannel?.id,
+        picksBans.id
       );
+
+      // Iniciar countdown de 21 segundos
+      await startCountdown(readyMessage.id, this.bot, picksBans);
     } catch (error) {
       console.error('Erro ao criar mix:', error);
       console.error('Error details:', error.stack);

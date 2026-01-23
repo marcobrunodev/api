@@ -12,6 +12,10 @@ const readySessions = new Map<string, {
   guildId?: string;
   categoryChannelId?: string;
   originalChannelId?: string;
+  queueMixChannelId?: string;
+  timeRemaining: number;
+  intervalId?: NodeJS.Timeout;
+  channelId?: string;
 }>();
 
 export function initializeReadySession(
@@ -21,7 +25,9 @@ export function initializeReadySession(
   movedPlayers: any[],
   guildId?: string,
   categoryChannelId?: string,
-  originalChannelId?: string
+  originalChannelId?: string,
+  queueMixChannelId?: string,
+  channelId?: string
 ) {
   readySessions.set(messageId, {
     readyPlayers: new Set(),
@@ -32,6 +38,9 @@ export function initializeReadySession(
     guildId,
     categoryChannelId,
     originalChannelId,
+    queueMixChannelId,
+    timeRemaining: 21,
+    channelId,
   });
 }
 
@@ -40,7 +49,314 @@ export function getReadySession(messageId: string) {
 }
 
 export function deleteReadySession(messageId: string) {
+  const session = readySessions.get(messageId);
+  if (session?.intervalId) {
+    clearInterval(session.intervalId);
+  }
   readySessions.delete(messageId);
+}
+
+function getColorByTimeRemaining(time: number): number {
+  if (time > 10) return 0x00FF00; // Verde
+  if (time > 5) return 0xFFD700;  // Amarelo
+  return 0xFF0000; // Vermelho
+}
+
+export async function startCountdown(messageId: string, bot: any, channel: any) {
+  const session = readySessions.get(messageId);
+  if (!session) return;
+
+  // Buscar a mensagem
+  let message;
+  try {
+    message = await channel.messages.fetch(messageId);
+  } catch (error) {
+    console.error('Failed to fetch ready check message:', error);
+    return;
+  }
+
+  session.intervalId = setInterval(async () => {
+    const currentSession = readySessions.get(messageId);
+    if (!currentSession) {
+      clearInterval(session.intervalId);
+      return;
+    }
+
+    currentSession.timeRemaining--;
+
+    // Atualizar embed
+    const readyCount = currentSession.readyPlayers.size;
+    const playersList = currentSession.movedPlayers.map((p) => {
+      const isReady = currentSession.readyPlayers.has(p.id);
+      const status = isReady ? '✅' : '⏳';
+      return `${status} <@${p.id}>`;
+    }).join('\n');
+
+    try {
+      await message.edit({
+        embeds: [{
+          title: '⏳ Ready Check',
+          description: `
+**⏰ Time Remaining: ${currentSession.timeRemaining} seconds**
+**Players Ready: ${readyCount}/${currentSession.totalPlayers}**
+
+${playersList}
+
+Click the button below when you're ready!
+          `,
+          color: getColorByTimeRemaining(currentSession.timeRemaining),
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: 'From BananaServer.xyz with 🍌',
+          }
+        }],
+        components: message.components
+      });
+    } catch (error) {
+      console.error('Failed to update ready check message:', error);
+    }
+
+    // Timeout - ninguém mais tem tempo
+    if (currentSession.timeRemaining <= 0) {
+      clearInterval(currentSession.intervalId);
+      await handleTimeout(messageId, bot, channel);
+    }
+  }, 1000);
+}
+
+async function handleTimeout(messageId: string, bot: any, channel: any) {
+  const session = readySessions.get(messageId);
+  if (!session) return;
+
+  const notReadyPlayers = session.allowedPlayerIds.filter(
+    id => !session.readyPlayers.has(id)
+  );
+
+  // Se todos deram ready, não fazer nada
+  if (notReadyPlayers.length === 0) return;
+
+  await channel.send({
+    content: `⚠️ **Timeout!** The following players didn't ready in time:\n${notReadyPlayers.map(id => `<@${id}>`).join(', ')}\n\nMoving AFK players to 💤 AFK channel...`
+  });
+
+  // Mover players que não deram ready para o canal AFK
+  if (session.guildId && session.queueMixChannelId && session.originalChannelId) {
+    try {
+      const guild = await bot.client.guilds.fetch(session.guildId);
+
+      // Buscar canal AFK e Queue Mix
+      await guild.channels.fetch();
+      const afkChannel = guild.channels.cache.find(
+        (ch: any) => ch.type === ChannelType.GuildVoice && ch.name === '💤 AFK'
+      );
+      const queueMixChannel = guild.channels.cache.get(session.queueMixChannelId);
+      const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
+
+      if (afkChannel && 'id' in afkChannel) {
+        // Mover cada player não-ready para o AFK e adicionar penalidade
+        for (const playerId of notReadyPlayers) {
+          try {
+            const member = await guild.members.fetch(playerId);
+            if (member.voice.channel) {
+              await member.voice.setChannel(afkChannel.id);
+            }
+
+            // Remover permissões do player nos canais do mix
+            if (mixVoiceChannel) {
+              await (mixVoiceChannel as any).permissionOverwrites.delete(playerId);
+            }
+            if (channel && 'permissionOverwrites' in channel) {
+              await channel.permissionOverwrites.delete(playerId);
+            }
+
+            // Adicionar penalidade - mover para o final da fila
+            await bot.addPenaltyToPlayer(session.guildId, playerId);
+          } catch (error) {
+            console.error(`Failed to move player ${playerId} to AFK:`, error);
+          }
+        }
+
+        await channel.send({
+          content: `✅ Moved ${notReadyPlayers.length} AFK player(s) to 💤 AFK channel.\n⚠️ Penalty applied - moved to end of queue.`
+        });
+
+        // Buscar players substitutos da Queue Mix
+        if (queueMixChannel && mixVoiceChannel) {
+          const queueMembers = Array.from((queueMixChannel as any).members.values());
+
+          // Filtrar players que não estão nos AFK ou já estavam no mix
+          const availableReplacements = queueMembers.filter((m: any) =>
+            !session.allowedPlayerIds.includes(m.id) && !notReadyPlayers.includes(m.id)
+          );
+
+          if (availableReplacements.length >= notReadyPlayers.length) {
+            // Pegar os substitutos necessários usando movePlayersToMix para respeitar a ordem da fila
+            const replacementsNeeded = notReadyPlayers.length;
+            const replacementPlayers = await bot.movePlayersToMix(
+              queueMixChannel,
+              availableReplacements.slice(0, replacementsNeeded),
+              mixVoiceChannel
+            );
+
+            if (replacementPlayers.length > 0) {
+              // Criar um mapa de playerId -> fruit dos players AFK antes de remover
+              const afkPlayerFruits = new Map<string, string>();
+              for (const [fruit, playerId] of session.fruitToPlayer.entries()) {
+                if (notReadyPlayers.includes(playerId)) {
+                  afkPlayerFruits.set(playerId, fruit);
+                }
+              }
+
+              // Remover frutas dos players AFK do mapeamento
+              for (const [playerId, fruit] of afkPlayerFruits.entries()) {
+                session.fruitToPlayer.delete(fruit);
+              }
+
+              // Atribuir frutas para os novos players
+              const fruitsToReuse = Array.from(afkPlayerFruits.values());
+              for (let i = 0; i < replacementPlayers.length; i++) {
+                const playerId = replacementPlayers[i].id;
+
+                // Se o player substituto for o mesmo que foi AFK, reutilizar SUA própria fruta
+                let fruitToAssign: string;
+                if (afkPlayerFruits.has(playerId)) {
+                  fruitToAssign = afkPlayerFruits.get(playerId)!;
+                } else {
+                  // Caso contrário, pegar a próxima fruta disponível
+                  fruitToAssign = fruitsToReuse[i];
+                }
+
+                session.fruitToPlayer.set(fruitToAssign, playerId);
+              }
+
+              // Adicionar permissões para os novos players
+              for (const player of replacementPlayers) {
+                // Permissão no canal de voz
+                if (mixVoiceChannel) {
+                  await (mixVoiceChannel as any).permissionOverwrites.create(player.id, {
+                    ViewChannel: true,
+                    Connect: true,
+                    Speak: true,
+                  });
+                }
+
+                // Permissão no canal de texto (picks-bans)
+                if (channel && 'permissionOverwrites' in channel) {
+                  await channel.permissionOverwrites.create(player.id, {
+                    ViewChannel: true,
+                    SendMessages: true,
+                    AddReactions: true,
+                  });
+                }
+              }
+
+              // Atualizar a sessão com os novos players
+              const newAllowedPlayerIds = [
+                ...session.allowedPlayerIds.filter((id: string) => !notReadyPlayers.includes(id)),
+                ...replacementPlayers.map((p: any) => p.id)
+              ];
+
+              // Atualizar movedPlayers removendo os AFK e adicionando os novos
+              const newMovedPlayers = [
+                ...session.movedPlayers.filter((p: any) => !notReadyPlayers.includes(p.id)),
+                ...replacementPlayers
+              ];
+
+              session.allowedPlayerIds = newAllowedPlayerIds;
+              session.movedPlayers = newMovedPlayers;
+              session.totalPlayers = newAllowedPlayerIds.length;
+              session.timeRemaining = 21; // Resetar timer
+
+              await channel.send({
+                content: `🔄 Found ${replacementPlayers.length} replacement player(s):\n${replacementPlayers.map((p: any) => `<@${p.id}>`).join(', ')}\n\n⏳ Starting new 21-second ready check...`
+              });
+
+              // Reiniciar countdown
+              await startCountdown(messageId, bot, channel);
+              return; // Não deletar a sessão ainda
+            }
+          }
+
+          // Se não houver players suficientes para substituir
+          await channel.send({
+            content: `❌ Not enough players in Queue Mix to replace AFK players.\n❌ Mix cancelled.`
+          });
+
+          // Mover players que deram ready de volta para Queue Mix
+          await moveReadyPlayersBackToQueue(session, guild, queueMixChannel, mixVoiceChannel, bot);
+        }
+      } else {
+        await channel.send({
+          content: `⚠️ AFK channel not found. Please run \`/init\` first.\n❌ Mix cancelled - not enough players ready in time.`
+        });
+
+        // Mover players de volta mesmo sem AFK channel
+        const queueMixChannel = guild.channels.cache.get(session.queueMixChannelId);
+        const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
+        await moveReadyPlayersBackToQueue(session, guild, queueMixChannel, mixVoiceChannel, bot);
+      }
+    } catch (error) {
+      console.error('Error moving AFK players:', error);
+      await channel.send({
+        content: `❌ Mix cancelled - not enough players ready in time.`
+      });
+
+      // Tentar mover players de volta mesmo com erro
+      if (session.guildId && session.queueMixChannelId && session.originalChannelId) {
+        try {
+          const guild = await bot.client.guilds.fetch(session.guildId);
+          const queueMixChannel = guild.channels.cache.get(session.queueMixChannelId);
+          const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
+          await moveReadyPlayersBackToQueue(session, guild, queueMixChannel, mixVoiceChannel, bot);
+        } catch (moveError) {
+          console.error('Error moving players back to queue:', moveError);
+        }
+      }
+    }
+  } else {
+    await channel.send({
+      content: `❌ Mix cancelled - not enough players ready in time.`
+    });
+
+    // Tentar mover players de volta se tivermos as informações necessárias
+    if (session.guildId && session.queueMixChannelId && session.originalChannelId) {
+      try {
+        const guild = await bot.client.guilds.fetch(session.guildId);
+        const queueMixChannel = guild.channels.cache.get(session.queueMixChannelId);
+        const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
+        await moveReadyPlayersBackToQueue(session, guild, queueMixChannel, mixVoiceChannel, bot);
+      } catch (error) {
+        console.error('Error moving players back to queue:', error);
+      }
+    }
+  }
+
+  deleteReadySession(messageId);
+}
+
+async function moveReadyPlayersBackToQueue(session: any, guild: any, queueMixChannel: any, mixVoiceChannel: any, bot?: any) {
+  if (!queueMixChannel || !mixVoiceChannel) return;
+
+  const readyPlayers = Array.from(session.readyPlayers);
+
+  if (readyPlayers.length === 0) return;
+
+  // Mover cada player que deu ready de volta para Queue Mix e colocar no topo da fila
+  for (const playerId of readyPlayers) {
+    try {
+      const member = await guild.members.fetch(playerId);
+      if (member.voice.channelId === mixVoiceChannel.id) {
+        await member.voice.setChannel(queueMixChannel.id);
+
+        // Adicionar no topo da fila para garantir prioridade
+        if (bot && session.guildId) {
+          await bot.addPlayerToTopOfQueue(session.guildId, playerId);
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to move player ${playerId} back to Queue Mix:`, error);
+    }
+  }
 }
 
 @BotButtonInteraction(ButtonActions.ReadyCheck)
@@ -147,17 +463,21 @@ export default class ReadyCheck extends DiscordInteraction {
     return `${status} <@${p.id}>`;
   }).join('\n');
 
+  const timeDisplay = session.timeRemaining > 0
+    ? `**⏰ Time Remaining: ${session.timeRemaining} seconds**\n`
+    : '';
+
   await interaction.message.edit({
     embeds: [{
       title: '⏳ Ready Check',
       description: `
-**Players Ready: ${readyCount}/${totalCount}**
+${timeDisplay}**Players Ready: ${readyCount}/${totalCount}**
 
 ${playersList}
 
 Click the button below when you're ready!
       `,
-      color: readyCount === totalCount ? 0x00FF00 : 0xFFD700,
+      color: readyCount === totalCount ? 0x00FF00 : getColorByTimeRemaining(session.timeRemaining),
       timestamp: new Date().toISOString(),
       footer: {
         text: 'From BananaServer.xyz with 🍌',
@@ -167,6 +487,11 @@ Click the button below when you're ready!
   });
 
   if (readyCount === totalCount) {
+    // Parar countdown
+    if (session.intervalId) {
+      clearInterval(session.intervalId);
+      session.intervalId = undefined;
+    }
     await interaction.message.edit({
       components: [],
     });
@@ -199,6 +524,16 @@ Click the button below when you're ready!
         .addComponents(buttons.slice(i, i + 5));
       rows.push(row);
     }
+
+    // Adicionar botão de remake em uma linha separada
+    const remakeButton = new ButtonBuilder()
+      .setCustomId(ButtonActions.RequestRemake)
+      .setLabel('🔄 Request Remake')
+      .setStyle(ButtonStyle.Danger);
+
+    const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(remakeButton);
+    rows.push(remakeRow);
 
     const voteMessage = await channel.send({
       embeds: [{
@@ -392,6 +727,16 @@ ${updatedPlayersList}
               .addComponents(buttons.slice(i, i + 5));
             rows.push(row);
           }
+
+          // Adicionar botão de remake em uma linha separada
+          const remakeButton = new ButtonBuilder()
+            .setCustomId(ButtonActions.RequestRemake)
+            .setLabel('🔄 Request Remake')
+            .setStyle(ButtonStyle.Danger);
+
+          const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(remakeButton);
+          rows.push(remakeRow);
 
           const pickMessage = await channel.send({
             embeds: [{

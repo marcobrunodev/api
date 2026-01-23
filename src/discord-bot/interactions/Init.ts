@@ -34,6 +34,12 @@ export default class Init extends DiscordInteraction {
           channel.name === '🍌 Queue Mix'
       );
 
+      let afkChannel = guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildVoice &&
+          channel.name === '💤 AFK'
+      );
+
       const results: string[] = [];
 
       if (!category) {
@@ -63,6 +69,23 @@ export default class Init extends DiscordInteraction {
         if ('setParent' in queueMixChannel && queueMixChannel.parentId !== category.id) {
           await (queueMixChannel as any).setParent(category.id);
           results.push('✅ Moved **🍌 Queue Mix** to the correct category');
+        }
+      }
+
+      if (!afkChannel) {
+        afkChannel = await guild.channels.create({
+          name: '💤 AFK',
+          type: ChannelType.GuildVoice,
+          parent: category.id,
+        });
+        results.push('✅ Created voice channel: **💤 AFK**');
+        this.logger.log(`Created AFK channel in guild: ${guild.name}`);
+      } else {
+        results.push('ℹ️ Voice channel **💤 AFK** already exists');
+
+        if ('setParent' in afkChannel && afkChannel.parentId !== category.id) {
+          await (afkChannel as any).setParent(category.id);
+          results.push('✅ Moved **💤 AFK** to the correct category');
         }
       }
 
