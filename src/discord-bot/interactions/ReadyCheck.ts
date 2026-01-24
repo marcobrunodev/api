@@ -484,12 +484,27 @@ Click the button below when you're ready!
 
     const waitingForVotesList = session.movedPlayers.map(p => `<@${p.id}>`).join(', ');
 
-    const buttons = usedFruits.map(fruit =>
-      new ButtonBuilder()
+    // Buscar guild para obter os usernames
+    const guild = await this.bot.client.guilds.fetch(session.guildId);
+
+    const buttons = await Promise.all(usedFruits.map(async (fruit) => {
+      const playerId = session.fruitToPlayer.get(fruit);
+      let playerName = 'Player';
+
+      if (playerId) {
+        try {
+          const member = await guild.members.fetch(playerId);
+          playerName = member.user.username;
+        } catch (error) {
+          console.error(`Failed to fetch member ${playerId}:`, error);
+        }
+      }
+
+      return new ButtonBuilder()
         .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
-        .setLabel(fruit)
-        .setStyle(ButtonStyle.Secondary)
-    );
+        .setLabel(`${fruit} ${playerName}`)
+        .setStyle(ButtonStyle.Secondary);
+    }));
 
     const rows: ActionRowBuilder<ButtonBuilder>[] = [];
     for (let i = 0; i < buttons.length; i += 5) {
@@ -703,14 +718,23 @@ ${updatedPlayersList}
           );
 
           // Criar botões com as frutas dos players disponíveis
-          const buttons = availablePlayers.map(player => {
+          const buttons = await Promise.all(availablePlayers.map(async (player) => {
             const fruit = Array.from(session.fruitToPlayer.entries())
               .find(([, id]) => id === player.id)?.[0] || '❓';
+
+            let playerName = 'Player';
+            try {
+              const member = await guild.members.fetch(player.id);
+              playerName = member.user.username;
+            } catch (error) {
+              console.error(`Failed to fetch member ${player.id}:`, error);
+            }
+
             return new ButtonBuilder()
               .setCustomId(`${ButtonActions.PickPlayer}:${fruit}`)
-              .setLabel(fruit)
+              .setLabel(`${fruit} ${playerName}`)
               .setStyle(ButtonStyle.Secondary);
-          });
+          }));
 
           const rows: ActionRowBuilder<ButtonBuilder>[] = [];
           for (let i = 0; i < buttons.length; i += 5) {

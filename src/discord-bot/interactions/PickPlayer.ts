@@ -221,15 +221,27 @@ async function updatePickMessage(interaction: ButtonInteraction) {
 
   const picksRemaining = session.pickOrder.length - session.currentPickIndex;
 
+  // Buscar guild para obter os usernames
+  const guild = await this.bot.client.guilds.fetch(session.guildId);
+
   // Reconstruir botões apenas com players disponíveis
-  const buttons = session.availablePlayers.map(playerId => {
+  const buttons = await Promise.all(session.availablePlayers.map(async (playerId) => {
     const fruit = Array.from(session.fruitToPlayer.entries())
       .find(([, id]) => id === playerId)?.[0] || '❓';
+
+    let playerName = 'Player';
+    try {
+      const member = await guild.members.fetch(playerId);
+      playerName = member.user.username;
+    } catch (error) {
+      console.error(`Failed to fetch member ${playerId}:`, error);
+    }
+
     return new ButtonBuilder()
       .setCustomId(`${ButtonActions.PickPlayer}:${fruit}`)
-      .setLabel(fruit)
+      .setLabel(`${fruit} ${playerName}`)
       .setStyle(ButtonStyle.Secondary);
-  });
+  }));
 
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (let i = 0; i < buttons.length; i += 5) {
@@ -446,15 +458,27 @@ export async function updatePickMessageById(message: any) {
 
   const picksRemaining = session.pickOrder.length - session.currentPickIndex;
 
+  // Buscar guild para obter os usernames
+  const guild = message.guild;
+
   // Reconstruir botões apenas com players disponíveis
-  const buttons = session.availablePlayers.map(playerId => {
+  const buttons = await Promise.all(session.availablePlayers.map(async (playerId) => {
     const fruit = Array.from(session.fruitToPlayer.entries())
       .find(([, id]) => id === playerId)?.[0] || '❓';
+
+    let playerName = 'Player';
+    try {
+      const member = await guild.members.fetch(playerId);
+      playerName = member.user.username;
+    } catch (error) {
+      console.error(`Failed to fetch member ${playerId}:`, error);
+    }
+
     return new ButtonBuilder()
       .setCustomId(`${ButtonActions.PickPlayer}:${fruit}`)
-      .setLabel(fruit)
+      .setLabel(`${fruit} ${playerName}`)
       .setStyle(ButtonStyle.Secondary);
-  });
+  }));
 
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   for (let i = 0; i < buttons.length; i += 5) {
