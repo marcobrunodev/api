@@ -138,11 +138,6 @@ export default class PickPlayer extends DiscordInteraction {
     // Avançar para o próximo pick
     session.currentPickIndex++;
 
-    await interaction.reply({
-      content: `✅ You picked \`${fruit}\` <@${pickedPlayerId}>!`,
-      ephemeral: true
-    });
-
     // Mover o player para o canal de voz do time ANTES de atualizar a mensagem
     try {
       console.log(`🎮 [PICK PLAYER] Fetching guild ${session.guildId}...`);

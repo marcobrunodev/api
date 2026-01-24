@@ -39,7 +39,7 @@ export function initializeReadySession(
     categoryChannelId,
     originalChannelId,
     queueMixChannelId,
-    timeRemaining: 21,
+    timeRemaining: 90,
     channelId,
   });
 }

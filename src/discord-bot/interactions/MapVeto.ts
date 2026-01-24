@@ -139,11 +139,6 @@ export default class MapVeto extends DiscordInteraction {
     // Avançar para o próximo veto
     session.currentVetoIndex++;
 
-    await interaction.reply({
-      content: `✅ You banned **${mapName}**!`,
-      ephemeral: true
-    });
-
     // Atualizar a mensagem
     await updateVetoMessage(interaction);
 
