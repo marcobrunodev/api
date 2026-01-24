@@ -341,6 +341,7 @@ ${bannedMapsList}
         server: {
           host: true,
           port: true,
+          tv_port: true,
           game_server_node: {
             node_ip: true,
           }
@@ -352,6 +353,9 @@ ${bannedMapsList}
       const server = matches_by_pk.server;
       const serverIp = server.game_server_node?.node_ip || server.host;
       const connectCommand = `connect ${serverIp}:${server.port}`;
+      const tvCommand = server.tv_port ? `connect ${serverIp}:${server.tv_port}` : null;
+
+      const tvSection = tvCommand ? `\n**GOTV (Spectate):**\n\`\`\`\n${tvCommand}\n\`\`\`` : '';
 
       await channel.send({
         embeds: [{
@@ -364,7 +368,7 @@ ${bannedMapsList}
 **Connect to Server:**
 \`\`\`
 ${connectCommand}
-\`\`\`
+\`\`\`${tvSection}
 
 **Team ${session.captain1Fruit}:**
 ${session.team1.map((id: string) => `<@${id}>`).join(', ')}
