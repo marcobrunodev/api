@@ -494,7 +494,7 @@ Click the button below when you're ready!
       if (playerId) {
         try {
           const member = await guild.members.fetch(playerId);
-          playerName = member.user.username;
+          playerName = member.displayName;
         } catch (error) {
           console.error(`Failed to fetch member ${playerId}:`, error);
         }
@@ -725,7 +725,7 @@ ${updatedPlayersList}
             let playerName = 'Player';
             try {
               const member = await guild.members.fetch(player.id);
-              playerName = member.user.username;
+              playerName = member.displayName;
             } catch (error) {
               console.error(`Failed to fetch member ${player.id}:`, error);
             }

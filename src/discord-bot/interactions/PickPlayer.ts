@@ -221,7 +221,7 @@ async function updatePickMessage(interaction: ButtonInteraction) {
 
   const picksRemaining = session.pickOrder.length - session.currentPickIndex;
 
-  // Buscar guild para obter os usernames
+  // Buscar guild para obter os displayNames
   const guild = await this.bot.client.guilds.fetch(session.guildId);
 
   // Reconstruir botões apenas com players disponíveis
@@ -232,7 +232,7 @@ async function updatePickMessage(interaction: ButtonInteraction) {
     let playerName = 'Player';
     try {
       const member = await guild.members.fetch(playerId);
-      playerName = member.user.username;
+      playerName = member.displayName;
     } catch (error) {
       console.error(`Failed to fetch member ${playerId}:`, error);
     }
@@ -458,7 +458,7 @@ export async function updatePickMessageById(message: any) {
 
   const picksRemaining = session.pickOrder.length - session.currentPickIndex;
 
-  // Buscar guild para obter os usernames
+  // Buscar guild para obter os displayNames
   const guild = message.guild;
 
   // Reconstruir botões apenas com players disponíveis
@@ -469,7 +469,7 @@ export async function updatePickMessageById(message: any) {
     let playerName = 'Player';
     try {
       const member = await guild.members.fetch(playerId);
-      playerName = member.user.username;
+      playerName = member.displayName;
     } catch (error) {
       console.error(`Failed to fetch member ${playerId}:`, error);
     }

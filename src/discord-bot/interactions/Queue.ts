@@ -54,8 +54,7 @@ export default class Queue extends DiscordInteraction {
 
       const queueList = sortedMembers.map((m: any, index: number) => {
         const position = (index + 1).toString().padStart(2, '0');
-        const displayName = m.nickname || m.user.username;
-        return `\`${position}\` - ${displayName}`;
+        return `\`${position}\` - ${m.displayName}`;
       }).join('\n');
 
       const totalPlayers = members.length;
