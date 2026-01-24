@@ -341,7 +341,6 @@ ${bannedMapsList}
         server: {
           host: true,
           port: true,
-          gotv_port: true,
           game_server_node: {
             node_ip: true,
           }
@@ -353,7 +352,6 @@ ${bannedMapsList}
       const server = matches_by_pk.server;
       const serverIp = server.game_server_node?.node_ip || server.host;
       const connectCommand = `connect ${serverIp}:${server.port}`;
-      const gotvCommand = `connect ${serverIp}:${server.gotv_port}`;
 
       await channel.send({
         embeds: [{
@@ -366,11 +364,6 @@ ${bannedMapsList}
 **Connect to Server:**
 \`\`\`
 ${connectCommand}
-\`\`\`
-
-**GOTV (Spectate):**
-\`\`\`
-${gotvCommand}
 \`\`\`
 
 **Team ${session.captain1Fruit}:**
