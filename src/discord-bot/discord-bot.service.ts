@@ -669,6 +669,28 @@ export class DiscordBotService {
     this.logger.log(`Added penalty to ${memberId} in guild ${guildId} - moved to end of queue`);
   }
 
+  public async movePlayerToAFK(guildId: string, memberId: string): Promise<void> {
+    try {
+      const guild = await this.client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
+
+      // Buscar canal AFK
+      const afkChannel = guild.channels.cache.find(
+        (ch: any) => ch.type === 2 && ch.name === '💤 AFK' // ChannelType.GuildVoice = 2
+      );
+
+      if (afkChannel && 'id' in afkChannel && member.voice.channel) {
+        await member.voice.setChannel(afkChannel.id);
+        this.logger.log(`Moved ${memberId} to AFK channel in guild ${guildId}`);
+      }
+
+      // Remove da fila também
+      await this.removeFromQueueMix(guildId, memberId);
+    } catch (error) {
+      this.logger.error(`Failed to move player ${memberId} to AFK:`, error);
+    }
+  }
+
   public async addPlayerToTopOfQueue(guildId: string, memberId: string): Promise<void> {
     const redis = this.redisManager.getConnection();
     const key = this.getQueueMixRedisKey(guildId);
@@ -830,15 +852,34 @@ export class DiscordBotService {
     const { guildId, categoryId, team1PlayerIds, team2PlayerIds } = mixMatch;
 
     try {
-      // Buscar qual lineup venceu
+      // Buscar qual lineup venceu e informações de ready
       const { matches_by_pk } = await this.hasura.query({
         matches_by_pk: {
           __args: {
             id: matchId
           },
+          status: true,
           winning_lineup_id: true,
           lineup_1_id: true,
           lineup_2_id: true,
+          lineup_1: {
+            id: true,
+            is_ready: true,
+            lineup_players: {
+              player: {
+                discord_id: true,
+              }
+            }
+          },
+          lineup_2: {
+            id: true,
+            is_ready: true,
+            lineup_players: {
+              player: {
+                discord_id: true,
+              }
+            }
+          },
         }
       });
 
@@ -861,11 +902,39 @@ export class DiscordBotService {
         winningPlayerIds = team2PlayerIds;
         losingPlayerIds = team1PlayerIds;
         this.logger.log(`[Mix Match] Team 2 won`);
+      } else if (matches_by_pk.status === 'Canceled') {
+        // Partida cancelada - separar jogadores por ready status
+        const lineup1PlayerDiscordIds = matches_by_pk.lineup_1.lineup_players
+          .map(lp => lp.player?.discord_id)
+          .filter(Boolean) as string[];
+        const lineup2PlayerDiscordIds = matches_by_pk.lineup_2.lineup_players
+          .map(lp => lp.player?.discord_id)
+          .filter(Boolean) as string[];
+
+        const lineup1Ready = matches_by_pk.lineup_1.is_ready;
+        const lineup2Ready = matches_by_pk.lineup_2.is_ready;
+
+        if (lineup1Ready && !lineup2Ready) {
+          // Lineup 1 deu ready, lineup 2 não deu - mover lineup 1 para topo e lineup 2 para AFK
+          winningPlayerIds = lineup1PlayerDiscordIds;
+          losingPlayerIds = lineup2PlayerDiscordIds;
+          this.logger.log(`[Mix Match] Canceled - Team 1 was ready, Team 2 wasn't`);
+        } else if (lineup2Ready && !lineup1Ready) {
+          // Lineup 2 deu ready, lineup 1 não deu - mover lineup 2 para topo e lineup 1 para AFK
+          winningPlayerIds = lineup2PlayerDiscordIds;
+          losingPlayerIds = lineup1PlayerDiscordIds;
+          this.logger.log(`[Mix Match] Canceled - Team 2 was ready, Team 1 wasn't`);
+        } else {
+          // Ambos deram ready ou ambos não deram - mover todos para o topo
+          winningPlayerIds = [...lineup1PlayerDiscordIds, ...lineup2PlayerDiscordIds];
+          losingPlayerIds = [];
+          this.logger.log(`[Mix Match] Canceled - moving all players to top`);
+        }
       } else {
         // Empate ou sem vencedor - mover todos para o topo
         winningPlayerIds = [...team1PlayerIds, ...team2PlayerIds];
         losingPlayerIds = [];
-        this.logger.log(`[Mix Match] No winner (tie/canceled) - moving all players to top`);
+        this.logger.log(`[Mix Match] No winner (tie) - moving all players to top`);
       }
 
       // Buscar estatísticas da partida para ordenar por performance
@@ -960,9 +1029,18 @@ export class DiscordBotService {
         await this.addPlayerToTopOfQueue(guildId, playerId);
       }
 
-      // Mover perdedores para o final da fila (na ordem: melhor K/D primeiro, pior por último)
-      for (const playerId of sortedLosers) {
-        await this.addPenaltyToPlayer(guildId, playerId);
+      // Se a partida foi cancelada, mover perdedores (que não deram ready) para AFK
+      // Senão, mover perdedores para o final da fila
+      if (matches_by_pk.status === 'Canceled' && losingPlayerIds.length > 0) {
+        this.logger.log(`[Mix Match] Moving ${losingPlayerIds.length} players who didn't ready to AFK`);
+        for (const playerId of sortedLosers) {
+          await this.movePlayerToAFK(guildId, playerId);
+        }
+      } else {
+        // Partida terminou normalmente - mover perdedores para o final da fila
+        for (const playerId of sortedLosers) {
+          await this.addPenaltyToPlayer(guildId, playerId);
+        }
       }
 
       // Nota: Categoria e canais são deletados automaticamente quando todos os players saem dos canais de voz
