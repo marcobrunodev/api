@@ -114,28 +114,82 @@ export class DiscordBotScoreboardService {
       };
     }
 
-    const { v_player_stats } = await this.hasura.query({
-      v_player_stats: {
+    // Buscar kills, deaths e assists dos players
+    const { player_kills, player_assists } = await this.hasura.query({
+      player_kills: {
         __args: {
           where: {
             match_map_id: { _eq: currentMap.id },
           },
-          order_by: [{ kills: 'desc' }],
         },
-        steam_id: true,
-        name: true,
-        kills: true,
-        deaths: true,
-        assists: true,
-        headshots: true,
-        damage: true,
-        mvps: true,
+        killer_steam_id: true,
+        victim_steam_id: true,
+        headshot: true,
+      },
+      player_assists: {
+        __args: {
+          where: {
+            match_map_id: { _eq: currentMap.id },
+          },
+        },
+        assister_steam_id: true,
       },
     });
 
+    // Agregar stats por player
+    const statsMap = new Map<string, { kills: number; deaths: number; assists: number; headshots: number }>();
+
+    // Contar kills e headshots
+    player_kills?.forEach((kill) => {
+      if (kill.killer_steam_id) {
+        const killerId = String(kill.killer_steam_id);
+        const stats = statsMap.get(killerId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
+        stats.kills++;
+        if (kill.headshot) stats.headshots++;
+        statsMap.set(killerId, stats);
+      }
+
+      // Contar deaths
+      if (kill.victim_steam_id) {
+        const victimId = String(kill.victim_steam_id);
+        const stats = statsMap.get(victimId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
+        stats.deaths++;
+        statsMap.set(victimId, stats);
+      }
+    });
+
+    // Contar assists
+    player_assists?.forEach((assist) => {
+      if (assist.assister_steam_id) {
+        const assisterId = String(assist.assister_steam_id);
+        const stats = statsMap.get(assisterId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
+        stats.assists++;
+        statsMap.set(assisterId, stats);
+      }
+    });
+
+    // Buscar nomes dos players dos lineups
+    const allPlayers = [
+      ...(matches_by_pk.lineup_1?.lineup_players || []),
+      ...(matches_by_pk.lineup_2?.lineup_players || []),
+    ];
+
+    const playerStats = allPlayers.map((lp) => {
+      const steamId = lp.player.steam_id;
+      const stats = statsMap.get(steamId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
+      return {
+        steam_id: steamId,
+        name: lp.player.name,
+        ...stats,
+      };
+    });
+
+    // Ordenar por kills
+    playerStats.sort((a, b) => b.kills - a.kills);
+
     return {
       match: matches_by_pk,
-      playerStats: v_player_stats || [],
+      playerStats,
     };
   }
 

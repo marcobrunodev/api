@@ -75,12 +75,9 @@ export default class ScoreEvent extends MatchEventProcessor<{
         return;
       }
 
-      // Chamar o serviço de scoreboard do Discord via dependency injection
-      const { DiscordBotScoreboardService } = await import('../../discord-bot/discord-bot-scoreboard/discord-bot-scoreboard.service');
-      const discordScoreboard = this.moduleRef.get(DiscordBotScoreboardService, { strict: false });
-
-      if (discordScoreboard) {
-        await discordScoreboard.updateMatchScoreboard(match_maps_by_pk.match_id);
+      // Chamar o serviço de scoreboard do Discord se estiver disponível
+      if (this.discordScoreboard) {
+        await this.discordScoreboard.updateMatchScoreboard(match_maps_by_pk.match_id);
       }
     } catch (error) {
       // Não falhar o processamento do evento se o Discord falhar
