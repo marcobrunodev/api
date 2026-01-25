@@ -6,9 +6,12 @@ import {
   ChannelType,
   MessageFlags,
 } from "discord.js";
+import { Logger } from "@nestjs/common";
 
 @BotChatCommand(ChatCommands.Init)
 export default class Init extends DiscordInteraction {
+  private readonly initLogger = new Logger(Init.name);
+
   public async handler(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -50,7 +53,7 @@ export default class Init extends DiscordInteraction {
 
         await category.setPosition(0);
         results.push('✅ Created category: **🍌 BananaServer.xyz Mix**');
-        this.logger.log(`Created BananaServer.xyz Mix category in guild: ${guild.name}`);
+        this.initLogger.log(`Created BananaServer.xyz Mix category in guild: ${guild.name}`);
       } else {
         results.push('ℹ️ Category **🍌 BananaServer.xyz Mix** already exists');
       }
@@ -59,14 +62,14 @@ export default class Init extends DiscordInteraction {
         queueMixChannel = await guild.channels.create({
           name: '🍌 Queue Mix',
           type: ChannelType.GuildVoice,
-          parent: category.id,
+          parent: category?.id,
         });
         results.push('✅ Created voice channel: **🍌 Queue Mix**');
-        this.logger.log(`Created Queue Mix channel in guild: ${guild.name}`);
+        this.initLogger.log(`Created Queue Mix channel in guild: ${guild.name}`);
       } else {
         results.push('ℹ️ Voice channel **🍌 Queue Mix** already exists');
 
-        if ('setParent' in queueMixChannel && queueMixChannel.parentId !== category.id) {
+        if ('setParent' in queueMixChannel && queueMixChannel.parentId !== category?.id && category) {
           await (queueMixChannel as any).setParent(category.id);
           results.push('✅ Moved **🍌 Queue Mix** to the correct category');
         }
@@ -76,14 +79,14 @@ export default class Init extends DiscordInteraction {
         afkChannel = await guild.channels.create({
           name: '💤 AFK',
           type: ChannelType.GuildVoice,
-          parent: category.id,
+          parent: category?.id,
         });
         results.push('✅ Created voice channel: **💤 AFK**');
-        this.logger.log(`Created AFK channel in guild: ${guild.name}`);
+        this.initLogger.log(`Created AFK channel in guild: ${guild.name}`);
       } else {
         results.push('ℹ️ Voice channel **💤 AFK** already exists');
 
-        if ('setParent' in afkChannel && afkChannel.parentId !== category.id) {
+        if ('setParent' in afkChannel && afkChannel.parentId !== category?.id && category) {
           await (afkChannel as any).setParent(category.id);
           results.push('✅ Moved **💤 AFK** to the correct category');
         }
@@ -94,7 +97,7 @@ export default class Init extends DiscordInteraction {
       );
 
     } catch (error) {
-      this.logger.error('Error in /init command:', error);
+      this.initLogger.error('Error in /init command:', error);
       await interaction.editReply("❌ Error initializing server structure. Check bot permissions.");
     }
   }
