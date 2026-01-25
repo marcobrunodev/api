@@ -6,6 +6,9 @@ import {
   Message,
   TextChannel,
   ThreadChannel,
+  Guild,
+  CategoryChannel,
+  ChannelType,
 } from "discord.js";
 import { ConfigService } from "@nestjs/config";
 
@@ -43,6 +46,33 @@ export class DiscordBotMessagingService {
     } catch (error) {
       this.logger.warn(`[${matchId}] unable to remove thread`, error.message);
     }
+  }
+
+  public async getCategory(
+    channelName: string,
+    guild: Guild,
+  ): Promise<CategoryChannel> {
+    let category: CategoryChannel;
+    for (const [, channel] of guild.channels.cache) {
+      if (channel.name === channelName) {
+        category = channel as CategoryChannel;
+        break;
+      }
+    }
+
+    if (!category) {
+      // Não criar categoria de Archive
+      if (channelName.includes('Archive')) {
+        return null;
+      }
+
+      return (await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildCategory,
+      })) as CategoryChannel;
+    }
+
+    return category;
   }
 
 

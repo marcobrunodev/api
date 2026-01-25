@@ -537,14 +537,14 @@ Click the button below when you're ready!
     }
 
     // Adicionar botão de remake em uma linha separada
-    const remakeButton = new ButtonBuilder()
-      .setCustomId(ButtonActions.RequestRemake)
-      .setLabel('🔄 Request Remake')
-      .setStyle(ButtonStyle.Primary);
+    // const remakeButton = new ButtonBuilder()
+    //   .setCustomId(ButtonActions.RequestRemake)
+    //   .setLabel('🔄 Request Remake')
+    //   .setStyle(ButtonStyle.Primary);
 
-    const remakeRow = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(remakeButton);
-    rows.push(remakeRow);
+    // const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+    //   .addComponents(remakeButton);
+    // rows.push(remakeRow);
 
     const voteMessage = await channel.send({
       embeds: [{
@@ -778,14 +778,14 @@ ${updatedPlayersList}
           }
 
           // Adicionar botão de remake em uma linha separada
-          const remakeButton = new ButtonBuilder()
-            .setCustomId(ButtonActions.RequestRemake)
-            .setLabel('🔄 Request Remake')
-            .setStyle(ButtonStyle.Primary);
+          // const remakeButton = new ButtonBuilder()
+          //   .setCustomId(ButtonActions.RequestRemake)
+          //   .setLabel('🔄 Request Remake')
+          //   .setStyle(ButtonStyle.Primary);
 
-          const remakeRow = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(remakeButton);
-          rows.push(remakeRow);
+          // const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+          //   .addComponents(remakeButton);
+          // rows.push(remakeRow);
 
           const pickMessage = await channel.send({
             embeds: [{
