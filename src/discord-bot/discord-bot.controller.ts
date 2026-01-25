@@ -46,7 +46,7 @@ export class DiscordBotController {
       302,
       settings_by_pk?.value
         ? settings_by_pk.value
-        : `https://discord.gg/6xUDQRAaYY`,
+        : `https://discord.gg/v8Mc5hjpNg`,
     );
   }
 }
