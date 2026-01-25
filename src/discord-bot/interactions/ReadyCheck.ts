@@ -258,30 +258,37 @@ async function handleTimeout(messageId: string, bot: any, channel: any) {
           }
 
           // Se não houver players suficientes para substituir
-          await channel.send({
-            content: `❌ Not enough players in Queue Mix to replace AFK players.\n❌ Mix cancelled.`
-          });
+          const finalMessage = `❌ Not enough players in Queue Mix to replace AFK players.\n❌ Mix cancelled.`;
+          await channel.send({ content: finalMessage });
 
           // Mover players que deram ready de volta para Queue Mix
+          // IMPORTANTE: Isso vai deletar os canais automaticamente via voiceStateUpdate
           await moveReadyPlayersBackToQueue(session, guild, queueMixChannel, mixVoiceChannel, bot);
         }
       } else {
-        await channel.send({
-          content: `⚠️ AFK channel not found. Please run \`/init\` first.\n❌ Mix cancelled - not enough players ready in time.`
-        });
+        const finalMessage = `⚠️ AFK channel not found. Please run \`/init\` first.\n❌ Mix cancelled - not enough players ready in time.`;
+        await channel.send({ content: finalMessage });
 
         // Mover players de volta mesmo sem AFK channel
+        // IMPORTANTE: Isso vai deletar os canais automaticamente via voiceStateUpdate
         const queueMixChannel = guild.channels.cache.get(session.queueMixChannelId);
         const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
         await moveReadyPlayersBackToQueue(session, guild, queueMixChannel, mixVoiceChannel, bot);
       }
     } catch (error) {
       console.error('Error moving AFK players:', error);
-      await channel.send({
-        content: `❌ Mix cancelled - not enough players ready in time.`
-      });
+
+      // Enviar mensagem ANTES de mover os players
+      try {
+        await channel.send({
+          content: `❌ Mix cancelled - not enough players ready in time.`
+        });
+      } catch (sendError) {
+        console.error('Error sending cancellation message:', sendError);
+      }
 
       // Tentar mover players de volta mesmo com erro
+      // IMPORTANTE: Isso vai deletar os canais automaticamente via voiceStateUpdate
       if (session.guildId && session.queueMixChannelId && session.originalChannelId) {
         try {
           const guild = await bot.client.guilds.fetch(session.guildId);
@@ -294,11 +301,11 @@ async function handleTimeout(messageId: string, bot: any, channel: any) {
       }
     }
   } else {
-    await channel.send({
-      content: `❌ Mix cancelled - not enough players ready in time.`
-    });
+    const finalMessage = `❌ Mix cancelled - not enough players ready in time.`;
+    await channel.send({ content: finalMessage });
 
     // Tentar mover players de volta se tivermos as informações necessárias
+    // IMPORTANTE: Isso vai deletar os canais automaticamente via voiceStateUpdate
     if (session.guildId && session.queueMixChannelId && session.originalChannelId) {
       try {
         const guild = await bot.client.guilds.fetch(session.guildId);
@@ -498,24 +505,29 @@ Click the button below when you're ready!
     // Buscar guild para obter os displayNames
     const guild = interaction.guild;
 
-    const buttons = await Promise.all(usedFruits.map(async (fruit) => {
-      const playerId = session.fruitToPlayer.get(fruit);
-      let playerName = 'Player';
+    // Buscar todos os membros de uma vez (mais rápido que buscar um por um)
+    const memberPromises = session.movedPlayers.map(p =>
+      guild.members.fetch(p.id).catch((): null => null)
+    );
+    const members = await Promise.all(memberPromises);
 
-      if (playerId && guild) {
-        try {
-          const member = await guild.members.fetch(playerId);
-          playerName = member.displayName;
-        } catch (error) {
-          console.error(`Failed to fetch member ${playerId}:`, error);
-        }
+    // Criar mapa de ID -> displayName
+    const playerNames = new Map<string, string>();
+    members.forEach((member, index) => {
+      if (member) {
+        playerNames.set(session.movedPlayers[index].id, member.displayName);
       }
+    });
+
+    const buttons = usedFruits.map((fruit) => {
+      const playerId = session.fruitToPlayer.get(fruit);
+      const playerName = playerId ? (playerNames.get(playerId) || 'Player') : 'Player';
 
       return new ButtonBuilder()
         .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
         .setLabel(`${fruit} ${playerName}`)
         .setStyle(ButtonStyle.Secondary);
-    }));
+    });
 
     const rows: ActionRowBuilder<ButtonBuilder>[] = [];
     for (let i = 0; i < buttons.length; i += 5) {
@@ -528,7 +540,7 @@ Click the button below when you're ready!
     const remakeButton = new ButtonBuilder()
       .setCustomId(ButtonActions.RequestRemake)
       .setLabel('🔄 Request Remake')
-      .setStyle(ButtonStyle.Secondary);
+      .setStyle(ButtonStyle.Primary);
 
     const remakeRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(remakeButton);
@@ -732,24 +744,31 @@ ${updatedPlayersList}
             p => p.id !== captain1Id && p.id !== captain2Id
           );
 
+          // Buscar todos os membros disponíveis de uma vez (mais rápido)
+          const availableMemberPromises = availablePlayers.map(p =>
+            guild.members.fetch(p.id).catch((): null => null)
+          );
+          const availableMembers = await Promise.all(availableMemberPromises);
+
+          // Criar mapa de ID -> displayName
+          const availablePlayerNames = new Map<string, string>();
+          availableMembers.forEach((member, index) => {
+            if (member) {
+              availablePlayerNames.set(availablePlayers[index].id, member.displayName);
+            }
+          });
+
           // Criar botões com as frutas dos players disponíveis
-          const buttons = await Promise.all(availablePlayers.map(async (player) => {
+          const buttons = availablePlayers.map((player) => {
             const fruit = Array.from(session.fruitToPlayer.entries())
               .find(([, id]) => id === player.id)?.[0] || '❓';
-
-            let playerName = 'Player';
-            try {
-              const member = await guild.members.fetch(player.id);
-              playerName = member.displayName;
-            } catch (error) {
-              console.error(`Failed to fetch member ${player.id}:`, error);
-            }
+            const playerName = availablePlayerNames.get(player.id) || 'Player';
 
             return new ButtonBuilder()
               .setCustomId(`${ButtonActions.PickPlayer}:${fruit}`)
               .setLabel(`${fruit} ${playerName}`)
               .setStyle(ButtonStyle.Secondary);
-          }));
+          });
 
           const rows: ActionRowBuilder<ButtonBuilder>[] = [];
           for (let i = 0; i < buttons.length; i += 5) {
@@ -762,7 +781,7 @@ ${updatedPlayersList}
           const remakeButton = new ButtonBuilder()
             .setCustomId(ButtonActions.RequestRemake)
             .setLabel('🔄 Request Remake')
-            .setStyle(ButtonStyle.Secondary);
+            .setStyle(ButtonStyle.Primary);
 
           const remakeRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(remakeButton);

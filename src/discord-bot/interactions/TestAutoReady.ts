@@ -148,24 +148,29 @@ Click the button below when you're ready!
         // Buscar guild para obter os displayNames
         const guild = interaction.guild;
 
-        const buttons = await Promise.all(usedFruits.map(async (fruit) => {
-          const playerId = session.fruitToPlayer.get(fruit);
-          let playerName = 'Player';
+        // Buscar todos os membros de uma vez (mais rápido que buscar um por um)
+        const memberPromises = session.movedPlayers.map(p =>
+          guild.members.fetch(p.id).catch((): null => null)
+        );
+        const members = await Promise.all(memberPromises);
 
-          if (playerId && guild) {
-            try {
-              const member = await guild.members.fetch(playerId);
-              playerName = member.displayName;
-            } catch (error) {
-              console.error(`Failed to fetch member ${playerId}:`, error);
-            }
+        // Criar mapa de ID -> displayName
+        const playerNames = new Map<string, string>();
+        members.forEach((member, index) => {
+          if (member) {
+            playerNames.set(session.movedPlayers[index].id, member.displayName);
           }
+        });
+
+        const buttons = usedFruits.map((fruit) => {
+          const playerId = session.fruitToPlayer.get(fruit);
+          const playerName = playerId ? (playerNames.get(playerId) || 'Player') : 'Player';
 
           return new ButtonBuilder()
             .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
             .setLabel(`${fruit} ${playerName}`)
             .setStyle(ButtonStyle.Secondary);
-        }));
+        });
 
         const rows: ActionRowBuilder<ButtonBuilder>[] = [];
         for (let i = 0; i < buttons.length; i += 5) {
