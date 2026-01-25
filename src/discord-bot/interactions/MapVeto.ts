@@ -341,7 +341,7 @@ ${bannedMapsList}
           port: true,
           tv_port: true,
           game_server_node: {
-            node_ip: true,
+            public_ip: true,
           }
         }
       }
@@ -349,7 +349,7 @@ ${bannedMapsList}
 
     if (matches_by_pk?.server) {
       const server = matches_by_pk.server;
-      const serverIp = server.game_server_node?.node_ip || server.host;
+      const serverIp = server.game_server_node?.public_ip || server.host;
       const connectCommand = `connect ${serverIp}:${server.port}`;
       const tvCommand = server.tv_port ? `connect ${serverIp}:${server.tv_port}` : null;
 
