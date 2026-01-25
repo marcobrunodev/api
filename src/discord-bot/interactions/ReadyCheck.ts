@@ -113,6 +113,13 @@ Click the button below when you're ready!
         components: message.components
       });
     } catch (error) {
+      // Se o canal foi deletado (erro 10003 ou ChannelNotCached), parar o countdown
+      if (error.code === 10003 || error.code === 'ChannelNotCached') {
+        console.log(`⚠️ [READY CHECK] Channel deleted, stopping countdown for message ${messageId}`);
+        clearInterval(currentSession.intervalId);
+        deleteReadySession(messageId);
+        return;
+      }
       console.error('Failed to update ready check message:', error);
     }
 
@@ -422,13 +429,11 @@ export default class ReadyCheck extends DiscordInteraction {
 
   session.readyPlayers.add(userId);
 
+  // Acknowledge the interaction silently (no message shown to user)
+  await interaction.deferUpdate();
+
   const readyCount = session.readyPlayers.size;
   const totalCount = session.totalPlayers;
-
-  await interaction.reply({
-    content: `✅ You are ready! (${readyCount}/${totalCount})`,
-    ephemeral: true,
-  });
 
   const playersList = session.movedPlayers.map((p) => {
     const isReady = session.readyPlayers.has(p.id);
@@ -472,6 +477,12 @@ Click the button below when you're ready!
     const channel = interaction.channel;
     if (!channel || !('send' in channel)) return;
 
+    // Enviar mensagem rápida informando que está preparando a votação
+    const preparingMessage = await channel.send({
+      content: '⏳ **All players ready!** Preparing captain voting...'
+    });
+    console.log('✅ Sent preparing message');
+
     const fruitEmojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🥒', '🍆', '🌶️', '🌽'];
     const shuffledFruits = [...fruitEmojis].sort(() => Math.random() - 0.5);
     const usedFruits = shuffledFruits.slice(0, session.movedPlayers.length);
@@ -484,14 +495,14 @@ Click the button below when you're ready!
 
     const waitingForVotesList = session.movedPlayers.map(p => `<@${p.id}>`).join(', ');
 
-    // Buscar guild para obter os usernames
-    const guild = await this.bot.client.guilds.fetch(session.guildId);
+    // Buscar guild para obter os displayNames
+    const guild = interaction.guild;
 
     const buttons = await Promise.all(usedFruits.map(async (fruit) => {
       const playerId = session.fruitToPlayer.get(fruit);
       let playerName = 'Player';
 
-      if (playerId) {
+      if (playerId && guild) {
         try {
           const member = await guild.members.fetch(playerId);
           playerName = member.displayName;
@@ -517,7 +528,7 @@ Click the button below when you're ready!
     const remakeButton = new ButtonBuilder()
       .setCustomId(ButtonActions.RequestRemake)
       .setLabel('🔄 Request Remake')
-      .setStyle(ButtonStyle.Danger);
+      .setStyle(ButtonStyle.Secondary);
 
     const remakeRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(remakeButton);
@@ -545,6 +556,14 @@ ${waitingForVotesList}
       }],
       components: rows
     });
+
+    // Deletar a mensagem "Preparing captain voting..."
+    try {
+      await preparingMessage.delete();
+      console.log('✅ Deleted preparing message');
+    } catch (error) {
+      console.error('Failed to delete preparing message:', error);
+    }
 
     const { initializeVotingSession } = await import('./VoteCaptain');
 
@@ -683,7 +702,6 @@ ${updatedPlayersList}
           });
           console.log(`🎯 [CAPTAIN VOTE CALLBACK] Team ${captain1Fruit} channel created: ${team1Channel.id}`);
 
-          // Criar canal para Team 2 (captain2)
           console.log(`🎯 [CAPTAIN VOTE CALLBACK] Creating Team ${captain2Fruit} voice channel...`);
           const team2Channel = await guild.channels.create({
             name: `Team ${captain2Fruit}`,
@@ -692,14 +710,12 @@ ${updatedPlayersList}
             permissionOverwrites: voicePermissions,
           });
           console.log(`🎯 [CAPTAIN VOTE CALLBACK] Team ${captain2Fruit} channel created: ${team2Channel.id}`);
-
-          // Mover capitão 1
+          
           const captain1Member = await guild.members.fetch(captain1Id);
           if (captain1Member.voice.channel) {
             await captain1Member.voice.setChannel(team1Channel.id);
           }
 
-          // Mover capitão 2
           const captain2Member = await guild.members.fetch(captain2Id);
           if (captain2Member.voice.channel) {
             await captain2Member.voice.setChannel(team2Channel.id);
@@ -709,7 +725,6 @@ ${updatedPlayersList}
             content: `🔊 Voice channels created!\n👑 <@${captain1Id}> → ${team1Channel.name}\n👑 <@${captain2Id}> → ${team2Channel.name}`
           });
 
-          // Criar mensagem de pick de players
           const { initializePickSession } = await import('./PickPlayer');
 
           // Pegar apenas os players disponíveis (excluindo os capitães)
@@ -747,7 +762,7 @@ ${updatedPlayersList}
           const remakeButton = new ButtonBuilder()
             .setCustomId(ButtonActions.RequestRemake)
             .setLabel('🔄 Request Remake')
-            .setStyle(ButtonStyle.Danger);
+            .setStyle(ButtonStyle.Secondary);
 
           const remakeRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(remakeButton);

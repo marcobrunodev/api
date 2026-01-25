@@ -108,7 +108,7 @@ export async function startRemakeCountdown(messageId: string, bot: any, channel:
 
 **⏰ Time Remaining: ${currentSession.timeRemaining} seconds**
 **Votes:** ✅ ${yesVotes} | ❌ ${noVotes} | ⏳ ${notVoted}
-**Required:** ${Math.ceil(currentSession.totalPlayers / 2 + 0.5)} Yes votes (50% + 1)
+**Required:** ${Math.floor(currentSession.totalPlayers / 2) + 1} Yes votes (50% + 1)
 
 ${votesList}
 
@@ -123,6 +123,13 @@ Vote to cancel the mix and return all players to Queue Mix!
         components: message.components
       });
     } catch (error) {
+      // Se o canal foi deletado (erro 10003 ou ChannelNotCached), parar o countdown
+      if (error.code === 10003 || error.code === 'ChannelNotCached') {
+        console.log(`⚠️ [REMAKE VOTE] Channel deleted, stopping countdown for message ${messageId}`);
+        clearInterval(currentSession.intervalId);
+        deleteRemakeSession(messageId);
+        return;
+      }
       console.error('Failed to update remake vote message:', error);
     }
 
@@ -145,7 +152,7 @@ async function handleRemakeVoteEnd(messageId: string, bot: any, channel: any) {
   if (!session) return;
 
   const yesVotes = Array.from(session.votes.values()).filter(v => v === true).length;
-  const requiredVotes = Math.ceil(session.totalPlayers / 2 + 0.5); // 50% + 1
+  const requiredVotes = Math.floor(session.totalPlayers / 2) + 1; // 50% + 1
 
   // Desabilitar botões
   try {
@@ -169,12 +176,13 @@ async function handleRemakeVoteEnd(messageId: string, bot: any, channel: any) {
     }
 
     // Mover todos para Queue Mix no topo da fila
+    // Nota: Não deletamos manualmente os canais e categoria porque isso
+    // será feito automaticamente quando não houver mais players nos canais de voz
     if (session.guildId && session.queueMixChannelId && session.categoryChannelId) {
       try {
         await moveAllPlayersToQueueTop(session, bot);
-        await deleteMatchCategoryAndChannels(session, bot);
       } catch (error) {
-        console.error('Error during remake cleanup:', error);
+        console.error('Error moving players to queue:', error);
       }
     }
   } else {
@@ -230,39 +238,12 @@ async function moveAllPlayersToQueueTop(session: any, bot: any) {
   }
 }
 
-async function deleteMatchCategoryAndChannels(session: any, bot: any) {
-  if (!session.guildId || !session.categoryChannelId) return;
-
-  try {
-    const guild = await bot.client.guilds.fetch(session.guildId);
-    const category = guild.channels.cache.get(session.categoryChannelId);
-
-    if (!category) {
-      console.error('Category not found');
-      return;
-    }
-
-    // Deletar todos os canais filhos da categoria
-    if ('children' in category) {
-      const children = category.children.cache;
-      for (const [, child] of children) {
-        try {
-          await child.delete();
-        } catch (error) {
-          console.error(`Failed to delete channel ${child.name}:`, error);
-        }
-      }
-    }
-
-    // Deletar a categoria
-    await category.delete();
-  } catch (error) {
-    console.error('Error deleting match category:', error);
-  }
-}
+// Função removida: deleteMatchCategoryAndChannels
+// Os canais e categoria são deletados automaticamente pelo sistema
+// quando não há mais players nos canais de voz
 
 @BotButtonInteraction(ButtonActions.RequestRemake)
-export class RequestRemake extends DiscordInteraction {
+export default class RequestRemake extends DiscordInteraction {
   public async handler(interaction: ButtonInteraction) {
     const userId = interaction.user.id;
     const guildId = interaction.guildId;
@@ -453,8 +434,8 @@ export class RequestRemake extends DiscordInteraction {
     // Definir cooldown
     remakeCooldowns.set(cooldownKey, Date.now());
 
-    await interaction.reply({
-      content: '⏳ Starting remake vote...',
+    // Defer the reply so we can delete it later
+    await interaction.deferReply({
       ephemeral: true
     });
 
@@ -480,7 +461,7 @@ export class RequestRemake extends DiscordInteraction {
 
 **⏰ Time Remaining: ${REMAKE_VOTE_TIMEOUT} seconds**
 **Votes:** ✅ 0 | ❌ 0 | ⏳ ${finalVoters.length}
-**Required:** ${Math.ceil(finalVoters.length / 2 + 0.5)} Yes votes (50% + 1)
+**Required:** ${Math.floor(finalVoters.length / 2) + 1} Yes votes (50% + 1)
 ${finalVoters.length < allowedVoters.length ? `\n⚠️ **Only counting ${finalVoters.length}/${allowedVoters.length} players online in voice**\n` : ''}
 ${finalVoters.map(id => `⏳ Pending <@${id}>`).join('\n')}
 
@@ -494,6 +475,13 @@ Vote to cancel the mix and return all players to Queue Mix!
       }],
       components: [voteRow]
     });
+
+    // Deletar a mensagem ephemeral "Starting remake vote..."
+    try {
+      await interaction.deleteReply();
+    } catch (error) {
+      console.error('Failed to delete remake starting message:', error);
+    }
 
     // Inicializar sessão de remake
     initializeRemakeSession(
@@ -512,7 +500,7 @@ Vote to cancel the mix and return all players to Queue Mix!
 }
 
 @BotButtonInteraction(ButtonActions.VoteRemake)
-export class VoteRemake extends DiscordInteraction {
+class VoteRemake extends DiscordInteraction {
   public async handler(interaction: ButtonInteraction) {
     const [, vote] = interaction.customId.split(":");
     const messageId = interaction.message.id;
@@ -544,12 +532,21 @@ export class VoteRemake extends DiscordInteraction {
       ephemeral: true
     });
 
-    // Verificar se atingiu o threshold
+    // Verificar se devemos finalizar a votação
     const yesVotes = Array.from(session.votes.values()).filter(v => v === true).length;
-    const requiredVotes = Math.ceil(session.totalPlayers / 2 + 0.5);
+    const noVotes = Array.from(session.votes.values()).filter(v => v === false).length;
+    const remainingVotes = session.totalPlayers - session.votes.size;
+    const requiredVotes = Math.floor(session.totalPlayers / 2) + 1;
 
-    // Se todos votaram ou atingiu threshold, finalizar votação
-    if (session.votes.size === session.totalPlayers || yesVotes >= requiredVotes) {
+    // Finalizar se:
+    // 1. Todos votaram
+    // 2. Atingiu 50%+1 votos Yes (aprovado)
+    // 3. É impossível atingir 50%+1 votos Yes (rejeitado automaticamente)
+    const yesWins = yesVotes >= requiredVotes;
+    const yesCannotWin = (yesVotes + remainingVotes) < requiredVotes;
+    const shouldFinalize = session.votes.size === session.totalPlayers || yesWins || yesCannotWin;
+
+    if (shouldFinalize) {
       if (session.intervalId) {
         clearInterval(session.intervalId);
       }

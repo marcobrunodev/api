@@ -116,12 +116,23 @@ Click the button below when you're ready!
 
       // If all players are ready, trigger captain voting
       if (readyCount === totalCount) {
+        // Parar countdown
+        if (session.intervalId) {
+          clearInterval(session.intervalId);
+          session.intervalId = undefined;
+        }
+
         await message.edit({
           components: [], // Remove the ready button
         });
 
         const channel = interaction.channel;
         if (!channel || !('send' in channel)) return;
+
+        // Enviar mensagem rápida informando que está preparando a votação
+        const preparingMessage = await channel.send({
+          content: '⏳ **All players ready!** Preparing captain voting...'
+        });
 
         // Start captain voting
         const fruitEmojis = ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝'];
@@ -134,12 +145,27 @@ Click the button below when you're ready!
           return `[0] \`${fruit}\` <@${p.id}>`;
         }).join('\n');
 
-        const buttons = usedFruits.map(fruit =>
-          new ButtonBuilder()
-            .setCustomId(`${ButtonActions.VoteCaptain}:\`${fruit}\``)
-            .setLabel(fruit)
-            .setStyle(ButtonStyle.Secondary)
-        );
+        // Buscar guild para obter os displayNames
+        const guild = interaction.guild;
+
+        const buttons = await Promise.all(usedFruits.map(async (fruit) => {
+          const playerId = session.fruitToPlayer.get(fruit);
+          let playerName = 'Player';
+
+          if (playerId && guild) {
+            try {
+              const member = await guild.members.fetch(playerId);
+              playerName = member.displayName;
+            } catch (error) {
+              console.error(`Failed to fetch member ${playerId}:`, error);
+            }
+          }
+
+          return new ButtonBuilder()
+            .setCustomId(`${ButtonActions.VoteCaptain}:${fruit}`)
+            .setLabel(`${fruit} ${playerName}`)
+            .setStyle(ButtonStyle.Secondary);
+        }));
 
         const rows: ActionRowBuilder<ButtonBuilder>[] = [];
         for (let i = 0; i < buttons.length; i += 5) {
@@ -147,6 +173,16 @@ Click the button below when you're ready!
             .addComponents(buttons.slice(i, i + 5));
           rows.push(row);
         }
+
+        // Adicionar botão de remake em uma linha separada
+        const remakeButton = new ButtonBuilder()
+          .setCustomId(ButtonActions.RequestRemake)
+          .setLabel('🔄 Request Remake')
+          .setStyle(ButtonStyle.Secondary);
+
+        const remakeRow = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(remakeButton);
+        rows.push(remakeRow);
 
         const voteMessage = await channel.send({
           embeds: [{
@@ -168,8 +204,19 @@ ${playersList}
           components: rows
         });
 
+        // Deletar a mensagem "Preparing captain voting..."
+        try {
+          await preparingMessage.delete();
+        } catch (error) {
+          console.error('Failed to delete preparing message:', error);
+        }
+
         const { initializeVotingSession } = await import('./VoteCaptain');
         initializeVotingSession(voteMessage.id, session.fruitToPlayer);
+
+        // Deletar a sessão do ready check
+        const { deleteReadySession } = await import('./ReadyCheck');
+        deleteReadySession(messageId);
       }
 
     } catch (error) {

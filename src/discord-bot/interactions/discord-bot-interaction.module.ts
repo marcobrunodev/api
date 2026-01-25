@@ -14,6 +14,7 @@ import VoteCaptain from "./VoteCaptain";
 import TestVote from "./TestVote";
 import TestAutoVote from "./TestAutoVote";
 import TestAutoReady from "./TestAutoReady";
+import TestAutoRemake from "./TestAutoRemake";
 import Init from "./Init";
 import Queue from "./Queue";
 import ReadyCheck from "./ReadyCheck";
@@ -24,6 +25,9 @@ import ConfirmSteamId from "./ConfirmSteamId";
 import CancelSteamId from "./CancelSteamId";
 import OpenRegisterSteamIdModal from "./OpenRegisterSteamIdModal";
 import KickPlayer from "./KickPlayer";
+import PickPlayer from "./PickPlayer";
+import MapVeto from "./MapVeto";
+import RequestRemake from "./RemakeVote";
 
 @Module({
   imports: [
@@ -44,9 +48,13 @@ import KickPlayer from "./KickPlayer";
     VetoPick,
     VoteCaptain,
     ReadyCheck,
+    PickPlayer,
+    MapVeto,
+    RequestRemake,
     TestVote,
     TestAutoVote,
     TestAutoReady,
+    TestAutoRemake,
     LeaveGuild,
     RegisterSteamId,
     RegisterSteamIdModal,
@@ -66,9 +74,13 @@ import KickPlayer from "./KickPlayer";
     VetoPick,
     VoteCaptain,
     ReadyCheck,
+    PickPlayer,
+    MapVeto,
+    RequestRemake,
     TestVote,
     TestAutoVote,
     TestAutoReady,
+    TestAutoRemake,
     LeaveGuild,
     RegisterSteamId,
     RegisterSteamIdModal,

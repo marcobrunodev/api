@@ -489,6 +489,25 @@ export class DiscordBotService {
                 .setRequired(true),
             ),
           new SlashCommandBuilder()
+            .setName(ChatCommands.TestAutoRemake)
+            .setDescription("[TEST ONLY] Auto-simulate remake votes for all bot players")
+            .addStringOption((option) =>
+              option
+                .setName("message_id")
+                .setDescription("The ID of the remake vote message")
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("vote_yes_or_no")
+                .setDescription("Vote yes or no")
+                .setRequired(true)
+                .addChoices(
+                  { name: "Yes", value: "yes" },
+                  { name: "No", value: "no" },
+                ),
+            ),
+          new SlashCommandBuilder()
             .setName(ChatCommands.LeaveGuild)
             .setDescription("[TEST ONLY] Make the bot leave the current Discord server"),
         );

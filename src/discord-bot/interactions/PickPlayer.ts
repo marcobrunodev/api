@@ -74,21 +74,15 @@ export default class PickPlayer extends DiscordInteraction {
     const messageId = interaction.message.id;
     const userId = interaction.user.id;
 
-    console.log(`🎮 [PICK PLAYER] Button clicked - Fruit: ${fruit}, User: ${userId}, Message: ${messageId}`);
-
     const session = pickSessions.get(messageId);
 
     if (!session) {
-      console.log(`❌ [PICK PLAYER] Session not found for message ${messageId}`);
       await interaction.reply({
         content: '❌ Pick session not found.',
         ephemeral: true
       });
       return;
     }
-
-    console.log(`🎮 [PICK PLAYER] Session found. Current pick: ${session.currentPickIndex}/${session.pickOrder.length}`);
-    console.log(`🎮 [PICK PLAYER] Team1 channel: ${session.team1ChannelId}, Team2 channel: ${session.team2ChannelId}`);
 
     // Verificar se é a vez do capitão correto
     const currentCaptain = session.pickOrder[session.currentPickIndex];
@@ -114,7 +108,6 @@ export default class PickPlayer extends DiscordInteraction {
       return;
     }
 
-    // Verificar se a fruta existe e o player está disponível
     const pickedPlayerId = session.fruitToPlayer.get(fruit);
 
     if (!pickedPlayerId || !session.availablePlayers.includes(pickedPlayerId)) {
@@ -125,44 +118,29 @@ export default class PickPlayer extends DiscordInteraction {
       return;
     }
 
-    // Adicionar player ao time do capitão
+    // Acknowledge the interaction silently (no message shown to user)
+    await interaction.deferUpdate();
+
     if (currentCaptain === 1) {
       session.team1.push(pickedPlayerId);
     } else {
       session.team2.push(pickedPlayerId);
     }
 
-    // Remover player da lista de disponíveis
     session.availablePlayers = session.availablePlayers.filter(id => id !== pickedPlayerId);
-
-    // Avançar para o próximo pick
     session.currentPickIndex++;
 
     // Mover o player para o canal de voz do time ANTES de atualizar a mensagem
     try {
-      console.log(`🎮 [PICK PLAYER] Fetching guild ${session.guildId}...`);
       const guild = await this.bot.client.guilds.fetch(session.guildId);
-      console.log(`🎮 [PICK PLAYER] Fetching member ${pickedPlayerId}...`);
       const member = await guild.members.fetch(pickedPlayerId);
       const targetChannelId = currentCaptain === 1 ? session.team1ChannelId : session.team2ChannelId;
 
-      console.log(`🎮 [PICK PLAYER] [Pick ${session.currentPickIndex}/${session.pickOrder.length}] Attempting to move player ${pickedPlayerId} to team ${currentCaptain}`);
-      console.log(`🎮 [PICK PLAYER] Target channel ID: ${targetChannelId}`);
-
       if (member.voice.channel) {
-        console.log(`🎮 [PICK PLAYER] Player ${pickedPlayerId} is in voice channel ${member.voice.channel.id}, moving to ${targetChannelId}`);
         await member.voice.setChannel(targetChannelId);
-        console.log(`🎮 [PICK PLAYER] ✓ Successfully moved player ${pickedPlayerId} to team ${currentCaptain} voice channel`);
-      } else {
-        console.log(`🎮 [PICK PLAYER] ⚠ Player ${pickedPlayerId} is not in a voice channel, cannot move`);
       }
     } catch (error) {
-      const errorMsg = `✗ Error moving player ${pickedPlayerId} to team channel:`;
-      if (this.logger) {
-        this.logger.error(errorMsg, error);
-      } else {
-        console.error(errorMsg, error);
-      }
+      console.error(`Error moving player ${pickedPlayerId} to team channel:`, error);
     }
 
     // Verificar se todos os picks foram feitos
@@ -170,7 +148,7 @@ export default class PickPlayer extends DiscordInteraction {
 
     // Atualizar a mensagem
     if (!isLastPick) {
-      await updatePickMessage(interaction);
+      await updatePickMessage(interaction, this.bot);
     }
 
     // Se foi o último pick, finalizar
@@ -181,7 +159,7 @@ export default class PickPlayer extends DiscordInteraction {
   }
 }
 
-async function updatePickMessage(interaction: ButtonInteraction) {
+async function updatePickMessage(interaction: ButtonInteraction, bot: any) {
   const messageId = interaction.message.id;
   const session = pickSessions.get(messageId);
 
@@ -222,7 +200,7 @@ async function updatePickMessage(interaction: ButtonInteraction) {
   const picksRemaining = session.pickOrder.length - session.currentPickIndex;
 
   // Buscar guild para obter os displayNames
-  const guild = await this.bot.client.guilds.fetch(session.guildId);
+  const guild = await bot.client.guilds.fetch(session.guildId);
 
   // Reconstruir botões apenas com players disponíveis
   const buttons = await Promise.all(session.availablePlayers.map(async (playerId) => {
@@ -254,7 +232,7 @@ async function updatePickMessage(interaction: ButtonInteraction) {
   const remakeButton = new ButtonBuilder()
     .setCustomId(ButtonActions.RequestRemake)
     .setLabel('🔄 Request Remake')
-    .setStyle(ButtonStyle.Danger);
+    .setStyle(ButtonStyle.Secondary);
 
   const remakeRow = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(remakeButton);
@@ -370,7 +348,7 @@ ${team2List}
   const remakeButton = new ButtonBuilder()
     .setCustomId(ButtonActions.RequestRemake)
     .setLabel('🔄 Request Remake')
-    .setStyle(ButtonStyle.Danger);
+    .setStyle(ButtonStyle.Secondary);
 
   const remakeRow = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(remakeButton);

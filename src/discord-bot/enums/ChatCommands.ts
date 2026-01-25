@@ -9,6 +9,7 @@ export enum ChatCommands {
   TestVote = "test-vote",
   TestAutoVoteCaptains = "test-auto-vote-captains",
   TestAutoReady = "test-auto-ready",
+  TestAutoRemake = "test-auto-remake",
   LeaveGuild = "leave-guild",
   KickPlayer = "kick",
   RegisterSteamId = "steamid",

@@ -132,6 +132,9 @@ export default class MapVeto extends DiscordInteraction {
       return;
     }
 
+    // Acknowledge the interaction silently (no message shown to user)
+    await interaction.deferUpdate();
+
     // Banir o mapa
     session.bannedMaps.push(mapName);
     session.availableMaps = session.availableMaps.filter(m => m !== mapName);
@@ -446,7 +449,7 @@ async function updateVetoMessage(interaction: ButtonInteraction) {
   const remakeButton = new ButtonBuilder()
     .setCustomId(ButtonActions.RequestRemake)
     .setLabel('🔄 Request Remake')
-    .setStyle(ButtonStyle.Danger);
+    .setStyle(ButtonStyle.Secondary);
 
   const remakeRow = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(remakeButton);
