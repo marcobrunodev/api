@@ -1024,6 +1024,12 @@ export class DiscordBotService {
         return kdB - kdA; // Decrescente
       });
 
+      // Buscar guild e canal Queue Mix
+      const guild = await this.client.guilds.fetch(guildId);
+      const queueMixChannel = guild.channels.cache.find(
+        (ch: any) => ch.type === ChannelType.GuildVoice && ch.name === '🍌 Queue Mix'
+      );
+
       // Mover vencedores para o topo da fila (na ordem: melhor K/D primeiro)
       for (const playerId of sortedWinners) {
         await this.addPlayerToTopOfQueue(guildId, playerId);
@@ -1040,6 +1046,24 @@ export class DiscordBotService {
         // Partida terminou normalmente - mover perdedores para o final da fila
         for (const playerId of sortedLosers) {
           await this.addPenaltyToPlayer(guildId, playerId);
+        }
+      }
+
+      // Mover todos os jogadores de volta para Queue Mix (se existir)
+      // Isso vai acionar a limpeza automática dos canais vazios
+      if (queueMixChannel && 'id' in queueMixChannel) {
+        this.logger.log(`[Mix Match] Moving all players back to Queue Mix`);
+        for (const playerId of allPlayerIds) {
+          try {
+            const member = await guild.members.fetch(playerId);
+            // Só mover se o jogador ainda estiver em algum canal de voz da categoria do mix
+            if (member.voice.channel && member.voice.channel.parent?.name?.startsWith('Banana Mix')) {
+              await member.voice.setChannel(queueMixChannel.id);
+              this.logger.log(`[Mix Match] Moved ${playerId} back to Queue Mix`);
+            }
+          } catch (error) {
+            this.logger.error(`[Mix Match] Failed to move player ${playerId} back to Queue Mix:`, error);
+          }
         }
       }
 
