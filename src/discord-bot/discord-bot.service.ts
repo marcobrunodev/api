@@ -404,21 +404,6 @@ export class DiscordBotService {
 
     try {
       const commands: any[] = [
-        await this.addBaseOptions(
-          new SlashCommandBuilder()
-            .setName(ChatCommands.ScheduleComp)
-            .setDescription("Creates a Competitive Match"),
-        ),
-        await this.addBaseOptions(
-          new SlashCommandBuilder()
-            .setName(ChatCommands.ScheduleWingMan)
-            .setDescription("Creates a Wingman Match"),
-        ),
-        await this.addBaseOptions(
-          new SlashCommandBuilder()
-            .setName(ChatCommands.ScheduleDuel)
-            .setDescription("Creates a Duel Match"),
-        ),
         new SlashCommandBuilder()
           .setName(ChatCommands.LinkDiscord)
           .setDescription(
