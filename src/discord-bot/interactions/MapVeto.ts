@@ -337,6 +337,7 @@ ${bannedMapsList}
         },
         id: true,
         status: true,
+        connection_link: true,
         server: {
           host: true,
           port: true,
@@ -358,6 +359,9 @@ ${bannedMapsList}
 
       // Criar URL para abrir Steam diretamente
       const steamConnectUrl = `steam://run/730//+connect%20${serverIp}:${server.port}`;
+      const quickConnectUrl = matches_by_pk.connection_link
+        ? `${this.configService.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(matches_by_pk.connection_link)}`
+        : `${this.configService.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(steamConnectUrl)}`;
 
       await channel.send({
         embeds: [{
@@ -381,13 +385,24 @@ ${session.team2.map((id: string) => `<@${id}>`).join(', ')}
 Good luck and have fun! 🍌
 
 **Quick Connect (Click to copy):**
-\`${steamConnectUrl}\`
+\`\`\`
+${steamConnectUrl}
+\`\`\`
         `,
           color: 0x00FF00,
           timestamp: new Date().toISOString(),
           footer: {
             text: 'From BananaServer.xyz with 🍌',
           }
+        }],
+        components: [{
+          type: 1,
+          components: [{
+            type: 2,
+            style: 5,
+            label: '🚀 Quick Connect',
+            url: quickConnectUrl
+          }]
         }]
       });
 
