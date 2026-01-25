@@ -137,8 +137,8 @@ export class HasuraService {
         this.logger.log('[Hasura] Ensuring discord_guilds table is tracked...');
 
         // Usar API do Hasura para track a tabela
-        const hasuraEndpoint = this.config.get('HASURA_GRAPHQL_ENDPOINT');
-        const adminSecret = this.config.get('HASURA_GRAPHQL_ADMIN_SECRET');
+        const hasuraEndpoint = this.config.endpoint;
+        const adminSecret = this.config.secret;
 
         await fetch(`${hasuraEndpoint}/v1/metadata`, {
           method: 'POST',
