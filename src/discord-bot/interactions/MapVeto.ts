@@ -355,6 +355,18 @@ ${bannedMapsList}
 
       const tvSection = tvCommand ? `\n**GOTV (Spectate):**\n\`\`\`\n${tvCommand}\n\`\`\`` : '';
 
+      // Criar URL para abrir Steam diretamente
+      const steamConnectUrl = `steam://run/730//+connect%20${serverIp}:${server.port}`;
+
+      // Criar botão para conectar via Steam
+      const connectButton = new ButtonBuilder()
+        .setLabel('🎮 Connect via Steam')
+        .setURL(steamConnectUrl)
+        .setStyle(ButtonStyle.Link);
+
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(connectButton);
+
       await channel.send({
         embeds: [{
           title: '🎮 Match Ready!',
@@ -381,7 +393,8 @@ Good luck and have fun! 🍌
           footer: {
             text: 'From BananaServer.xyz with 🍌',
           }
-        }]
+        }],
+        components: [row]
       });
     } else {
       await channel.send({
