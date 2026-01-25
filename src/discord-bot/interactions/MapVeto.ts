@@ -359,15 +359,6 @@ ${bannedMapsList}
       // Criar URL para abrir Steam diretamente
       const steamConnectUrl = `steam://run/730//+connect%20${serverIp}:${server.port}`;
 
-      // Criar botão para conectar via Steam
-      const connectButton = new ButtonBuilder()
-        .setLabel('🎮 Connect via Steam')
-        .setURL(steamConnectUrl)
-        .setStyle(ButtonStyle.Link);
-
-      const row = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(connectButton);
-
       await channel.send({
         embeds: [{
           title: '🎮 Match Ready!',
@@ -388,14 +379,16 @@ ${session.team1.map((id: string) => `<@${id}>`).join(', ')}
 ${session.team2.map((id: string) => `<@${id}>`).join(', ')}
 
 Good luck and have fun! 🍌
+
+**Quick Connect (Click to copy):**
+\`${steamConnectUrl}\`
         `,
           color: 0x00FF00,
           timestamp: new Date().toISOString(),
           footer: {
             text: 'From BananaServer.xyz with 🍌',
           }
-        }],
-        components: [row]
+        }]
       });
 
       // Criar canal de log para a partida
