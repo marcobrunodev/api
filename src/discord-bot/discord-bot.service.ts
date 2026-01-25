@@ -825,18 +825,104 @@ export class DiscordBotService {
         this.logger.log(`[Mix Match] No winner (tie/canceled) - moving all players to top`);
       }
 
-      // Mover vencedores para o topo da fila
-      for (const playerId of winningPlayerIds) {
+      // Buscar estatísticas da partida para ordenar por performance
+      const allPlayerIds = [...team1PlayerIds, ...team2PlayerIds];
+
+      // Buscar Steam IDs dos jogadores
+      const { players } = await this.hasura.query({
+        players: {
+          __args: {
+            where: {
+              discord_id: {
+                _in: allPlayerIds
+              }
+            }
+          },
+          discord_id: true,
+          steam_id: true,
+        }
+      });
+
+      // Criar mapa Discord ID -> Steam ID
+      const discordToSteam = new Map<string, string>();
+      players.forEach(p => {
+        if (p.discord_id && p.steam_id) {
+          discordToSteam.set(p.discord_id, p.steam_id.toString());
+        }
+      });
+
+      // Buscar kills e deaths da partida
+      const { player_kills } = await this.hasura.query({
+        player_kills: {
+          __args: {
+            where: {
+              match_id: {
+                _eq: matchId
+              }
+            }
+          },
+          attacker_steam_id: true,
+          attacked_steam_id: true,
+        }
+      });
+
+      // Calcular K/D para cada jogador
+      const playerStats = new Map<string, { kills: number; deaths: number; kd: number }>();
+
+      // Inicializar stats para todos os jogadores
+      allPlayerIds.forEach(discordId => {
+        playerStats.set(discordId, { kills: 0, deaths: 0, kd: 0 });
+      });
+
+      // Contar kills e deaths
+      player_kills.forEach(kill => {
+        const attackerSteamId = kill.attacker_steam_id?.toString();
+        const attackedSteamId = kill.attacked_steam_id?.toString();
+
+        // Encontrar Discord ID do atacante
+        for (const [discordId, steamId] of discordToSteam.entries()) {
+          if (steamId === attackerSteamId) {
+            const stats = playerStats.get(discordId);
+            if (stats) stats.kills++;
+          }
+          if (steamId === attackedSteamId) {
+            const stats = playerStats.get(discordId);
+            if (stats) stats.deaths++;
+          }
+        }
+      });
+
+      // Calcular K/D ratio
+      playerStats.forEach((stats, discordId) => {
+        stats.kd = stats.deaths > 0 ? stats.kills / stats.deaths : stats.kills;
+        this.logger.log(`[Mix Match] ${discordId}: ${stats.kills}K/${stats.deaths}D (K/D: ${stats.kd.toFixed(2)})`);
+      });
+
+      // Ordenar vencedores por K/D (melhor para pior)
+      const sortedWinners = [...winningPlayerIds].sort((a, b) => {
+        const kdA = playerStats.get(a)?.kd || 0;
+        const kdB = playerStats.get(b)?.kd || 0;
+        return kdB - kdA; // Decrescente
+      });
+
+      // Ordenar perdedores por K/D (melhor para pior)
+      const sortedLosers = [...losingPlayerIds].sort((a, b) => {
+        const kdA = playerStats.get(a)?.kd || 0;
+        const kdB = playerStats.get(b)?.kd || 0;
+        return kdB - kdA; // Decrescente
+      });
+
+      // Mover vencedores para o topo da fila (na ordem: melhor K/D primeiro)
+      for (const playerId of sortedWinners) {
         await this.addPlayerToTopOfQueue(guildId, playerId);
       }
 
-      // Mover perdedores para o final da fila
-      for (const playerId of losingPlayerIds) {
+      // Mover perdedores para o final da fila (na ordem: melhor K/D primeiro, pior por último)
+      for (const playerId of sortedLosers) {
         await this.addPenaltyToPlayer(guildId, playerId);
       }
 
-      // Deletar categoria e canais do Discord
-      await this.deleteMatchCategory(guildId, categoryId);
+      // Nota: Categoria e canais são deletados automaticamente quando todos os players saem dos canais de voz
 
       this.logger.log(`[Mix Match] Successfully processed end of match ${matchId}`);
     } catch (error) {
