@@ -383,6 +383,7 @@ export class DiscordBotOverviewService {
   }
 
   private getMatchConnectLink(link: string) {
-    return `${this.config.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(link)}`;
+    // Retorna o link Steam diretamente para funcionar no Discord
+    return link;
   }
 }
