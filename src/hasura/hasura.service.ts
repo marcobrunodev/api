@@ -126,37 +126,55 @@ export class HasuraService {
 
   private async applyMetadata() {
     try {
-      const metadataPath = path.resolve("./hasura/metadata/databases/default/tables");
+      // Try both relative and absolute paths for different environments
+      const possiblePaths = [
+        path.resolve("./hasura/metadata/databases/default/tables"),
+        "/opt/5stack/hasura/metadata/databases/default/tables",
+      ];
+
       const fs = require('fs');
       const yaml = require('js-yaml');
 
-      // Verificar se discord_guilds precisa ser tracked
-      const discordGuildsMetadata = path.join(metadataPath, 'public_discord_guilds.yaml');
+      let metadataPath = null;
+      for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+          metadataPath = p;
+          break;
+        }
+      }
 
-      if (fs.existsSync(discordGuildsMetadata)) {
-        this.logger.log('[Hasura] Ensuring discord_guilds table is tracked...');
+      if (!metadataPath) {
+        this.logger.warn('[Hasura] Metadata path not found, skipping metadata apply');
+        return;
+      }
 
-        // Usar API do Hasura para track a tabela
-        const hasuraEndpoint = this.config.endpoint;
-        const adminSecret = this.config.secret;
+      // Reload metadata to ensure all tables are tracked
+      this.logger.log('[Hasura] Reloading metadata to ensure all tables are tracked...');
 
-        await fetch(`${hasuraEndpoint}/v1/metadata`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-hasura-admin-secret': adminSecret,
+      const hasuraEndpoint = this.config.endpoint;
+      const adminSecret = this.config.secret;
+
+      const response = await fetch(`${hasuraEndpoint}/v1/metadata`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-hasura-admin-secret': adminSecret,
+        },
+        body: JSON.stringify({
+          type: 'reload_metadata',
+          args: {
+            reload_remote_schemas: true,
+            reload_sources: true,
           },
-          body: JSON.stringify({
-            type: 'pg_track_table',
-            args: {
-              source: 'default',
-              schema: 'public',
-              name: 'discord_guilds',
-            },
-          }),
-        });
+        }),
+      });
 
-        this.logger.log('[Hasura] discord_guilds table tracked successfully');
+      const result = await response.json();
+
+      if (result.is_consistent) {
+        this.logger.log('[Hasura] Metadata reloaded successfully');
+      } else {
+        this.logger.warn('[Hasura] Metadata reload completed but may have inconsistencies:', result);
       }
     } catch (error) {
       // Não falhar o startup se metadata já foi aplicado
