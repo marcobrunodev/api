@@ -6,6 +6,7 @@ import { DiscordBotOverviewService } from "./discord-bot-overview/discord-bot-ov
 import { DiscordPickPlayerService } from "./discord-pick-player/discord-pick-player.service";
 import { DiscordBotVoiceChannelsService } from "./discord-bot-voice-channels/discord-bot-voice-channels.service";
 import { DiscordBotVetoService } from "./discord-bot-veto/discord-bot-veto.service";
+import { DiscordBotScoreboardService } from "./discord-bot-scoreboard/discord-bot-scoreboard.service";
 import { CacheModule } from "../cache/cache.module";
 import { HasuraModule } from "../hasura/hasura.module";
 import { MatchesModule } from "../matches/matches.module";
@@ -42,6 +43,7 @@ import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
     DiscordBotVetoService,
     DiscordBotVoiceChannelsService,
     DiscordPickPlayerService,
+    DiscordBotScoreboardService,
     UpdateDiscordMatchVetoJob,
     RemoveArchivedThreads,
     ...getQueuesProcessors("DiscordBot"),
@@ -54,6 +56,7 @@ import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
     DiscordBotVetoService,
     DiscordBotVoiceChannelsService,
     DiscordPickPlayerService,
+    DiscordBotScoreboardService,
   ],
   controllers: [DiscordBotController],
 })

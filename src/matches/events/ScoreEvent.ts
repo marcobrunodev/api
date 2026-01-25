@@ -56,6 +56,36 @@ export default class ScoreEvent extends MatchEventProcessor<{
         __typename: true,
       },
     });
+
+    // Atualizar scoreboard do Discord
+    await this.updateDiscordScoreboard();
+  }
+
+  private async updateDiscordScoreboard() {
+    try {
+      // Buscar match_id a partir do match_map_id
+      const { match_maps_by_pk } = await this.hasura.query({
+        match_maps_by_pk: {
+          __args: { id: this.data.match_map_id },
+          match_id: true,
+        },
+      });
+
+      if (!match_maps_by_pk?.match_id) {
+        return;
+      }
+
+      // Chamar o serviço de scoreboard do Discord via dependency injection
+      const { DiscordBotScoreboardService } = await import('../../discord-bot/discord-bot-scoreboard/discord-bot-scoreboard.service');
+      const discordScoreboard = this.moduleRef.get(DiscordBotScoreboardService, { strict: false });
+
+      if (discordScoreboard) {
+        await discordScoreboard.updateMatchScoreboard(match_maps_by_pk.match_id);
+      }
+    } catch (error) {
+      // Não falhar o processamento do evento se o Discord falhar
+      console.error('[ScoreEvent] Error updating Discord scoreboard:', error);
+    }
   }
 
   private async cleanupData() {

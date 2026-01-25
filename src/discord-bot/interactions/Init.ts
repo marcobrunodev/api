@@ -92,6 +92,38 @@ export default class Init extends DiscordInteraction {
         }
       }
 
+      // Salvar/atualizar informações da guild no banco de dados
+      try {
+        const guildOwner = await guild.fetchOwner();
+
+        await this.hasura.mutation({
+          insert_discord_guilds_one: {
+            __args: {
+              object: {
+                id: guild.id,
+                name: guild.name,
+                icon: guild.icon,
+                owner_id: guildOwner.id,
+                category_channel_id: category?.id,
+                queue_mix_channel_id: queueMixChannel?.id,
+                afk_channel_id: afkChannel?.id,
+              },
+              on_conflict: {
+                constraint: 'discord_guilds_pkey',
+                update_columns: ['name', 'icon', 'owner_id', 'category_channel_id', 'queue_mix_channel_id', 'afk_channel_id', 'updated_at'],
+              },
+            },
+            id: true,
+          },
+        });
+
+        results.push('✅ Guild information saved to database');
+        this.initLogger.log(`Saved guild information for: ${guild.name} (${guild.id})`);
+      } catch (dbError) {
+        this.initLogger.error('Error saving guild to database:', dbError);
+        results.push('⚠️ Warning: Could not save guild information to database');
+      }
+
       await interaction.editReply(
         `**Initialization Complete!**\n\n${results.join('\n')}`
       );

@@ -601,6 +601,94 @@ export interface db_backups_variance_fields {
 }
 
 
+/** columns and relationships of "discord_guilds" */
+export interface discord_guilds {
+    afk_channel_id: (Scalars['String'] | null)
+    category_channel_id: (Scalars['String'] | null)
+    created_at: Scalars['timestamptz']
+    icon: (Scalars['String'] | null)
+    id: Scalars['String']
+    /** An array relationship */
+    matches: matches[]
+    /** An aggregate relationship */
+    matches_aggregate: matches_aggregate
+    name: Scalars['String']
+    owner_id: (Scalars['String'] | null)
+    queue_mix_channel_id: (Scalars['String'] | null)
+    updated_at: Scalars['timestamptz']
+    __typename: 'discord_guilds'
+}
+
+
+/** aggregated selection of "discord_guilds" */
+export interface discord_guilds_aggregate {
+    aggregate: (discord_guilds_aggregate_fields | null)
+    nodes: discord_guilds[]
+    __typename: 'discord_guilds_aggregate'
+}
+
+
+/** aggregate fields of "discord_guilds" */
+export interface discord_guilds_aggregate_fields {
+    count: Scalars['Int']
+    max: (discord_guilds_max_fields | null)
+    min: (discord_guilds_min_fields | null)
+    __typename: 'discord_guilds_aggregate_fields'
+}
+
+
+/** unique or primary key constraints on table "discord_guilds" */
+export type discord_guilds_constraint = 'discord_guilds_pkey'
+
+
+/** aggregate max on columns */
+export interface discord_guilds_max_fields {
+    afk_channel_id: (Scalars['String'] | null)
+    category_channel_id: (Scalars['String'] | null)
+    created_at: (Scalars['timestamptz'] | null)
+    icon: (Scalars['String'] | null)
+    id: (Scalars['String'] | null)
+    name: (Scalars['String'] | null)
+    owner_id: (Scalars['String'] | null)
+    queue_mix_channel_id: (Scalars['String'] | null)
+    updated_at: (Scalars['timestamptz'] | null)
+    __typename: 'discord_guilds_max_fields'
+}
+
+
+/** aggregate min on columns */
+export interface discord_guilds_min_fields {
+    afk_channel_id: (Scalars['String'] | null)
+    category_channel_id: (Scalars['String'] | null)
+    created_at: (Scalars['timestamptz'] | null)
+    icon: (Scalars['String'] | null)
+    id: (Scalars['String'] | null)
+    name: (Scalars['String'] | null)
+    owner_id: (Scalars['String'] | null)
+    queue_mix_channel_id: (Scalars['String'] | null)
+    updated_at: (Scalars['timestamptz'] | null)
+    __typename: 'discord_guilds_min_fields'
+}
+
+
+/** response of any mutation on the table "discord_guilds" */
+export interface discord_guilds_mutation_response {
+    /** number of rows affected by the mutation */
+    affected_rows: Scalars['Int']
+    /** data from the rows affected by the mutation */
+    returning: discord_guilds[]
+    __typename: 'discord_guilds_mutation_response'
+}
+
+
+/** select columns of table "discord_guilds" */
+export type discord_guilds_select_column = 'afk_channel_id' | 'category_channel_id' | 'created_at' | 'icon' | 'id' | 'name' | 'owner_id' | 'queue_mix_channel_id' | 'updated_at'
+
+
+/** update columns of table "discord_guilds" */
+export type discord_guilds_update_column = 'afk_channel_id' | 'category_channel_id' | 'created_at' | 'icon' | 'id' | 'name' | 'owner_id' | 'queue_mix_channel_id' | 'updated_at'
+
+
 /** columns and relationships of "e_check_in_settings" */
 export interface e_check_in_settings {
     description: Scalars['String']
@@ -4876,6 +4964,7 @@ export interface matches {
     demos: match_map_demos[]
     /** An aggregate relationship */
     demos_aggregate: match_map_demos_aggregate
+    discord_guild_id: (Scalars['String'] | null)
     /** An object relationship */
     e_match_status: e_match_status
     /** An object relationship */
@@ -5054,6 +5143,7 @@ export interface matches_max_fields {
     created_at: (Scalars['timestamptz'] | null)
     /** A computed field, executes function "get_current_match_map" */
     current_match_map_id: (Scalars['uuid'] | null)
+    discord_guild_id: (Scalars['String'] | null)
     ended_at: (Scalars['timestamptz'] | null)
     id: (Scalars['uuid'] | null)
     /** A computed field, executes function "match_invite_code" */
@@ -5099,6 +5189,7 @@ export interface matches_min_fields {
     created_at: (Scalars['timestamptz'] | null)
     /** A computed field, executes function "get_current_match_map" */
     current_match_map_id: (Scalars['uuid'] | null)
+    discord_guild_id: (Scalars['String'] | null)
     ended_at: (Scalars['timestamptz'] | null)
     id: (Scalars['uuid'] | null)
     /** A computed field, executes function "match_invite_code" */
@@ -5145,7 +5236,7 @@ export interface matches_mutation_response {
 
 
 /** select columns of table "matches" */
-export type matches_select_column = 'cancels_at' | 'created_at' | 'ended_at' | 'id' | 'label' | 'lineup_1_id' | 'lineup_2_id' | 'match_options_id' | 'organizer_steam_id' | 'password' | 'region' | 'scheduled_at' | 'server_id' | 'started_at' | 'status' | 'winning_lineup_id'
+export type matches_select_column = 'cancels_at' | 'created_at' | 'discord_guild_id' | 'ended_at' | 'id' | 'label' | 'lineup_1_id' | 'lineup_2_id' | 'match_options_id' | 'organizer_steam_id' | 'password' | 'region' | 'scheduled_at' | 'server_id' | 'started_at' | 'status' | 'winning_lineup_id'
 
 
 /** aggregate stddev on columns */
@@ -5193,7 +5284,7 @@ export interface matches_sum_fields {
 
 
 /** update columns of table "matches" */
-export type matches_update_column = 'cancels_at' | 'created_at' | 'ended_at' | 'id' | 'label' | 'lineup_1_id' | 'lineup_2_id' | 'match_options_id' | 'organizer_steam_id' | 'password' | 'region' | 'scheduled_at' | 'server_id' | 'started_at' | 'status' | 'winning_lineup_id'
+export type matches_update_column = 'cancels_at' | 'created_at' | 'discord_guild_id' | 'ended_at' | 'id' | 'label' | 'lineup_1_id' | 'lineup_2_id' | 'match_options_id' | 'organizer_steam_id' | 'password' | 'region' | 'scheduled_at' | 'server_id' | 'started_at' | 'status' | 'winning_lineup_id'
 
 
 /** aggregate var_pop on columns */
@@ -5321,6 +5412,10 @@ export interface mutation_root {
     delete_db_backups: (db_backups_mutation_response | null)
     /** delete single row from the table: "db_backups" */
     delete_db_backups_by_pk: (db_backups | null)
+    /** delete data from the table: "discord_guilds" */
+    delete_discord_guilds: (discord_guilds_mutation_response | null)
+    /** delete single row from the table: "discord_guilds" */
+    delete_discord_guilds_by_pk: (discord_guilds | null)
     /** delete data from the table: "e_check_in_settings" */
     delete_e_check_in_settings: (e_check_in_settings_mutation_response | null)
     /** delete single row from the table: "e_check_in_settings" */
@@ -5622,6 +5717,10 @@ export interface mutation_root {
     insert_db_backups: (db_backups_mutation_response | null)
     /** insert a single row into the table: "db_backups" */
     insert_db_backups_one: (db_backups | null)
+    /** insert data into the table: "discord_guilds" */
+    insert_discord_guilds: (discord_guilds_mutation_response | null)
+    /** insert a single row into the table: "discord_guilds" */
+    insert_discord_guilds_one: (discord_guilds | null)
     /** insert data into the table: "e_check_in_settings" */
     insert_e_check_in_settings: (e_check_in_settings_mutation_response | null)
     /** insert a single row into the table: "e_check_in_settings" */
@@ -5957,6 +6056,12 @@ export interface mutation_root {
     update_db_backups_by_pk: (db_backups | null)
     /** update multiples rows of table: "db_backups" */
     update_db_backups_many: ((db_backups_mutation_response | null)[] | null)
+    /** update data of the table: "discord_guilds" */
+    update_discord_guilds: (discord_guilds_mutation_response | null)
+    /** update single row of the table: "discord_guilds" */
+    update_discord_guilds_by_pk: (discord_guilds | null)
+    /** update multiples rows of table: "discord_guilds" */
+    update_discord_guilds_many: ((discord_guilds_mutation_response | null)[] | null)
     /** update data of the table: "e_check_in_settings" */
     update_e_check_in_settings: (e_check_in_settings_mutation_response | null)
     /** update single row of the table: "e_check_in_settings" */
@@ -8833,6 +8938,12 @@ export interface query_root {
     db_backups_aggregate: db_backups_aggregate
     /** fetch data from the table: "db_backups" using primary key columns */
     db_backups_by_pk: (db_backups | null)
+    /** fetch data from the table: "discord_guilds" */
+    discord_guilds: discord_guilds[]
+    /** fetch aggregated fields from the table: "discord_guilds" */
+    discord_guilds_aggregate: discord_guilds_aggregate
+    /** fetch data from the table: "discord_guilds" using primary key columns */
+    discord_guilds_by_pk: (discord_guilds | null)
     /** fetch data from the table: "e_check_in_settings" */
     e_check_in_settings: e_check_in_settings[]
     /** fetch aggregated fields from the table: "e_check_in_settings" */
@@ -9795,6 +9906,14 @@ export interface subscription_root {
     db_backups_by_pk: (db_backups | null)
     /** fetch data from the table in a streaming manner: "db_backups" */
     db_backups_stream: db_backups[]
+    /** fetch data from the table: "discord_guilds" */
+    discord_guilds: discord_guilds[]
+    /** fetch aggregated fields from the table: "discord_guilds" */
+    discord_guilds_aggregate: discord_guilds_aggregate
+    /** fetch data from the table: "discord_guilds" using primary key columns */
+    discord_guilds_by_pk: (discord_guilds | null)
+    /** fetch data from the table in a streaming manner: "discord_guilds" */
+    discord_guilds_stream: discord_guilds[]
     /** fetch data from the table: "e_check_in_settings" */
     e_check_in_settings: e_check_in_settings[]
     /** fetch aggregated fields from the table: "e_check_in_settings" */
@@ -14859,6 +14978,150 @@ export interface db_backups_variance_fieldsGenqlSelection{
     __typename?: boolean | number
     __scalar?: boolean | number
 }
+
+
+/** columns and relationships of "discord_guilds" */
+export interface discord_guildsGenqlSelection{
+    afk_channel_id?: boolean | number
+    category_channel_id?: boolean | number
+    created_at?: boolean | number
+    icon?: boolean | number
+    id?: boolean | number
+    /** An array relationship */
+    matches?: (matchesGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (matches_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (matches_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (matches_bool_exp | null)} })
+    /** An aggregate relationship */
+    matches_aggregate?: (matches_aggregateGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (matches_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (matches_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (matches_bool_exp | null)} })
+    name?: boolean | number
+    owner_id?: boolean | number
+    queue_mix_channel_id?: boolean | number
+    updated_at?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** aggregated selection of "discord_guilds" */
+export interface discord_guilds_aggregateGenqlSelection{
+    aggregate?: discord_guilds_aggregate_fieldsGenqlSelection
+    nodes?: discord_guildsGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** aggregate fields of "discord_guilds" */
+export interface discord_guilds_aggregate_fieldsGenqlSelection{
+    count?: { __args: {columns?: (discord_guilds_select_column[] | null), distinct?: (Scalars['Boolean'] | null)} } | boolean | number
+    max?: discord_guilds_max_fieldsGenqlSelection
+    min?: discord_guilds_min_fieldsGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** Boolean expression to filter rows from the table "discord_guilds". All fields are combined with a logical 'AND'. */
+export interface discord_guilds_bool_exp {_and?: (discord_guilds_bool_exp[] | null),_not?: (discord_guilds_bool_exp | null),_or?: (discord_guilds_bool_exp[] | null),afk_channel_id?: (String_comparison_exp | null),category_channel_id?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),icon?: (String_comparison_exp | null),id?: (String_comparison_exp | null),matches?: (matches_bool_exp | null),matches_aggregate?: (matches_aggregate_bool_exp | null),name?: (String_comparison_exp | null),owner_id?: (String_comparison_exp | null),queue_mix_channel_id?: (String_comparison_exp | null),updated_at?: (timestamptz_comparison_exp | null)}
+
+
+/** input type for inserting data into table "discord_guilds" */
+export interface discord_guilds_insert_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),matches?: (matches_arr_rel_insert_input | null),name?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
+
+
+/** aggregate max on columns */
+export interface discord_guilds_max_fieldsGenqlSelection{
+    afk_channel_id?: boolean | number
+    category_channel_id?: boolean | number
+    created_at?: boolean | number
+    icon?: boolean | number
+    id?: boolean | number
+    name?: boolean | number
+    owner_id?: boolean | number
+    queue_mix_channel_id?: boolean | number
+    updated_at?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** aggregate min on columns */
+export interface discord_guilds_min_fieldsGenqlSelection{
+    afk_channel_id?: boolean | number
+    category_channel_id?: boolean | number
+    created_at?: boolean | number
+    icon?: boolean | number
+    id?: boolean | number
+    name?: boolean | number
+    owner_id?: boolean | number
+    queue_mix_channel_id?: boolean | number
+    updated_at?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** response of any mutation on the table "discord_guilds" */
+export interface discord_guilds_mutation_responseGenqlSelection{
+    /** number of rows affected by the mutation */
+    affected_rows?: boolean | number
+    /** data from the rows affected by the mutation */
+    returning?: discord_guildsGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** on_conflict condition type for table "discord_guilds" */
+export interface discord_guilds_on_conflict {constraint: discord_guilds_constraint,update_columns?: discord_guilds_update_column[],where?: (discord_guilds_bool_exp | null)}
+
+
+/** Ordering options when selecting data from "discord_guilds". */
+export interface discord_guilds_order_by {afk_channel_id?: (order_by | null),category_channel_id?: (order_by | null),created_at?: (order_by | null),icon?: (order_by | null),id?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),name?: (order_by | null),owner_id?: (order_by | null),queue_mix_channel_id?: (order_by | null),updated_at?: (order_by | null)}
+
+
+/** primary key columns input for table: discord_guilds */
+export interface discord_guilds_pk_columns_input {id: Scalars['String']}
+
+
+/** input type for updating data in table "discord_guilds" */
+export interface discord_guilds_set_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),name?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
+
+
+/** Streaming cursor of the table "discord_guilds" */
+export interface discord_guilds_stream_cursor_input {
+/** Stream column input with initial value */
+initial_value: discord_guilds_stream_cursor_value_input,
+/** cursor ordering */
+ordering?: (cursor_ordering | null)}
+
+
+/** Initial value of the column from where the streaming should start */
+export interface discord_guilds_stream_cursor_value_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),name?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
+
+export interface discord_guilds_updates {
+/** sets the columns of the filtered rows to the given values */
+_set?: (discord_guilds_set_input | null),
+/** filter the rows which have to be updated */
+where: discord_guilds_bool_exp}
 
 
 /** columns and relationships of "e_check_in_settings" */
@@ -22268,6 +22531,7 @@ export interface matchesGenqlSelection{
     order_by?: (match_map_demos_order_by[] | null), 
     /** filter the rows returned */
     where?: (match_map_demos_bool_exp | null)} })
+    discord_guild_id?: boolean | number
     /** An object relationship */
     e_match_status?: e_match_statusGenqlSelection
     /** An object relationship */
@@ -22747,7 +23011,7 @@ export interface matches_avg_order_by {organizer_steam_id?: (order_by | null)}
 
 
 /** Boolean expression to filter rows from the table "matches". All fields are combined with a logical 'AND'. */
-export interface matches_bool_exp {_and?: (matches_bool_exp[] | null),_not?: (matches_bool_exp | null),_or?: (matches_bool_exp[] | null),can_assign_server?: (Boolean_comparison_exp | null),can_cancel?: (Boolean_comparison_exp | null),can_check_in?: (Boolean_comparison_exp | null),can_schedule?: (Boolean_comparison_exp | null),can_start?: (Boolean_comparison_exp | null),cancels_at?: (timestamptz_comparison_exp | null),connection_link?: (String_comparison_exp | null),connection_string?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),current_match_map_id?: (uuid_comparison_exp | null),demos?: (match_map_demos_bool_exp | null),demos_aggregate?: (match_map_demos_aggregate_bool_exp | null),e_match_status?: (e_match_status_bool_exp | null),e_region?: (server_regions_bool_exp | null),elo_changes?: (v_player_elo_bool_exp | null),elo_changes_aggregate?: (v_player_elo_aggregate_bool_exp | null),ended_at?: (timestamptz_comparison_exp | null),id?: (uuid_comparison_exp | null),invite_code?: (String_comparison_exp | null),invites?: (match_invites_bool_exp | null),invites_aggregate?: (match_invites_aggregate_bool_exp | null),is_captain?: (Boolean_comparison_exp | null),is_coach?: (Boolean_comparison_exp | null),is_in_lineup?: (Boolean_comparison_exp | null),is_match_server_available?: (Boolean_comparison_exp | null),is_organizer?: (Boolean_comparison_exp | null),is_server_online?: (Boolean_comparison_exp | null),is_tournament_match?: (Boolean_comparison_exp | null),label?: (String_comparison_exp | null),lineup_1?: (match_lineups_bool_exp | null),lineup_1_id?: (uuid_comparison_exp | null),lineup_2?: (match_lineups_bool_exp | null),lineup_2_id?: (uuid_comparison_exp | null),lineup_counts?: (json_comparison_exp | null),map_veto_picking_lineup_id?: (uuid_comparison_exp | null),map_veto_picks?: (match_map_veto_picks_bool_exp | null),map_veto_picks_aggregate?: (match_map_veto_picks_aggregate_bool_exp | null),map_veto_type?: (String_comparison_exp | null),match_maps?: (match_maps_bool_exp | null),match_maps_aggregate?: (match_maps_aggregate_bool_exp | null),match_options_id?: (uuid_comparison_exp | null),max_players_per_lineup?: (Int_comparison_exp | null),min_players_per_lineup?: (Int_comparison_exp | null),options?: (match_options_bool_exp | null),organizer?: (players_bool_exp | null),organizer_steam_id?: (bigint_comparison_exp | null),password?: (String_comparison_exp | null),player_assists?: (player_assists_bool_exp | null),player_assists_aggregate?: (player_assists_aggregate_bool_exp | null),player_damages?: (player_damages_bool_exp | null),player_damages_aggregate?: (player_damages_aggregate_bool_exp | null),player_flashes?: (player_flashes_bool_exp | null),player_flashes_aggregate?: (player_flashes_aggregate_bool_exp | null),player_kills?: (player_kills_bool_exp | null),player_kills_aggregate?: (player_kills_aggregate_bool_exp | null),player_objectives?: (player_objectives_bool_exp | null),player_objectives_aggregate?: (player_objectives_aggregate_bool_exp | null),player_unused_utilities?: (player_unused_utility_bool_exp | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_bool_exp | null),player_utility?: (player_utility_bool_exp | null),player_utility_aggregate?: (player_utility_aggregate_bool_exp | null),region?: (String_comparison_exp | null),region_veto_picking_lineup_id?: (uuid_comparison_exp | null),region_veto_picks?: (match_region_veto_picks_bool_exp | null),region_veto_picks_aggregate?: (match_region_veto_picks_aggregate_bool_exp | null),requested_organizer?: (Boolean_comparison_exp | null),scheduled_at?: (timestamptz_comparison_exp | null),server?: (servers_bool_exp | null),server_id?: (uuid_comparison_exp | null),server_region?: (String_comparison_exp | null),server_type?: (String_comparison_exp | null),started_at?: (timestamptz_comparison_exp | null),status?: (e_match_status_enum_comparison_exp | null),streams?: (match_streams_bool_exp | null),streams_aggregate?: (match_streams_aggregate_bool_exp | null),teams?: (teams_bool_exp | null),tournament_brackets?: (tournament_brackets_bool_exp | null),tournament_brackets_aggregate?: (tournament_brackets_aggregate_bool_exp | null),tv_connection_string?: (String_comparison_exp | null),winner?: (match_lineups_bool_exp | null),winning_lineup_id?: (uuid_comparison_exp | null)}
+export interface matches_bool_exp {_and?: (matches_bool_exp[] | null),_not?: (matches_bool_exp | null),_or?: (matches_bool_exp[] | null),can_assign_server?: (Boolean_comparison_exp | null),can_cancel?: (Boolean_comparison_exp | null),can_check_in?: (Boolean_comparison_exp | null),can_schedule?: (Boolean_comparison_exp | null),can_start?: (Boolean_comparison_exp | null),cancels_at?: (timestamptz_comparison_exp | null),connection_link?: (String_comparison_exp | null),connection_string?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),current_match_map_id?: (uuid_comparison_exp | null),demos?: (match_map_demos_bool_exp | null),demos_aggregate?: (match_map_demos_aggregate_bool_exp | null),discord_guild_id?: (String_comparison_exp | null),e_match_status?: (e_match_status_bool_exp | null),e_region?: (server_regions_bool_exp | null),elo_changes?: (v_player_elo_bool_exp | null),elo_changes_aggregate?: (v_player_elo_aggregate_bool_exp | null),ended_at?: (timestamptz_comparison_exp | null),id?: (uuid_comparison_exp | null),invite_code?: (String_comparison_exp | null),invites?: (match_invites_bool_exp | null),invites_aggregate?: (match_invites_aggregate_bool_exp | null),is_captain?: (Boolean_comparison_exp | null),is_coach?: (Boolean_comparison_exp | null),is_in_lineup?: (Boolean_comparison_exp | null),is_match_server_available?: (Boolean_comparison_exp | null),is_organizer?: (Boolean_comparison_exp | null),is_server_online?: (Boolean_comparison_exp | null),is_tournament_match?: (Boolean_comparison_exp | null),label?: (String_comparison_exp | null),lineup_1?: (match_lineups_bool_exp | null),lineup_1_id?: (uuid_comparison_exp | null),lineup_2?: (match_lineups_bool_exp | null),lineup_2_id?: (uuid_comparison_exp | null),lineup_counts?: (json_comparison_exp | null),map_veto_picking_lineup_id?: (uuid_comparison_exp | null),map_veto_picks?: (match_map_veto_picks_bool_exp | null),map_veto_picks_aggregate?: (match_map_veto_picks_aggregate_bool_exp | null),map_veto_type?: (String_comparison_exp | null),match_maps?: (match_maps_bool_exp | null),match_maps_aggregate?: (match_maps_aggregate_bool_exp | null),match_options_id?: (uuid_comparison_exp | null),max_players_per_lineup?: (Int_comparison_exp | null),min_players_per_lineup?: (Int_comparison_exp | null),options?: (match_options_bool_exp | null),organizer?: (players_bool_exp | null),organizer_steam_id?: (bigint_comparison_exp | null),password?: (String_comparison_exp | null),player_assists?: (player_assists_bool_exp | null),player_assists_aggregate?: (player_assists_aggregate_bool_exp | null),player_damages?: (player_damages_bool_exp | null),player_damages_aggregate?: (player_damages_aggregate_bool_exp | null),player_flashes?: (player_flashes_bool_exp | null),player_flashes_aggregate?: (player_flashes_aggregate_bool_exp | null),player_kills?: (player_kills_bool_exp | null),player_kills_aggregate?: (player_kills_aggregate_bool_exp | null),player_objectives?: (player_objectives_bool_exp | null),player_objectives_aggregate?: (player_objectives_aggregate_bool_exp | null),player_unused_utilities?: (player_unused_utility_bool_exp | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_bool_exp | null),player_utility?: (player_utility_bool_exp | null),player_utility_aggregate?: (player_utility_aggregate_bool_exp | null),region?: (String_comparison_exp | null),region_veto_picking_lineup_id?: (uuid_comparison_exp | null),region_veto_picks?: (match_region_veto_picks_bool_exp | null),region_veto_picks_aggregate?: (match_region_veto_picks_aggregate_bool_exp | null),requested_organizer?: (Boolean_comparison_exp | null),scheduled_at?: (timestamptz_comparison_exp | null),server?: (servers_bool_exp | null),server_id?: (uuid_comparison_exp | null),server_region?: (String_comparison_exp | null),server_type?: (String_comparison_exp | null),started_at?: (timestamptz_comparison_exp | null),status?: (e_match_status_enum_comparison_exp | null),streams?: (match_streams_bool_exp | null),streams_aggregate?: (match_streams_aggregate_bool_exp | null),teams?: (teams_bool_exp | null),tournament_brackets?: (tournament_brackets_bool_exp | null),tournament_brackets_aggregate?: (tournament_brackets_aggregate_bool_exp | null),tv_connection_string?: (String_comparison_exp | null),winner?: (match_lineups_bool_exp | null),winning_lineup_id?: (uuid_comparison_exp | null)}
 
 
 /** input type for incrementing numeric columns in table "matches" */
@@ -22755,7 +23019,7 @@ export interface matches_inc_input {organizer_steam_id?: (Scalars['bigint'] | nu
 
 
 /** input type for inserting data into table "matches" */
-export interface matches_insert_input {cancels_at?: (Scalars['timestamptz'] | null),created_at?: (Scalars['timestamptz'] | null),demos?: (match_map_demos_arr_rel_insert_input | null),e_match_status?: (e_match_status_obj_rel_insert_input | null),e_region?: (server_regions_obj_rel_insert_input | null),elo_changes?: (v_player_elo_arr_rel_insert_input | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),invites?: (match_invites_arr_rel_insert_input | null),label?: (Scalars['String'] | null),lineup_1?: (match_lineups_obj_rel_insert_input | null),lineup_1_id?: (Scalars['uuid'] | null),lineup_2?: (match_lineups_obj_rel_insert_input | null),lineup_2_id?: (Scalars['uuid'] | null),map_veto_picks?: (match_map_veto_picks_arr_rel_insert_input | null),match_maps?: (match_maps_arr_rel_insert_input | null),match_options_id?: (Scalars['uuid'] | null),options?: (match_options_obj_rel_insert_input | null),organizer?: (players_obj_rel_insert_input | null),organizer_steam_id?: (Scalars['bigint'] | null),password?: (Scalars['String'] | null),player_assists?: (player_assists_arr_rel_insert_input | null),player_damages?: (player_damages_arr_rel_insert_input | null),player_flashes?: (player_flashes_arr_rel_insert_input | null),player_kills?: (player_kills_arr_rel_insert_input | null),player_objectives?: (player_objectives_arr_rel_insert_input | null),player_unused_utilities?: (player_unused_utility_arr_rel_insert_input | null),player_utility?: (player_utility_arr_rel_insert_input | null),region?: (Scalars['String'] | null),region_veto_picks?: (match_region_veto_picks_arr_rel_insert_input | null),scheduled_at?: (Scalars['timestamptz'] | null),server?: (servers_obj_rel_insert_input | null),server_id?: (Scalars['uuid'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_status_enum | null),streams?: (match_streams_arr_rel_insert_input | null),tournament_brackets?: (tournament_brackets_arr_rel_insert_input | null),winner?: (match_lineups_obj_rel_insert_input | null),winning_lineup_id?: (Scalars['uuid'] | null)}
+export interface matches_insert_input {cancels_at?: (Scalars['timestamptz'] | null),created_at?: (Scalars['timestamptz'] | null),demos?: (match_map_demos_arr_rel_insert_input | null),discord_guild_id?: (Scalars['String'] | null),e_match_status?: (e_match_status_obj_rel_insert_input | null),e_region?: (server_regions_obj_rel_insert_input | null),elo_changes?: (v_player_elo_arr_rel_insert_input | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),invites?: (match_invites_arr_rel_insert_input | null),label?: (Scalars['String'] | null),lineup_1?: (match_lineups_obj_rel_insert_input | null),lineup_1_id?: (Scalars['uuid'] | null),lineup_2?: (match_lineups_obj_rel_insert_input | null),lineup_2_id?: (Scalars['uuid'] | null),map_veto_picks?: (match_map_veto_picks_arr_rel_insert_input | null),match_maps?: (match_maps_arr_rel_insert_input | null),match_options_id?: (Scalars['uuid'] | null),options?: (match_options_obj_rel_insert_input | null),organizer?: (players_obj_rel_insert_input | null),organizer_steam_id?: (Scalars['bigint'] | null),password?: (Scalars['String'] | null),player_assists?: (player_assists_arr_rel_insert_input | null),player_damages?: (player_damages_arr_rel_insert_input | null),player_flashes?: (player_flashes_arr_rel_insert_input | null),player_kills?: (player_kills_arr_rel_insert_input | null),player_objectives?: (player_objectives_arr_rel_insert_input | null),player_unused_utilities?: (player_unused_utility_arr_rel_insert_input | null),player_utility?: (player_utility_arr_rel_insert_input | null),region?: (Scalars['String'] | null),region_veto_picks?: (match_region_veto_picks_arr_rel_insert_input | null),scheduled_at?: (Scalars['timestamptz'] | null),server?: (servers_obj_rel_insert_input | null),server_id?: (Scalars['uuid'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_status_enum | null),streams?: (match_streams_arr_rel_insert_input | null),tournament_brackets?: (tournament_brackets_arr_rel_insert_input | null),winner?: (match_lineups_obj_rel_insert_input | null),winning_lineup_id?: (Scalars['uuid'] | null)}
 
 
 /** aggregate max on columns */
@@ -22768,6 +23032,7 @@ export interface matches_max_fieldsGenqlSelection{
     created_at?: boolean | number
     /** A computed field, executes function "get_current_match_map" */
     current_match_map_id?: boolean | number
+    discord_guild_id?: boolean | number
     ended_at?: boolean | number
     id?: boolean | number
     /** A computed field, executes function "match_invite_code" */
@@ -22805,7 +23070,7 @@ export interface matches_max_fieldsGenqlSelection{
 
 
 /** order by max() on columns of table "matches" */
-export interface matches_max_order_by {cancels_at?: (order_by | null),created_at?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),label?: (order_by | null),lineup_1_id?: (order_by | null),lineup_2_id?: (order_by | null),match_options_id?: (order_by | null),organizer_steam_id?: (order_by | null),password?: (order_by | null),region?: (order_by | null),scheduled_at?: (order_by | null),server_id?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
+export interface matches_max_order_by {cancels_at?: (order_by | null),created_at?: (order_by | null),discord_guild_id?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),label?: (order_by | null),lineup_1_id?: (order_by | null),lineup_2_id?: (order_by | null),match_options_id?: (order_by | null),organizer_steam_id?: (order_by | null),password?: (order_by | null),region?: (order_by | null),scheduled_at?: (order_by | null),server_id?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
 
 
 /** aggregate min on columns */
@@ -22818,6 +23083,7 @@ export interface matches_min_fieldsGenqlSelection{
     created_at?: boolean | number
     /** A computed field, executes function "get_current_match_map" */
     current_match_map_id?: boolean | number
+    discord_guild_id?: boolean | number
     ended_at?: boolean | number
     id?: boolean | number
     /** A computed field, executes function "match_invite_code" */
@@ -22855,7 +23121,7 @@ export interface matches_min_fieldsGenqlSelection{
 
 
 /** order by min() on columns of table "matches" */
-export interface matches_min_order_by {cancels_at?: (order_by | null),created_at?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),label?: (order_by | null),lineup_1_id?: (order_by | null),lineup_2_id?: (order_by | null),match_options_id?: (order_by | null),organizer_steam_id?: (order_by | null),password?: (order_by | null),region?: (order_by | null),scheduled_at?: (order_by | null),server_id?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
+export interface matches_min_order_by {cancels_at?: (order_by | null),created_at?: (order_by | null),discord_guild_id?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),label?: (order_by | null),lineup_1_id?: (order_by | null),lineup_2_id?: (order_by | null),match_options_id?: (order_by | null),organizer_steam_id?: (order_by | null),password?: (order_by | null),region?: (order_by | null),scheduled_at?: (order_by | null),server_id?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
 
 
 /** response of any mutation on the table "matches" */
@@ -22880,7 +23146,7 @@ export interface matches_on_conflict {constraint: matches_constraint,update_colu
 
 
 /** Ordering options when selecting data from "matches". */
-export interface matches_order_by {can_assign_server?: (order_by | null),can_cancel?: (order_by | null),can_check_in?: (order_by | null),can_schedule?: (order_by | null),can_start?: (order_by | null),cancels_at?: (order_by | null),connection_link?: (order_by | null),connection_string?: (order_by | null),created_at?: (order_by | null),current_match_map_id?: (order_by | null),demos_aggregate?: (match_map_demos_aggregate_order_by | null),e_match_status?: (e_match_status_order_by | null),e_region?: (server_regions_order_by | null),elo_changes_aggregate?: (v_player_elo_aggregate_order_by | null),ended_at?: (order_by | null),id?: (order_by | null),invite_code?: (order_by | null),invites_aggregate?: (match_invites_aggregate_order_by | null),is_captain?: (order_by | null),is_coach?: (order_by | null),is_in_lineup?: (order_by | null),is_match_server_available?: (order_by | null),is_organizer?: (order_by | null),is_server_online?: (order_by | null),is_tournament_match?: (order_by | null),label?: (order_by | null),lineup_1?: (match_lineups_order_by | null),lineup_1_id?: (order_by | null),lineup_2?: (match_lineups_order_by | null),lineup_2_id?: (order_by | null),lineup_counts?: (order_by | null),map_veto_picking_lineup_id?: (order_by | null),map_veto_picks_aggregate?: (match_map_veto_picks_aggregate_order_by | null),map_veto_type?: (order_by | null),match_maps_aggregate?: (match_maps_aggregate_order_by | null),match_options_id?: (order_by | null),max_players_per_lineup?: (order_by | null),min_players_per_lineup?: (order_by | null),options?: (match_options_order_by | null),organizer?: (players_order_by | null),organizer_steam_id?: (order_by | null),password?: (order_by | null),player_assists_aggregate?: (player_assists_aggregate_order_by | null),player_damages_aggregate?: (player_damages_aggregate_order_by | null),player_flashes_aggregate?: (player_flashes_aggregate_order_by | null),player_kills_aggregate?: (player_kills_aggregate_order_by | null),player_objectives_aggregate?: (player_objectives_aggregate_order_by | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_order_by | null),player_utility_aggregate?: (player_utility_aggregate_order_by | null),region?: (order_by | null),region_veto_picking_lineup_id?: (order_by | null),region_veto_picks_aggregate?: (match_region_veto_picks_aggregate_order_by | null),requested_organizer?: (order_by | null),scheduled_at?: (order_by | null),server?: (servers_order_by | null),server_id?: (order_by | null),server_region?: (order_by | null),server_type?: (order_by | null),started_at?: (order_by | null),status?: (order_by | null),streams_aggregate?: (match_streams_aggregate_order_by | null),teams_aggregate?: (teams_aggregate_order_by | null),tournament_brackets_aggregate?: (tournament_brackets_aggregate_order_by | null),tv_connection_string?: (order_by | null),winner?: (match_lineups_order_by | null),winning_lineup_id?: (order_by | null)}
+export interface matches_order_by {can_assign_server?: (order_by | null),can_cancel?: (order_by | null),can_check_in?: (order_by | null),can_schedule?: (order_by | null),can_start?: (order_by | null),cancels_at?: (order_by | null),connection_link?: (order_by | null),connection_string?: (order_by | null),created_at?: (order_by | null),current_match_map_id?: (order_by | null),demos_aggregate?: (match_map_demos_aggregate_order_by | null),discord_guild_id?: (order_by | null),e_match_status?: (e_match_status_order_by | null),e_region?: (server_regions_order_by | null),elo_changes_aggregate?: (v_player_elo_aggregate_order_by | null),ended_at?: (order_by | null),id?: (order_by | null),invite_code?: (order_by | null),invites_aggregate?: (match_invites_aggregate_order_by | null),is_captain?: (order_by | null),is_coach?: (order_by | null),is_in_lineup?: (order_by | null),is_match_server_available?: (order_by | null),is_organizer?: (order_by | null),is_server_online?: (order_by | null),is_tournament_match?: (order_by | null),label?: (order_by | null),lineup_1?: (match_lineups_order_by | null),lineup_1_id?: (order_by | null),lineup_2?: (match_lineups_order_by | null),lineup_2_id?: (order_by | null),lineup_counts?: (order_by | null),map_veto_picking_lineup_id?: (order_by | null),map_veto_picks_aggregate?: (match_map_veto_picks_aggregate_order_by | null),map_veto_type?: (order_by | null),match_maps_aggregate?: (match_maps_aggregate_order_by | null),match_options_id?: (order_by | null),max_players_per_lineup?: (order_by | null),min_players_per_lineup?: (order_by | null),options?: (match_options_order_by | null),organizer?: (players_order_by | null),organizer_steam_id?: (order_by | null),password?: (order_by | null),player_assists_aggregate?: (player_assists_aggregate_order_by | null),player_damages_aggregate?: (player_damages_aggregate_order_by | null),player_flashes_aggregate?: (player_flashes_aggregate_order_by | null),player_kills_aggregate?: (player_kills_aggregate_order_by | null),player_objectives_aggregate?: (player_objectives_aggregate_order_by | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_order_by | null),player_utility_aggregate?: (player_utility_aggregate_order_by | null),region?: (order_by | null),region_veto_picking_lineup_id?: (order_by | null),region_veto_picks_aggregate?: (match_region_veto_picks_aggregate_order_by | null),requested_organizer?: (order_by | null),scheduled_at?: (order_by | null),server?: (servers_order_by | null),server_id?: (order_by | null),server_region?: (order_by | null),server_type?: (order_by | null),started_at?: (order_by | null),status?: (order_by | null),streams_aggregate?: (match_streams_aggregate_order_by | null),teams_aggregate?: (teams_aggregate_order_by | null),tournament_brackets_aggregate?: (tournament_brackets_aggregate_order_by | null),tv_connection_string?: (order_by | null),winner?: (match_lineups_order_by | null),winning_lineup_id?: (order_by | null)}
 
 
 /** primary key columns input for table: matches */
@@ -22888,7 +23154,7 @@ export interface matches_pk_columns_input {id: Scalars['uuid']}
 
 
 /** input type for updating data in table "matches" */
-export interface matches_set_input {cancels_at?: (Scalars['timestamptz'] | null),created_at?: (Scalars['timestamptz'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),label?: (Scalars['String'] | null),lineup_1_id?: (Scalars['uuid'] | null),lineup_2_id?: (Scalars['uuid'] | null),match_options_id?: (Scalars['uuid'] | null),organizer_steam_id?: (Scalars['bigint'] | null),password?: (Scalars['String'] | null),region?: (Scalars['String'] | null),scheduled_at?: (Scalars['timestamptz'] | null),server_id?: (Scalars['uuid'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
+export interface matches_set_input {cancels_at?: (Scalars['timestamptz'] | null),created_at?: (Scalars['timestamptz'] | null),discord_guild_id?: (Scalars['String'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),label?: (Scalars['String'] | null),lineup_1_id?: (Scalars['uuid'] | null),lineup_2_id?: (Scalars['uuid'] | null),match_options_id?: (Scalars['uuid'] | null),organizer_steam_id?: (Scalars['bigint'] | null),password?: (Scalars['String'] | null),region?: (Scalars['String'] | null),scheduled_at?: (Scalars['timestamptz'] | null),server_id?: (Scalars['uuid'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
 
 
 /** aggregate stddev on columns */
@@ -22948,7 +23214,7 @@ ordering?: (cursor_ordering | null)}
 
 
 /** Initial value of the column from where the streaming should start */
-export interface matches_stream_cursor_value_input {cancels_at?: (Scalars['timestamptz'] | null),created_at?: (Scalars['timestamptz'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),label?: (Scalars['String'] | null),lineup_1_id?: (Scalars['uuid'] | null),lineup_2_id?: (Scalars['uuid'] | null),match_options_id?: (Scalars['uuid'] | null),organizer_steam_id?: (Scalars['bigint'] | null),password?: (Scalars['String'] | null),region?: (Scalars['String'] | null),scheduled_at?: (Scalars['timestamptz'] | null),server_id?: (Scalars['uuid'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
+export interface matches_stream_cursor_value_input {cancels_at?: (Scalars['timestamptz'] | null),created_at?: (Scalars['timestamptz'] | null),discord_guild_id?: (Scalars['String'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),label?: (Scalars['String'] | null),lineup_1_id?: (Scalars['uuid'] | null),lineup_2_id?: (Scalars['uuid'] | null),match_options_id?: (Scalars['uuid'] | null),organizer_steam_id?: (Scalars['bigint'] | null),password?: (Scalars['String'] | null),region?: (Scalars['String'] | null),scheduled_at?: (Scalars['timestamptz'] | null),server_id?: (Scalars['uuid'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
 
 
 /** aggregate sum on columns */
@@ -23159,6 +23425,12 @@ export interface mutation_rootGenqlSelection{
     where: db_backups_bool_exp} })
     /** delete single row from the table: "db_backups" */
     delete_db_backups_by_pk?: (db_backupsGenqlSelection & { __args: {id: Scalars['uuid']} })
+    /** delete data from the table: "discord_guilds" */
+    delete_discord_guilds?: (discord_guilds_mutation_responseGenqlSelection & { __args: {
+    /** filter the rows which have to be deleted */
+    where: discord_guilds_bool_exp} })
+    /** delete single row from the table: "discord_guilds" */
+    delete_discord_guilds_by_pk?: (discord_guildsGenqlSelection & { __args: {id: Scalars['String']} })
     /** delete data from the table: "e_check_in_settings" */
     delete_e_check_in_settings?: (e_check_in_settings_mutation_responseGenqlSelection & { __args: {
     /** filter the rows which have to be deleted */
@@ -23636,6 +23908,18 @@ export interface mutation_rootGenqlSelection{
     object: db_backups_insert_input, 
     /** upsert condition */
     on_conflict?: (db_backups_on_conflict | null)} })
+    /** insert data into the table: "discord_guilds" */
+    insert_discord_guilds?: (discord_guilds_mutation_responseGenqlSelection & { __args: {
+    /** the rows to be inserted */
+    objects: discord_guilds_insert_input[], 
+    /** upsert condition */
+    on_conflict?: (discord_guilds_on_conflict | null)} })
+    /** insert a single row into the table: "discord_guilds" */
+    insert_discord_guilds_one?: (discord_guildsGenqlSelection & { __args: {
+    /** the row to be inserted */
+    object: discord_guilds_insert_input, 
+    /** upsert condition */
+    on_conflict?: (discord_guilds_on_conflict | null)} })
     /** insert data into the table: "e_check_in_settings" */
     insert_e_check_in_settings?: (e_check_in_settings_mutation_responseGenqlSelection & { __args: {
     /** the rows to be inserted */
@@ -24579,6 +24863,20 @@ export interface mutation_rootGenqlSelection{
     update_db_backups_many?: (db_backups_mutation_responseGenqlSelection & { __args: {
     /** updates to execute, in order */
     updates: db_backups_updates[]} })
+    /** update data of the table: "discord_guilds" */
+    update_discord_guilds?: (discord_guilds_mutation_responseGenqlSelection & { __args: {
+    /** sets the columns of the filtered rows to the given values */
+    _set?: (discord_guilds_set_input | null), 
+    /** filter the rows which have to be updated */
+    where: discord_guilds_bool_exp} })
+    /** update single row of the table: "discord_guilds" */
+    update_discord_guilds_by_pk?: (discord_guildsGenqlSelection & { __args: {
+    /** sets the columns of the filtered rows to the given values */
+    _set?: (discord_guilds_set_input | null), pk_columns: discord_guilds_pk_columns_input} })
+    /** update multiples rows of table: "discord_guilds" */
+    update_discord_guilds_many?: (discord_guilds_mutation_responseGenqlSelection & { __args: {
+    /** updates to execute, in order */
+    updates: discord_guilds_updates[]} })
     /** update data of the table: "e_check_in_settings" */
     update_e_check_in_settings?: (e_check_in_settings_mutation_responseGenqlSelection & { __args: {
     /** sets the columns of the filtered rows to the given values */
@@ -30144,6 +30442,32 @@ export interface query_rootGenqlSelection{
     where?: (db_backups_bool_exp | null)} })
     /** fetch data from the table: "db_backups" using primary key columns */
     db_backups_by_pk?: (db_backupsGenqlSelection & { __args: {id: Scalars['uuid']} })
+    /** fetch data from the table: "discord_guilds" */
+    discord_guilds?: (discord_guildsGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (discord_guilds_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (discord_guilds_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (discord_guilds_bool_exp | null)} })
+    /** fetch aggregated fields from the table: "discord_guilds" */
+    discord_guilds_aggregate?: (discord_guilds_aggregateGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (discord_guilds_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (discord_guilds_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (discord_guilds_bool_exp | null)} })
+    /** fetch data from the table: "discord_guilds" using primary key columns */
+    discord_guilds_by_pk?: (discord_guildsGenqlSelection & { __args: {id: Scalars['String']} })
     /** fetch data from the table: "e_check_in_settings" */
     e_check_in_settings?: (e_check_in_settingsGenqlSelection & { __args?: {
     /** distinct select on columns */
@@ -33063,6 +33387,40 @@ export interface subscription_rootGenqlSelection{
     cursor: (db_backups_stream_cursor_input | null)[], 
     /** filter the rows returned */
     where?: (db_backups_bool_exp | null)} })
+    /** fetch data from the table: "discord_guilds" */
+    discord_guilds?: (discord_guildsGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (discord_guilds_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (discord_guilds_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (discord_guilds_bool_exp | null)} })
+    /** fetch aggregated fields from the table: "discord_guilds" */
+    discord_guilds_aggregate?: (discord_guilds_aggregateGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (discord_guilds_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (discord_guilds_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (discord_guilds_bool_exp | null)} })
+    /** fetch data from the table: "discord_guilds" using primary key columns */
+    discord_guilds_by_pk?: (discord_guildsGenqlSelection & { __args: {id: Scalars['String']} })
+    /** fetch data from the table in a streaming manner: "discord_guilds" */
+    discord_guilds_stream?: (discord_guildsGenqlSelection & { __args: {
+    /** maximum number of rows returned in a single batch */
+    batch_size: Scalars['Int'], 
+    /** cursor to stream the results returned by the query */
+    cursor: (discord_guilds_stream_cursor_input | null)[], 
+    /** filter the rows returned */
+    where?: (discord_guilds_bool_exp | null)} })
     /** fetch data from the table: "e_check_in_settings" */
     e_check_in_settings?: (e_check_in_settingsGenqlSelection & { __args?: {
     /** distinct select on columns */
@@ -41807,6 +42165,54 @@ export type SubscriptionGenqlSelection = subscription_rootGenqlSelection
     
 
 
+    const discord_guilds_possibleTypes: string[] = ['discord_guilds']
+    export const isdiscord_guilds = (obj?: { __typename?: any } | null): obj is discord_guilds => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isdiscord_guilds"')
+      return discord_guilds_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const discord_guilds_aggregate_possibleTypes: string[] = ['discord_guilds_aggregate']
+    export const isdiscord_guilds_aggregate = (obj?: { __typename?: any } | null): obj is discord_guilds_aggregate => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isdiscord_guilds_aggregate"')
+      return discord_guilds_aggregate_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const discord_guilds_aggregate_fields_possibleTypes: string[] = ['discord_guilds_aggregate_fields']
+    export const isdiscord_guilds_aggregate_fields = (obj?: { __typename?: any } | null): obj is discord_guilds_aggregate_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isdiscord_guilds_aggregate_fields"')
+      return discord_guilds_aggregate_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const discord_guilds_max_fields_possibleTypes: string[] = ['discord_guilds_max_fields']
+    export const isdiscord_guilds_max_fields = (obj?: { __typename?: any } | null): obj is discord_guilds_max_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isdiscord_guilds_max_fields"')
+      return discord_guilds_max_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const discord_guilds_min_fields_possibleTypes: string[] = ['discord_guilds_min_fields']
+    export const isdiscord_guilds_min_fields = (obj?: { __typename?: any } | null): obj is discord_guilds_min_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isdiscord_guilds_min_fields"')
+      return discord_guilds_min_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const discord_guilds_mutation_response_possibleTypes: string[] = ['discord_guilds_mutation_response']
+    export const isdiscord_guilds_mutation_response = (obj?: { __typename?: any } | null): obj is discord_guilds_mutation_response => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isdiscord_guilds_mutation_response"')
+      return discord_guilds_mutation_response_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const e_check_in_settings_possibleTypes: string[] = ['e_check_in_settings']
     export const ise_check_in_settings = (obj?: { __typename?: any } | null): obj is e_check_in_settings => {
       if (!obj?.__typename) throw new Error('__typename is missing in "ise_check_in_settings"')
@@ -48791,6 +49197,34 @@ export const enumDbBackupsUpdateColumn = {
    size: 'size' as const
 }
 
+export const enumDiscordGuildsConstraint = {
+   discord_guilds_pkey: 'discord_guilds_pkey' as const
+}
+
+export const enumDiscordGuildsSelectColumn = {
+   afk_channel_id: 'afk_channel_id' as const,
+   category_channel_id: 'category_channel_id' as const,
+   created_at: 'created_at' as const,
+   icon: 'icon' as const,
+   id: 'id' as const,
+   name: 'name' as const,
+   owner_id: 'owner_id' as const,
+   queue_mix_channel_id: 'queue_mix_channel_id' as const,
+   updated_at: 'updated_at' as const
+}
+
+export const enumDiscordGuildsUpdateColumn = {
+   afk_channel_id: 'afk_channel_id' as const,
+   category_channel_id: 'category_channel_id' as const,
+   created_at: 'created_at' as const,
+   icon: 'icon' as const,
+   id: 'id' as const,
+   name: 'name' as const,
+   owner_id: 'owner_id' as const,
+   queue_mix_channel_id: 'queue_mix_channel_id' as const,
+   updated_at: 'updated_at' as const
+}
+
 export const enumECheckInSettingsConstraint = {
    e_check_in_settings_pkey: 'e_check_in_settings_pkey' as const
 }
@@ -49850,6 +50284,7 @@ export const enumMatchesConstraint = {
 export const enumMatchesSelectColumn = {
    cancels_at: 'cancels_at' as const,
    created_at: 'created_at' as const,
+   discord_guild_id: 'discord_guild_id' as const,
    ended_at: 'ended_at' as const,
    id: 'id' as const,
    label: 'label' as const,
@@ -49869,6 +50304,7 @@ export const enumMatchesSelectColumn = {
 export const enumMatchesUpdateColumn = {
    cancels_at: 'cancels_at' as const,
    created_at: 'created_at' as const,
+   discord_guild_id: 'discord_guild_id' as const,
    ended_at: 'ended_at' as const,
    id: 'id' as const,
    label: 'label' as const,

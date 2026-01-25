@@ -44,15 +44,45 @@ export default class ScheduleMix extends DiscordInteraction {
         return;
       }
 
+      // Verificar se a guild está inicializada
+      const { discord_guilds } = await this.hasura.query({
+        discord_guilds: {
+          __args: {
+            where: {
+              id: {
+                _eq: guild.id,
+              },
+            },
+          },
+          id: true,
+          category_channel_id: true,
+          queue_mix_channel_id: true,
+        },
+      });
+
+      if (!discord_guilds || discord_guilds.length === 0 || !discord_guilds[0].category_channel_id) {
+        await interaction.editReply(
+          `❌ This server is not initialized yet.\n\n` +
+          `An administrator must run the \`/init\` command first to set up the necessary channels.`
+        );
+        return;
+      }
+
+      const guildData = discord_guilds[0];
       const shortCode = nanoid();
 
       await guild.channels.fetch();
 
-      const bananaServerCategory = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildCategory &&
-          channel.name === '🍌 BananaServer.xyz Mix'
-      );
+      // Buscar a categoria principal que foi criada no /init
+      const bananaServerCategory = guild.channels.cache.get(guildData.category_channel_id);
+
+      if (!bananaServerCategory) {
+        await interaction.editReply(
+          `❌ The BananaServer.xyz Mix category was not found.\n\n` +
+          `Please ask an administrator to run \`/init\` again.`
+        );
+        return;
+      }
 
       const queueMixChannel = voiceChannel.name === '🍌 Queue Mix' ? voiceChannel : null;
       const playersArray = Array.from(players.values());
@@ -60,6 +90,7 @@ export default class ScheduleMix extends DiscordInteraction {
       console.log('Fetching bot member...');
       const botMember = await guild.members.fetch(interaction.client.user.id);
 
+      // Criar categoria específica para este mix
       const category = await guild.channels.create({
         name: `Banana Mix - #${shortCode}`,
         type: ChannelType.GuildCategory,

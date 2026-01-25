@@ -1,0 +1,37 @@
+table:
+  name: discord_guilds
+  schema: public
+array_relationships:
+  - name: matches
+    using:
+      foreign_key_constraint_on:
+        column: discord_guild_id
+        table:
+          name: matches
+          schema: public
+select_permissions:
+  - role: guest
+    permission:
+      columns:
+        - id
+        - name
+        - icon
+        - created_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - id
+        - name
+        - icon
+        - owner_id
+        - category_channel_id
+        - queue_mix_channel_id
+        - afk_channel_id
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""

@@ -53,6 +53,13 @@ export class DiscordBotService {
     team2PlayerIds: string[];
   }>();
 
+  // Mapa para rastrear canais de log das partidas
+  private matchLogChannels = new Map<string, {
+    channelId: string;
+    messageId: string;
+    guildId: string;
+  }>();
+
   constructor(
     readonly config: ConfigService,
     private readonly logger: Logger,
@@ -769,6 +776,42 @@ export class DiscordBotService {
       team2PlayerIds,
     });
     this.logger.log(`[Mix Match] Registered match ${matchId} for guild ${guildId}`);
+  }
+
+  /**
+   * Salva o canal de log da partida
+   */
+  public async setMatchLogChannel(matchId: string, channelId: string, messageId: string) {
+    // Buscar guildId da partida
+    const { matches_by_pk } = await this.hasura.query({
+      matches_by_pk: {
+        __args: { id: matchId },
+        discord_guild_id: true,
+      }
+    });
+
+    if (matches_by_pk?.discord_guild_id) {
+      this.matchLogChannels.set(matchId, {
+        channelId,
+        messageId,
+        guildId: matches_by_pk.discord_guild_id,
+      });
+      this.logger.log(`[Match Log] Saved log channel for match ${matchId}: ${channelId}`);
+    }
+  }
+
+  /**
+   * Busca o canal de log da partida
+   */
+  public getMatchLogChannel(matchId: string) {
+    return this.matchLogChannels.get(matchId);
+  }
+
+  /**
+   * Remove o canal de log da partida
+   */
+  public deleteMatchLogChannel(matchId: string) {
+    this.matchLogChannels.delete(matchId);
   }
 
   /**

@@ -303,6 +303,7 @@ insert_permissions:
       set:
         organizer_steam_id: x-hasura-user-id
       columns:
+        - discord_guild_id
         - label
         - match_options_id
         - scheduled_at
@@ -337,6 +338,7 @@ insert_permissions:
       set:
         organizer_steam_id: x-hasura-user-id
       columns:
+        - discord_guild_id
         - label
         - match_options_id
         - scheduled_at
@@ -370,6 +372,7 @@ insert_permissions:
       set:
         organizer_steam_id: x-hasura-user-id
       columns:
+        - discord_guild_id
         - label
         - match_options_id
         - scheduled_at
@@ -405,6 +408,7 @@ insert_permissions:
       set:
         organizer_steam_id: x-hasura-user-id
       columns:
+        - discord_guild_id
         - label
         - match_options_id
         - scheduled_at
@@ -435,6 +439,7 @@ insert_permissions:
       set:
         organizer_steam_id: x-hasura-user-id
       columns:
+        - discord_guild_id
         - label
         - match_options_id
         - scheduled_at
@@ -467,6 +472,7 @@ insert_permissions:
       set:
         organizer_steam_id: x-hasura-user-id
       columns:
+        - discord_guild_id
         - label
         - match_options_id
         - scheduled_at
@@ -478,6 +484,7 @@ select_permissions:
       columns:
         - cancels_at
         - created_at
+        - discord_guild_id
         - ended_at
         - id
         - label
@@ -530,6 +537,7 @@ select_permissions:
       columns:
         - cancels_at
         - created_at
+        - discord_guild_id
         - ended_at
         - id
         - label

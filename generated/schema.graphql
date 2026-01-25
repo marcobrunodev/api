@@ -1237,6 +1237,296 @@ type db_backups_variance_fields {
 }
 
 """
+columns and relationships of "discord_guilds"
+"""
+type discord_guilds {
+  afk_channel_id: String
+  category_channel_id: String
+  created_at: timestamptz!
+  icon: String
+  id: String!
+
+  """An array relationship"""
+  matches(
+    """distinct select on columns"""
+    distinct_on: [matches_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [matches_order_by!]
+
+    """filter the rows returned"""
+    where: matches_bool_exp
+  ): [matches!]!
+
+  """An aggregate relationship"""
+  matches_aggregate(
+    """distinct select on columns"""
+    distinct_on: [matches_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [matches_order_by!]
+
+    """filter the rows returned"""
+    where: matches_bool_exp
+  ): matches_aggregate!
+  name: String!
+  owner_id: String
+  queue_mix_channel_id: String
+  updated_at: timestamptz!
+}
+
+"""
+aggregated selection of "discord_guilds"
+"""
+type discord_guilds_aggregate {
+  aggregate: discord_guilds_aggregate_fields
+  nodes: [discord_guilds!]!
+}
+
+"""
+aggregate fields of "discord_guilds"
+"""
+type discord_guilds_aggregate_fields {
+  count(columns: [discord_guilds_select_column!], distinct: Boolean): Int!
+  max: discord_guilds_max_fields
+  min: discord_guilds_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "discord_guilds". All fields are combined with a logical 'AND'.
+"""
+input discord_guilds_bool_exp {
+  _and: [discord_guilds_bool_exp!]
+  _not: discord_guilds_bool_exp
+  _or: [discord_guilds_bool_exp!]
+  afk_channel_id: String_comparison_exp
+  category_channel_id: String_comparison_exp
+  created_at: timestamptz_comparison_exp
+  icon: String_comparison_exp
+  id: String_comparison_exp
+  matches: matches_bool_exp
+  matches_aggregate: matches_aggregate_bool_exp
+  name: String_comparison_exp
+  owner_id: String_comparison_exp
+  queue_mix_channel_id: String_comparison_exp
+  updated_at: timestamptz_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "discord_guilds"
+"""
+enum discord_guilds_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  discord_guilds_pkey
+}
+
+"""
+input type for inserting data into table "discord_guilds"
+"""
+input discord_guilds_insert_input {
+  afk_channel_id: String
+  category_channel_id: String
+  created_at: timestamptz
+  icon: String
+  id: String
+  matches: matches_arr_rel_insert_input
+  name: String
+  owner_id: String
+  queue_mix_channel_id: String
+  updated_at: timestamptz
+}
+
+"""aggregate max on columns"""
+type discord_guilds_max_fields {
+  afk_channel_id: String
+  category_channel_id: String
+  created_at: timestamptz
+  icon: String
+  id: String
+  name: String
+  owner_id: String
+  queue_mix_channel_id: String
+  updated_at: timestamptz
+}
+
+"""aggregate min on columns"""
+type discord_guilds_min_fields {
+  afk_channel_id: String
+  category_channel_id: String
+  created_at: timestamptz
+  icon: String
+  id: String
+  name: String
+  owner_id: String
+  queue_mix_channel_id: String
+  updated_at: timestamptz
+}
+
+"""
+response of any mutation on the table "discord_guilds"
+"""
+type discord_guilds_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [discord_guilds!]!
+}
+
+"""
+on_conflict condition type for table "discord_guilds"
+"""
+input discord_guilds_on_conflict {
+  constraint: discord_guilds_constraint!
+  update_columns: [discord_guilds_update_column!]! = []
+  where: discord_guilds_bool_exp
+}
+
+"""Ordering options when selecting data from "discord_guilds"."""
+input discord_guilds_order_by {
+  afk_channel_id: order_by
+  category_channel_id: order_by
+  created_at: order_by
+  icon: order_by
+  id: order_by
+  matches_aggregate: matches_aggregate_order_by
+  name: order_by
+  owner_id: order_by
+  queue_mix_channel_id: order_by
+  updated_at: order_by
+}
+
+"""primary key columns input for table: discord_guilds"""
+input discord_guilds_pk_columns_input {
+  id: String!
+}
+
+"""
+select columns of table "discord_guilds"
+"""
+enum discord_guilds_select_column {
+  """column name"""
+  afk_channel_id
+
+  """column name"""
+  category_channel_id
+
+  """column name"""
+  created_at
+
+  """column name"""
+  icon
+
+  """column name"""
+  id
+
+  """column name"""
+  name
+
+  """column name"""
+  owner_id
+
+  """column name"""
+  queue_mix_channel_id
+
+  """column name"""
+  updated_at
+}
+
+"""
+input type for updating data in table "discord_guilds"
+"""
+input discord_guilds_set_input {
+  afk_channel_id: String
+  category_channel_id: String
+  created_at: timestamptz
+  icon: String
+  id: String
+  name: String
+  owner_id: String
+  queue_mix_channel_id: String
+  updated_at: timestamptz
+}
+
+"""
+Streaming cursor of the table "discord_guilds"
+"""
+input discord_guilds_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: discord_guilds_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input discord_guilds_stream_cursor_value_input {
+  afk_channel_id: String
+  category_channel_id: String
+  created_at: timestamptz
+  icon: String
+  id: String
+  name: String
+  owner_id: String
+  queue_mix_channel_id: String
+  updated_at: timestamptz
+}
+
+"""
+update columns of table "discord_guilds"
+"""
+enum discord_guilds_update_column {
+  """column name"""
+  afk_channel_id
+
+  """column name"""
+  category_channel_id
+
+  """column name"""
+  created_at
+
+  """column name"""
+  icon
+
+  """column name"""
+  id
+
+  """column name"""
+  name
+
+  """column name"""
+  owner_id
+
+  """column name"""
+  queue_mix_channel_id
+
+  """column name"""
+  updated_at
+}
+
+input discord_guilds_updates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: discord_guilds_set_input
+
+  """filter the rows which have to be updated"""
+  where: discord_guilds_bool_exp!
+}
+
+"""
 columns and relationships of "e_check_in_settings"
 """
 type e_check_in_settings {
@@ -14573,6 +14863,7 @@ type matches {
     """filter the rows returned"""
     where: match_map_demos_bool_exp
   ): match_map_demos_aggregate!
+  discord_guild_id: String
 
   """An object relationship"""
   e_match_status: e_match_status!
@@ -15333,6 +15624,7 @@ input matches_bool_exp {
   current_match_map_id: uuid_comparison_exp
   demos: match_map_demos_bool_exp
   demos_aggregate: match_map_demos_aggregate_bool_exp
+  discord_guild_id: String_comparison_exp
   e_match_status: e_match_status_bool_exp
   e_region: server_regions_bool_exp
   elo_changes: v_player_elo_bool_exp
@@ -15443,6 +15735,7 @@ input matches_insert_input {
   cancels_at: timestamptz
   created_at: timestamptz
   demos: match_map_demos_arr_rel_insert_input
+  discord_guild_id: String
   e_match_status: e_match_status_obj_rel_insert_input
   e_region: server_regions_obj_rel_insert_input
   elo_changes: v_player_elo_arr_rel_insert_input
@@ -15500,6 +15793,7 @@ type matches_max_fields {
   A computed field, executes function "get_current_match_map"
   """
   current_match_map_id: uuid
+  discord_guild_id: String
   ended_at: timestamptz
   id: uuid
 
@@ -15566,6 +15860,7 @@ order by max() on columns of table "matches"
 input matches_max_order_by {
   cancels_at: order_by
   created_at: order_by
+  discord_guild_id: order_by
   ended_at: order_by
   id: order_by
   label: order_by
@@ -15600,6 +15895,7 @@ type matches_min_fields {
   A computed field, executes function "get_current_match_map"
   """
   current_match_map_id: uuid
+  discord_guild_id: String
   ended_at: timestamptz
   id: uuid
 
@@ -15666,6 +15962,7 @@ order by min() on columns of table "matches"
 input matches_min_order_by {
   cancels_at: order_by
   created_at: order_by
+  discord_guild_id: order_by
   ended_at: order_by
   id: order_by
   label: order_by
@@ -15724,6 +16021,7 @@ input matches_order_by {
   created_at: order_by
   current_match_map_id: order_by
   demos_aggregate: match_map_demos_aggregate_order_by
+  discord_guild_id: order_by
   e_match_status: e_match_status_order_by
   e_region: server_regions_order_by
   elo_changes_aggregate: v_player_elo_aggregate_order_by
@@ -15797,6 +16095,9 @@ enum matches_select_column {
   created_at
 
   """column name"""
+  discord_guild_id
+
+  """column name"""
   ended_at
 
   """column name"""
@@ -15845,6 +16146,7 @@ input type for updating data in table "matches"
 input matches_set_input {
   cancels_at: timestamptz
   created_at: timestamptz
+  discord_guild_id: String
   ended_at: timestamptz
   id: uuid
   label: String
@@ -15939,6 +16241,7 @@ input matches_stream_cursor_input {
 input matches_stream_cursor_value_input {
   cancels_at: timestamptz
   created_at: timestamptz
+  discord_guild_id: String
   ended_at: timestamptz
   id: uuid
   label: String
@@ -15985,6 +16288,9 @@ enum matches_update_column {
 
   """column name"""
   created_at
+
+  """column name"""
+  discord_guild_id
 
   """column name"""
   ended_at
@@ -16323,6 +16629,19 @@ type mutation_root {
   delete single row from the table: "db_backups"
   """
   delete_db_backups_by_pk(id: uuid!): db_backups
+
+  """
+  delete data from the table: "discord_guilds"
+  """
+  delete_discord_guilds(
+    """filter the rows which have to be deleted"""
+    where: discord_guilds_bool_exp!
+  ): discord_guilds_mutation_response
+
+  """
+  delete single row from the table: "discord_guilds"
+  """
+  delete_discord_guilds_by_pk(id: String!): discord_guilds
 
   """
   delete data from the table: "e_check_in_settings"
@@ -17335,6 +17654,28 @@ type mutation_root {
     """upsert condition"""
     on_conflict: db_backups_on_conflict
   ): db_backups
+
+  """
+  insert data into the table: "discord_guilds"
+  """
+  insert_discord_guilds(
+    """the rows to be inserted"""
+    objects: [discord_guilds_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: discord_guilds_on_conflict
+  ): discord_guilds_mutation_response
+
+  """
+  insert a single row into the table: "discord_guilds"
+  """
+  insert_discord_guilds_one(
+    """the row to be inserted"""
+    object: discord_guilds_insert_input!
+
+    """upsert condition"""
+    on_conflict: discord_guilds_on_conflict
+  ): discord_guilds
 
   """
   insert data into the table: "e_check_in_settings"
@@ -19058,6 +19399,34 @@ type mutation_root {
     """updates to execute, in order"""
     updates: [db_backups_updates!]!
   ): [db_backups_mutation_response]
+
+  """
+  update data of the table: "discord_guilds"
+  """
+  update_discord_guilds(
+    """sets the columns of the filtered rows to the given values"""
+    _set: discord_guilds_set_input
+
+    """filter the rows which have to be updated"""
+    where: discord_guilds_bool_exp!
+  ): discord_guilds_mutation_response
+
+  """
+  update single row of the table: "discord_guilds"
+  """
+  update_discord_guilds_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: discord_guilds_set_input
+    pk_columns: discord_guilds_pk_columns_input!
+  ): discord_guilds
+
+  """
+  update multiples rows of table: "discord_guilds"
+  """
+  update_discord_guilds_many(
+    """updates to execute, in order"""
+    updates: [discord_guilds_updates!]!
+  ): [discord_guilds_mutation_response]
 
   """
   update data of the table: "e_check_in_settings"
@@ -29348,6 +29717,49 @@ type query_root {
   db_backups_by_pk(id: uuid!): db_backups
 
   """
+  fetch data from the table: "discord_guilds"
+  """
+  discord_guilds(
+    """distinct select on columns"""
+    distinct_on: [discord_guilds_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [discord_guilds_order_by!]
+
+    """filter the rows returned"""
+    where: discord_guilds_bool_exp
+  ): [discord_guilds!]!
+
+  """
+  fetch aggregated fields from the table: "discord_guilds"
+  """
+  discord_guilds_aggregate(
+    """distinct select on columns"""
+    distinct_on: [discord_guilds_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [discord_guilds_order_by!]
+
+    """filter the rows returned"""
+    where: discord_guilds_bool_exp
+  ): discord_guilds_aggregate!
+
+  """fetch data from the table: "discord_guilds" using primary key columns"""
+  discord_guilds_by_pk(id: String!): discord_guilds
+
+  """
   fetch data from the table: "e_check_in_settings"
   """
   e_check_in_settings(
@@ -34344,6 +34756,63 @@ type subscription_root {
     """filter the rows returned"""
     where: db_backups_bool_exp
   ): [db_backups!]!
+
+  """
+  fetch data from the table: "discord_guilds"
+  """
+  discord_guilds(
+    """distinct select on columns"""
+    distinct_on: [discord_guilds_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [discord_guilds_order_by!]
+
+    """filter the rows returned"""
+    where: discord_guilds_bool_exp
+  ): [discord_guilds!]!
+
+  """
+  fetch aggregated fields from the table: "discord_guilds"
+  """
+  discord_guilds_aggregate(
+    """distinct select on columns"""
+    distinct_on: [discord_guilds_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [discord_guilds_order_by!]
+
+    """filter the rows returned"""
+    where: discord_guilds_bool_exp
+  ): discord_guilds_aggregate!
+
+  """fetch data from the table: "discord_guilds" using primary key columns"""
+  discord_guilds_by_pk(id: String!): discord_guilds
+
+  """
+  fetch data from the table in a streaming manner: "discord_guilds"
+  """
+  discord_guilds_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [discord_guilds_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: discord_guilds_bool_exp
+  ): [discord_guilds!]!
 
   """
   fetch data from the table: "e_check_in_settings"

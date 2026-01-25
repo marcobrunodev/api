@@ -1123,6 +1123,7 @@ export class MatchAssistantService {
       timeout_setting?: e_timeout_settings_enum;
       region?: string;
       maps?: Array<string>;
+      discord_guild_id?: string;
     },
   ) {
     let map_pool_id;
@@ -1157,6 +1158,9 @@ export class MatchAssistantService {
         __args: {
           object: {
             region: options.region,
+            ...(options.discord_guild_id && {
+              discord_guild_id: options.discord_guild_id,
+            }),
             options: {
               data: {
                 ...(map_pool_id

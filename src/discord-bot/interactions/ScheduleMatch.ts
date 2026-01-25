@@ -218,6 +218,7 @@ export default class ScheduleMatch extends DiscordInteraction {
           ...customMapPools["active_duty"],
           ...customMapPools["custom_maps"],
         ],
+        discord_guild_id: interaction.guildId,
       },
     );
     const matchId = match.id;

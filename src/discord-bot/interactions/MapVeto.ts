@@ -257,6 +257,7 @@ ${bannedMapsList}
         map: mapId,
         overtime: true,
         maps: [],
+        discord_guild_id: session.guildId,
       }
     );
 
@@ -396,6 +397,11 @@ Good luck and have fun! 🍌
         }],
         components: [row]
       });
+
+      // Criar canal de log para a partida
+      if (session.categoryId && session.guildId) {
+        await this.createMatchLogChannel(matchId, session.guildId, session.categoryId, selectedMap);
+      }
     } else {
       await channel.send({
         embeds: [{
@@ -414,6 +420,67 @@ The server is being prepared. You'll receive connection details shortly!
           }
         }]
       });
+    }
+  }
+
+  private async createMatchLogChannel(
+    matchId: string,
+    guildId: string,
+    categoryId: string,
+    mapName: string
+  ) {
+    try {
+      const guild = await this.bot.client.guilds.fetch(guildId);
+      const botMember = await guild.members.fetchMe();
+
+      // Criar canal de texto para scoreboard da partida
+      const logChannel = await guild.channels.create({
+        name: `scoreboard`,
+        type: ChannelType.GuildText,
+        parent: categoryId,
+        topic: `Live match stats for ${matchId}`,
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            allow: [PermissionFlagsBits.ViewChannel],
+            deny: [PermissionFlagsBits.SendMessages],
+          },
+          {
+            id: botMember.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.ManageChannels,
+              PermissionFlagsBits.ManageMessages,
+            ],
+          },
+        ],
+      });
+
+      // Enviar mensagem inicial do scoreboard
+      const scoreboardMessage = await logChannel.send({
+        embeds: [{
+          title: `📊 Live Match Stats - ${mapName}`,
+          description: `
+**Match ID:** \`${matchId}\`
+**Status:** Waiting for match to start...
+
+The scoreboard will be updated here after each round.
+          `,
+          color: 0x0099FF,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: 'From BananaServer.xyz with 🍌',
+          }
+        }]
+      });
+
+      // Salvar o canal e message ID no cache
+      await this.bot.setMatchLogChannel(matchId, logChannel.id, scoreboardMessage.id);
+
+      console.log(`📊 [MATCH LOG] Created log channel for match ${matchId}: ${logChannel.id}`);
+    } catch (error) {
+      console.error(`❌ [MATCH LOG] Error creating log channel for match ${matchId}:`, error);
     }
   }
 }
