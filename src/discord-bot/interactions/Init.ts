@@ -13,9 +13,9 @@ export default class Init extends DiscordInteraction {
   private readonly initLogger = new Logger(Init.name);
 
   public async handler(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
       const guild = interaction.guild;
 
       if (!guild) {
