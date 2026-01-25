@@ -2,6 +2,7 @@ import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, Channe
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotButtonInteraction } from "./interactions";
+import { AppConfig } from "src/configs/types/AppConfig";
 
 // Pool de mapas do competitive CS2
 const COMPETITIVE_MAPS = [
@@ -360,8 +361,8 @@ ${bannedMapsList}
       // Criar URL para abrir Steam diretamente
       const steamConnectUrl = `steam://run/730//+connect%20${serverIp}:${server.port}`;
       const quickConnectUrl = matches_by_pk.connection_link
-        ? `${this.configService.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(matches_by_pk.connection_link)}`
-        : `${this.configService.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(steamConnectUrl)}`;
+        ? `${this.config.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(matches_by_pk.connection_link)}`
+        : `${this.config.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(steamConnectUrl)}`;
 
       await channel.send({
         embeds: [{
