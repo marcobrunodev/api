@@ -1,3 +1,15 @@
+-- Criar função set_current_timestamp_updated_at se não existir
+CREATE OR REPLACE FUNCTION "public"."set_current_timestamp_updated_at"()
+RETURNS TRIGGER AS $$
+DECLARE
+  _new record;
+BEGIN
+  _new := NEW;
+  _new."updated_at" = NOW();
+  RETURN _new;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Criar trigger para updated_at na tabela discord_guilds
 DROP TRIGGER IF EXISTS "set_public_discord_guilds_updated_at" ON "public"."discord_guilds";
 

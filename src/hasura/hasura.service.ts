@@ -119,7 +119,49 @@ export class HasuraService {
     await this.apply(path.resolve("./hasura/views"));
     await this.apply(path.resolve("./hasura/triggers"));
 
+    await this.applyMetadata();
+
     await this.updateSettings();
+  }
+
+  private async applyMetadata() {
+    try {
+      const metadataPath = path.resolve("./hasura/metadata/databases/default/tables");
+      const fs = require('fs');
+      const yaml = require('js-yaml');
+
+      // Verificar se discord_guilds precisa ser tracked
+      const discordGuildsMetadata = path.join(metadataPath, 'public_discord_guilds.yaml');
+
+      if (fs.existsSync(discordGuildsMetadata)) {
+        this.logger.log('[Hasura] Ensuring discord_guilds table is tracked...');
+
+        // Usar API do Hasura para track a tabela
+        const hasuraEndpoint = this.config.get('HASURA_GRAPHQL_ENDPOINT');
+        const adminSecret = this.config.get('HASURA_GRAPHQL_ADMIN_SECRET');
+
+        await fetch(`${hasuraEndpoint}/v1/metadata`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-hasura-admin-secret': adminSecret,
+          },
+          body: JSON.stringify({
+            type: 'pg_track_table',
+            args: {
+              source: 'default',
+              schema: 'public',
+              name: 'discord_guilds',
+            },
+          }),
+        });
+
+        this.logger.log('[Hasura] discord_guilds table tracked successfully');
+      }
+    } catch (error) {
+      // Não falhar o startup se metadata já foi aplicado
+      this.logger.warn('[Hasura] Metadata apply warning (may already be applied):', error.message);
+    }
   }
 
   private async updateSettings() {
