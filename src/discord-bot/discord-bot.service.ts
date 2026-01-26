@@ -439,7 +439,7 @@ export class DiscordBotService {
           ),
       ];
 
-      // if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === 'development') {
         commands.push(
           new SlashCommandBuilder()
             .setName(ChatCommands.TestVote)
@@ -503,7 +503,7 @@ export class DiscordBotService {
             .setName(ChatCommands.LeaveGuild)
             .setDescription("[TEST ONLY] Make the bot leave the current Discord server"),
         );
-      // }
+      }
 
       await rest.put(Routes.applicationCommands(this.discordConfig.clientId), {
         body: commands,
@@ -918,17 +918,22 @@ export class DiscordBotService {
           // Lineup 1 deu ready, lineup 2 não deu - mover lineup 1 para topo e lineup 2 para AFK
           winningPlayerIds = lineup1PlayerDiscordIds;
           losingPlayerIds = lineup2PlayerDiscordIds;
-          this.logger.log(`[Mix Match] Canceled - Team 1 was ready, Team 2 wasn't`);
+          this.logger.log(`[Mix Match] Canceled - Team 1 was ready (${lineup1PlayerDiscordIds.length} players), Team 2 wasn't (${lineup2PlayerDiscordIds.length} players)`);
         } else if (lineup2Ready && !lineup1Ready) {
           // Lineup 2 deu ready, lineup 1 não deu - mover lineup 2 para topo e lineup 1 para AFK
           winningPlayerIds = lineup2PlayerDiscordIds;
           losingPlayerIds = lineup1PlayerDiscordIds;
-          this.logger.log(`[Mix Match] Canceled - Team 2 was ready, Team 1 wasn't`);
+          this.logger.log(`[Mix Match] Canceled - Team 2 was ready (${lineup2PlayerDiscordIds.length} players), Team 1 wasn't (${lineup1PlayerDiscordIds.length} players)`);
+        } else if (!lineup1Ready && !lineup2Ready) {
+          // Nenhum dos dois times deu ready - penalidade máxima: todos vão para AFK
+          winningPlayerIds = [];
+          losingPlayerIds = [...lineup1PlayerDiscordIds, ...lineup2PlayerDiscordIds];
+          this.logger.log(`[Mix Match] Canceled - Neither team was ready, moving all ${losingPlayerIds.length} players to AFK as penalty`);
         } else {
-          // Ambos deram ready ou ambos não deram - mover todos para o topo
+          // Ambos deram ready (improvável, mas possível) - mover todos para o topo
           winningPlayerIds = [...lineup1PlayerDiscordIds, ...lineup2PlayerDiscordIds];
           losingPlayerIds = [];
-          this.logger.log(`[Mix Match] Canceled - moving all players to top`);
+          this.logger.log(`[Mix Match] Canceled - Both teams were ready, moving all ${winningPlayerIds.length} players to top`);
         }
       } else {
         // Empate ou sem vencedor - mover todos para o topo
@@ -1030,40 +1035,61 @@ export class DiscordBotService {
         (ch: any) => ch.type === ChannelType.GuildVoice && ch.name === '🍌 Queue Mix'
       );
 
+      // PASSO 1: Mover fisicamente os jogadores de volta para Queue Mix ou AFK
+      // Isso vai acionar o evento VoiceStateUpdate que adiciona/remove do Redis
+      if (queueMixChannel && 'id' in queueMixChannel) {
+        this.logger.log(`[Mix Match] Moving players back to Queue Mix or AFK...`);
+
+        // Mover perdedores para AFK se a partida foi cancelada
+        if (matches_by_pk.status === 'Canceled' && losingPlayerIds.length > 0) {
+          this.logger.log(`[Mix Match] Moving ${losingPlayerIds.length} players who didn't ready to AFK`);
+          for (const playerId of sortedLosers) {
+            await this.movePlayerToAFK(guildId, playerId);
+          }
+        } else {
+          // Partida terminou normalmente - mover perdedores para Queue Mix
+          for (const playerId of sortedLosers) {
+            try {
+              const member = await guild.members.fetch(playerId);
+              if (member.voice.channel && member.voice.channel.parent?.name?.startsWith('Banana Mix')) {
+                await member.voice.setChannel(queueMixChannel.id);
+                this.logger.log(`[Mix Match] Moved loser ${playerId} back to Queue Mix`);
+              }
+            } catch (error) {
+              this.logger.error(`[Mix Match] Failed to move loser ${playerId} back to Queue Mix:`, error);
+            }
+          }
+        }
+
+        // Mover vencedores para Queue Mix
+        for (const playerId of sortedWinners) {
+          try {
+            const member = await guild.members.fetch(playerId);
+            if (member.voice.channel && member.voice.channel.parent?.name?.startsWith('Banana Mix')) {
+              await member.voice.setChannel(queueMixChannel.id);
+              this.logger.log(`[Mix Match] Moved winner ${playerId} back to Queue Mix`);
+            }
+          } catch (error) {
+            this.logger.error(`[Mix Match] Failed to move winner ${playerId} back to Queue Mix:`, error);
+          }
+        }
+      }
+
+      // PASSO 2: Atualizar posições no Redis baseado no desempenho (K/D)
+      // Isso sobrescreve as posições que foram adicionadas automaticamente pelo VoiceStateUpdate
+      // Aguardar um pouco para garantir que todos os eventos VoiceStateUpdate foram processados
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Mover vencedores para o topo da fila (na ordem: melhor K/D primeiro)
+      this.logger.log(`[Mix Match] Updating Redis queue positions based on K/D...`);
       for (const playerId of sortedWinners) {
         await this.addPlayerToTopOfQueue(guildId, playerId);
       }
 
-      // Se a partida foi cancelada, mover perdedores (que não deram ready) para AFK
-      // Senão, mover perdedores para o final da fila
-      if (matches_by_pk.status === 'Canceled' && losingPlayerIds.length > 0) {
-        this.logger.log(`[Mix Match] Moving ${losingPlayerIds.length} players who didn't ready to AFK`);
-        for (const playerId of sortedLosers) {
-          await this.movePlayerToAFK(guildId, playerId);
-        }
-      } else {
-        // Partida terminou normalmente - mover perdedores para o final da fila
+      // Mover perdedores para o final da fila (se a partida não foi cancelada)
+      if (matches_by_pk.status !== 'Canceled' || losingPlayerIds.length === 0) {
         for (const playerId of sortedLosers) {
           await this.addPenaltyToPlayer(guildId, playerId);
-        }
-      }
-
-      // Mover todos os jogadores de volta para Queue Mix (se existir)
-      // Isso vai acionar a limpeza automática dos canais vazios
-      if (queueMixChannel && 'id' in queueMixChannel) {
-        this.logger.log(`[Mix Match] Moving all players back to Queue Mix`);
-        for (const playerId of allPlayerIds) {
-          try {
-            const member = await guild.members.fetch(playerId);
-            // Só mover se o jogador ainda estiver em algum canal de voz da categoria do mix
-            if (member.voice.channel && member.voice.channel.parent?.name?.startsWith('Banana Mix')) {
-              await member.voice.setChannel(queueMixChannel.id);
-              this.logger.log(`[Mix Match] Moved ${playerId} back to Queue Mix`);
-            }
-          } catch (error) {
-            this.logger.error(`[Mix Match] Failed to move player ${playerId} back to Queue Mix:`, error);
-          }
         }
       }
 
