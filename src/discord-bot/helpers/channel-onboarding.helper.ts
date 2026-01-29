@@ -100,6 +100,8 @@ export async function sendChannelOnboarding(
   type: OnboardingChannelType,
   additionalInfo?: string
 ): Promise<void> {
+  console.log(`[CHANNEL ONBOARDING] Sending onboarding for type: ${type} to channel: ${channel.name}`);
+
   const info = CHANNEL_ONBOARDING_INFO[type];
 
   if (!info) {
@@ -126,9 +128,10 @@ export async function sendChannelOnboarding(
   }
 
   try {
-    await channel.send({ embeds: [embed] });
+    const message = await channel.send({ embeds: [embed] });
+    console.log(`[CHANNEL ONBOARDING] ✅ Successfully sent onboarding message (ID: ${message.id})`);
   } catch (error) {
-    console.error(`[CHANNEL ONBOARDING] Failed to send onboarding message:`, error);
+    console.error(`[CHANNEL ONBOARDING] ❌ Failed to send onboarding message:`, error);
   }
 }
 
@@ -140,6 +143,8 @@ export async function sendMixSessionOnboarding(
   mixCode: string,
   categoryName: string
 ): Promise<void> {
+  console.log(`[MIX SESSION ONBOARDING] Sending onboarding for mix ${mixCode} to channel: ${channel.name}`);
+
   const embed = new EmbedBuilder()
     .setTitle('🎮 Welcome to Your Mix Session!')
     .setDescription(
@@ -173,8 +178,9 @@ export async function sendMixSessionOnboarding(
     .setTimestamp();
 
   try {
-    await channel.send({ embeds: [embed] });
+    const message = await channel.send({ embeds: [embed] });
+    console.log(`[MIX SESSION ONBOARDING] ✅ Successfully sent onboarding message (ID: ${message.id})`);
   } catch (error) {
-    console.error(`[CHANNEL ONBOARDING] Failed to send mix session onboarding:`, error);
+    console.error(`[MIX SESSION ONBOARDING] ❌ Failed to send mix session onboarding:`, error);
   }
 }
