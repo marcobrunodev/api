@@ -11,6 +11,7 @@ import {
 } from "discord.js";
 import { ButtonActions } from "../enums/ButtonActions";
 import { customAlphabet } from 'nanoid';
+import { sendMixSessionOnboarding } from "../helpers/channel-onboarding.helper";
 
 const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 
@@ -44,7 +45,6 @@ export default class ScheduleMix extends DiscordInteraction {
         return;
       }
 
-      // Verificar se a guild está inicializada
       const { discord_guilds } = await this.hasura.query({
         discord_guilds: {
           __args: {
@@ -196,6 +196,9 @@ export default class ScheduleMix extends DiscordInteraction {
         `🔊 Voice: ${mixVoiceChannel}\n` +
         `👥 Players: ${movedPlayers.length}`
       );
+
+      // Enviar mensagem de onboarding explicando toda a sessão do mix
+      await sendMixSessionOnboarding(picksBans, shortCode, category.name);
 
       await picksBans.send({
         embeds: [{

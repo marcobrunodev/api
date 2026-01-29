@@ -7,6 +7,7 @@ import {
   MessageFlags,
 } from "discord.js";
 import { Logger } from "@nestjs/common";
+import { sendChannelOnboarding, OnboardingChannelType } from "../helpers/channel-onboarding.helper";
 
 @BotChatCommand(ChatCommands.Init)
 export default class Init extends DiscordInteraction {
@@ -124,9 +125,52 @@ export default class Init extends DiscordInteraction {
         results.push('⚠️ Warning: Could not save guild information to database');
       }
 
+      // Criar canal de texto para enviar mensagens de onboarding (se não existir)
+      let infoChannel = guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildText &&
+          channel.name === 'banana-info' &&
+          channel.parentId === category?.id
+      );
+
+      let sendOnboarding = false;
+
+      if (!infoChannel) {
+        infoChannel = await guild.channels.create({
+          name: 'banana-info',
+          type: ChannelType.GuildText,
+          parent: category?.id,
+          topic: 'Information about BananaServer.xyz Mix channels and how to use them',
+        });
+        results.push('✅ Created info channel: **banana-info**');
+        this.initLogger.log(`Created banana-info channel in guild: ${guild.name}`);
+        sendOnboarding = true;
+      } else {
+        results.push('ℹ️ Info channel **banana-info** already exists');
+      }
+
       await interaction.editReply(
         `**Initialization Complete!**\n\n${results.join('\n')}`
       );
+
+      // Enviar mensagens de onboarding se o canal foi recém-criado
+      if (sendOnboarding && infoChannel && 'send' in infoChannel) {
+        await sendChannelOnboarding(
+          infoChannel as any,
+          OnboardingChannelType.BANANA_MIX_CATEGORY,
+          `The **${category?.name}** category has been set up successfully!`
+        );
+
+        await sendChannelOnboarding(
+          infoChannel as any,
+          OnboardingChannelType.QUEUE_MIX
+        );
+
+        await sendChannelOnboarding(
+          infoChannel as any,
+          OnboardingChannelType.AFK
+        );
+      }
 
     } catch (error) {
       this.initLogger.error('Error in /init command:', error);

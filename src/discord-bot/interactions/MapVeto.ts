@@ -3,6 +3,7 @@ import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotButtonInteraction } from "./interactions";
 import { AppConfig } from "src/configs/types/AppConfig";
+import { sendChannelOnboarding, OnboardingChannelType } from "../helpers/channel-onboarding.helper";
 
 // Pool de mapas do competitive CS2
 const COMPETITIVE_MAPS = [
@@ -465,6 +466,13 @@ The server is being prepared. You'll receive connection details shortly!
           },
         ],
       });
+
+      // Enviar mensagem de onboarding explicando o canal scoreboard
+      await sendChannelOnboarding(
+        logChannel,
+        OnboardingChannelType.SCOREBOARD,
+        `Match ID: \`${matchId}\` | Map: ${mapName}`
+      );
 
       // Enviar mensagem inicial do scoreboard
       const scoreboardMessage = await logChannel.send({
