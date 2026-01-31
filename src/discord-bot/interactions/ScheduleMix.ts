@@ -119,11 +119,6 @@ export default class ScheduleMix extends DiscordInteraction {
               PermissionFlagsBits.MoveMembers,
             ],
           },
-          {
-            id: guild.id,
-            allow: [PermissionFlagsBits.ViewChannel],
-            deny: [PermissionFlagsBits.Connect],
-          },
         ],
       });
 

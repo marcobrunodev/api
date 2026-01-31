@@ -693,16 +693,6 @@ ${updatedPlayersList}
             ],
           });
 
-          // @everyone pode ver mas não pode conectar
-          voicePermissions.push({
-            id: guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-            ],
-            deny: [
-              PermissionFlagsBits.Connect,
-            ],
-          });
 
           // Criar canal para Team 1 (captain1)
           console.log(`🎯 [CAPTAIN VOTE CALLBACK] Creating Team ${captain1Fruit} voice channel...`);
