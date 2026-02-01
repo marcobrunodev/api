@@ -103,12 +103,5 @@ export default class RegisterSteamId extends DiscordInteraction {
       ephemeral: true,
     });
 
-    const channel = interaction.channel;
-    if (channel && 'send' in channel) {
-      await channel.send({
-        content: `<@${interaction.user.id}>
-📺 **Video Tutorial to find your SteamID64:**\nhttps://youtu.be/DHFmBEL-s1I`,
-      });
-    }
   }
 }

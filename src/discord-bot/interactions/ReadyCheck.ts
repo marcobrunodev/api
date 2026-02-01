@@ -416,13 +416,6 @@ export default class ReadyCheck extends DiscordInteraction {
       ephemeral: true,
     });
 
-    const channel = interaction.channel;
-    if (channel && 'send' in channel) {
-      await channel.send({
-        content: `<@${userId}> 
-📺 **Video Tutorial to find your SteamID64:**\nhttps://youtu.be/DHFmBEL-s1I`,
-      });
-    }
     return;
   }
 
