@@ -28,6 +28,7 @@ import KickPlayer from "./KickPlayer";
 import PickPlayer from "./PickPlayer";
 import MapVeto from "./MapVeto";
 import RequestRemake from "./RemakeVote";
+import CheckSteamId from "./CheckSteamId";
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import RequestRemake from "./RemakeVote";
     ConfirmSteamId,
     CancelSteamId,
     OpenRegisterSteamIdModal,
+    CheckSteamId,
   ],
   providers: [
     LinkDiscord,
@@ -87,6 +89,7 @@ import RequestRemake from "./RemakeVote";
     ConfirmSteamId,
     CancelSteamId,
     OpenRegisterSteamIdModal,
+    CheckSteamId,
     loggerFactory(),
   ],
 })

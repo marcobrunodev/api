@@ -420,6 +420,9 @@ export class DiscordBotService {
           .setName(ChatCommands.RegisterSteamId)
           .setDescription("Register your SteamID and create an account"),
         new SlashCommandBuilder()
+          .setName(ChatCommands.CheckSteamId)
+          .setDescription("Check which players in Queue Mix need to register their SteamID"),
+        new SlashCommandBuilder()
           .setName(ChatCommands.ScheduleMix)
           .setDescription("Creates a Mix Match"),
         new SlashCommandBuilder()

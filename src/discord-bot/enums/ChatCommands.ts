@@ -13,4 +13,5 @@ export enum ChatCommands {
   LeaveGuild = "leave-guild",
   KickPlayer = "kick",
   RegisterSteamId = "steamid",
+  CheckSteamId = "check-steamid",
 }
