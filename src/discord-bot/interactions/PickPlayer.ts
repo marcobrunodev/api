@@ -130,6 +130,9 @@ export default class PickPlayer extends DiscordInteraction {
     session.availablePlayers = session.availablePlayers.filter(id => id !== pickedPlayerId);
     session.currentPickIndex++;
 
+    // Verificar se todos os picks foram feitos
+    const isLastPick = session.currentPickIndex >= session.pickOrder.length;
+
     // Mover o player para o canal de voz do time ANTES de atualizar a mensagem
     try {
       const guild = await this.bot.client.guilds.fetch(session.guildId);
@@ -138,21 +141,21 @@ export default class PickPlayer extends DiscordInteraction {
 
       if (member.voice.channel) {
         await member.voice.setChannel(targetChannelId);
+        console.log(`✅ Moved player ${pickedPlayerId} to ${currentCaptain === 1 ? 'team 1' : 'team 2'} channel${isLastPick ? ' (LAST PICK)' : ''}`);
       }
     } catch (error) {
-      console.error(`Error moving player ${pickedPlayerId} to team channel:`, error);
+      console.error(`❌ Error moving player ${pickedPlayerId} to team channel:`, error);
     }
-
-    // Verificar se todos os picks foram feitos
-    const isLastPick = session.currentPickIndex >= session.pickOrder.length;
 
     // Atualizar a mensagem
     if (!isLastPick) {
       await updatePickMessage(interaction, this.bot);
     }
 
-    // Se foi o último pick, finalizar
+    // Se foi o último pick, finalizar (só depois de garantir que o player foi movido)
     if (isLastPick) {
+      // Pequeno delay para garantir que a movimentação foi processada pelo Discord
+      await new Promise(resolve => setTimeout(resolve, 500));
       await finalizePicks(interaction, session);
       deletePickSession(messageId);
     }
