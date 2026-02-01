@@ -48,6 +48,7 @@ import { MatchRelayController } from "./match-relay/match-relay.controller";
 import { MatchRelayService } from "./match-relay/match-relay.service";
 import { MatchRelayAuthMiddleware } from "./match-relay/match-relay-auth-middleware";
 import { K8sModule } from "src/k8s/k8s.module";
+import { DiscordBotScoreboardService } from "../discord-bot/discord-bot-scoreboard/discord-bot-scoreboard.service";
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { K8sModule } from "src/k8s/k8s.module";
     CancelInvalidTournaments,
     CleanAbandonedMatches,
     EloCalculation,
+    DiscordBotScoreboardService,
     ...getQueuesProcessors("Matches"),
     ...Object.values(MatchEvents),
     loggerFactory(),
