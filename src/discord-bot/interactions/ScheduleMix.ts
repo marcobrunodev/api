@@ -45,12 +45,85 @@ export default class ScheduleMix extends DiscordInteraction {
         return;
       }
 
+      const playersArray = Array.from(players.values());
+
+      // Filtrar apenas jogadores reais (não bots) para verificação de SteamID
+      const realPlayers = playersArray.filter((m: any) => !m.user.bot);
+      const discordIds = realPlayers.slice(0, 10).map((m: any) => m.id);
+
+      const { players: dbPlayers } = await this.hasura.query({
+        players: {
+          __args: {
+            where: {
+              discord_id: {
+                _in: discordIds,
+              },
+            },
+          },
+          discord_id: true,
+          steam_id: true,
+        },
+      });
+
+      // Criar mapa de Discord ID -> SteamID
+      const playerMap = new Map<string, string | null>();
+      dbPlayers.forEach(p => {
+        if (p.discord_id) {
+          playerMap.set(p.discord_id, p.steam_id);
+        }
+      });
+
+      // Identificar players sem SteamID (somente jogadores reais, não bots)
+      const playersWithoutSteamId: string[] = [];
+
+      for (let i = 0; i < Math.min(10, realPlayers.length); i++) {
+        const playerId = realPlayers[i].id;
+        const steamId = playerMap.get(playerId);
+
+        if (!steamId) {
+          playersWithoutSteamId.push(playerId);
+        }
+      }
+
+      // Se houver jogadores sem SteamID, não permitir iniciar o mix
+      if (playersWithoutSteamId.length > 0) {
+        const registerButton = new ButtonBuilder()
+          .setCustomId(ButtonActions.OpenRegisterSteamIdModal)
+          .setLabel('📝 Register SteamID')
+          .setStyle(ButtonStyle.Primary);
+
+        const row = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(registerButton);
+
+        await interaction.editReply({
+          embeds: [{
+            title: '⚠️ SteamID Registration Required',
+            description:
+              `**${playersWithoutSteamId.length}** player(s) need to register their SteamID64 before starting the mix!\n\n` +
+              '**Players without SteamID:**\n' +
+              playersWithoutSteamId.map(id => `❌ <@${id}>`).join('\n') +
+              '\n\n**How to find your SteamID64:**\n' +
+              '1. Open your Steam client\n' +
+              '2. Click on your profile name\n' +
+              '3. Click "Account Details"\n' +
+              '4. Your SteamID64 will be shown there\n\n' +
+              'Use the `/steamid` command to register, then try `/mix` again!',
+            color: 0xFF9900,
+            footer: {
+              text: 'From BananaServer.xyz with 🍌',
+            },
+            timestamp: new Date().toISOString(),
+          }],
+          components: [row],
+        });
+        return;
+      }
+
       const shortCode = nanoid();
 
       await guild.channels.fetch();
 
       const queueMixChannel = voiceChannel.name === '🍌 Queue Mix' ? voiceChannel : null;
-      const playersArray = Array.from(players.values());
 
       console.log('Fetching bot member...');
       const botMember = await guild.members.fetch(interaction.client.user.id);
