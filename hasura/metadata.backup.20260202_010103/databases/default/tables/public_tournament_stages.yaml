@@ -1,0 +1,97 @@
+table:
+  name: tournament_stages
+  schema: public
+object_relationships:
+  - name: e_tournament_stage_type
+    using:
+      foreign_key_constraint_on: type
+  - name: options
+    using:
+      manual_configuration:
+        column_mapping:
+          match_options_id: id
+        insertion_order: null
+        remote_table:
+          name: match_options
+          schema: public
+  - name: tournament
+    using:
+      foreign_key_constraint_on: tournament_id
+array_relationships:
+  - name: brackets
+    using:
+      foreign_key_constraint_on:
+        column: tournament_stage_id
+        table:
+          name: tournament_brackets
+          schema: public
+  - name: results
+    using:
+      manual_configuration:
+        column_mapping:
+          id: tournament_stage_id
+        insertion_order: null
+        remote_table:
+          name: v_team_stage_results
+          schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        tournament:
+          is_organizer:
+            _eq: true
+      columns:
+        - groups
+        - match_options_id
+        - max_teams
+        - min_teams
+        - order
+        - settings
+        - tournament_id
+        - type
+    comment: ""
+select_permissions:
+  - role: guest
+    permission:
+      columns:
+        - groups
+        - id
+        - match_options_id
+        - max_teams
+        - min_teams
+        - order
+        - settings
+        - tournament_id
+        - type
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - groups
+        - match_options_id
+        - max_teams
+        - min_teams
+        - order
+        - settings
+        - type
+      filter:
+        tournament:
+          is_organizer:
+            _eq: true
+      check:
+        tournament:
+          is_organizer:
+            _eq: true
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        tournament:
+          is_organizer:
+            _eq: true
+    comment: ""

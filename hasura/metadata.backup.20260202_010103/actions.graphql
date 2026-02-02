@@ -1,0 +1,299 @@
+type Mutation {
+  acceptInvite(
+    invite_id: uuid!
+    type: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  approveNameChange(
+    steam_id: bigint!
+    name: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  callForOrganizer(
+    match_id: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  cancelMatch(
+    match_id: uuid!
+  ): SuccessOutput
+}
+
+type Mutation {
+  checkIntoMatch(
+    match_id: uuid!
+  ): SuccessOutput
+}
+
+type Mutation {
+  createApiKey(
+    label: String!
+  ): ApiKeyResponse
+}
+
+type Mutation {
+  deleteMatch(
+    match_id: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  denyInvite(
+    invite_id: uuid!
+    type: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  forfeitMatch(
+    match_id: uuid!
+    winning_lineup_id: uuid!
+  ): SuccessOutput
+}
+
+type Query {
+  getDedicatedServerInfo: [DedicatedSeverInfo]!
+}
+
+type Query {
+  getNodeStats(
+    node: String!
+  ): NodeStats!
+}
+
+type Query {
+  getServiceStats: [PodStats]!
+}
+
+type Mutation {
+  getTestUploadLink: GetTestUploadResponse!
+}
+
+type Mutation {
+  joinLineup(
+    match_id: String!
+    lineup_id: String!
+    code: String
+  ): SuccessOutput
+}
+
+type Mutation {
+  leaveLineup(
+    match_id: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  logout: SuccessOutput
+}
+
+type Query {
+  me: MeResponse!
+}
+
+type Mutation {
+  randomizeTeams(
+    match_id: uuid!
+  ): SuccessOutput
+}
+
+type Mutation {
+  registerName(
+    name: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  requestNameChange(
+    steam_id: bigint!
+    name: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  restartService(
+    service: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  scheduleMatch(
+    match_id: uuid!
+    time: timestamptz
+  ): SuccessOutput
+}
+
+type Mutation {
+  setGameNodeSchedulingState(
+    game_server_node_id: String!
+    enabled: Boolean!
+  ): SuccessOutput
+}
+
+type Mutation {
+  setMatchWinner(
+    match_id: uuid!
+    winning_lineup_id: uuid!
+  ): SuccessOutput
+}
+
+type Mutation {
+  setupGameServer: SetupGameServeOutput
+}
+
+type Mutation {
+  startMatch(
+    match_id: uuid!
+    server_id: uuid
+  ): SuccessOutput
+}
+
+type Mutation {
+  swapLineups(
+    match_id: uuid!
+  ): SuccessOutput
+}
+
+type Mutation {
+  switchLineup(
+    match_id: String!
+  ): SuccessOutput
+}
+
+type Mutation {
+  syncSteamFriends: SuccessOutput
+}
+
+type Query {
+  telemetryStats: TelemetryStats!
+}
+
+type Mutation {
+  testUpload: TestUploadResponse
+}
+
+type Mutation {
+  unlinkDiscord: SuccessOutput
+}
+
+type Mutation {
+  updateCs(
+    game_server_node_id: uuid
+  ): SuccessOutput
+}
+
+type Mutation {
+  updateServices: SuccessOutput
+}
+
+input SampleInput {
+  username: String!
+  password: String!
+}
+
+type MeResponse {
+  name: String!
+  country: String
+  steam_id: String!
+  avatar_url: String!
+  profile_url: String
+  discord_id: String
+  role: String!
+  language: String
+}
+
+type SuccessOutput {
+  success: Boolean!
+}
+
+type SetupGameServeOutput {
+  link: String!
+  gameServerId: String!
+}
+
+type SampleOutput {
+  accessToken: String!
+}
+
+type CpuStat {
+  window: Float
+  time: timestamp
+  used: bigint
+  total: bigint
+}
+
+type MemoryStat {
+  time: timestamp
+  used: bigint
+  total: bigint
+}
+
+type NodeStats {
+  node: String!
+  cpu: CpuStat
+  memory: MemoryStat
+  disks: [DiskStats]
+  network: [NetworkStats]
+}
+
+type PodStats {
+  node: String!
+  name: String!
+  cpu: CpuStat
+  memory: MemoryStat
+}
+
+type TelemetryStats {
+  online: Int!
+}
+
+type TestUploadResponse {
+  error: String
+}
+
+type GetTestUploadResponse {
+  error: String
+  link: String
+}
+
+type ApiKeyResponse {
+  key: String!
+}
+
+type DiskStats {
+  time: timestamp
+  disks: [DiskStat]
+}
+
+type DiskStat {
+  filesystem: String
+  size: String
+  used: String
+  available: String
+  usedPercent: String
+  mountpoint: String
+}
+
+type NetworkStats {
+  time: timestamp
+  nics: [NicStat]
+}
+
+type NicStat {
+  name: String
+  tx: bigint
+  rx: bigint
+}
+
+type DedicatedSeverInfo {
+  id: String!
+  players: Int!
+  map: String!
+  lastPing: String!
+}
+

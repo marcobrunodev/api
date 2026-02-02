@@ -1,0 +1,83 @@
+table:
+  name: discord_guilds
+  schema: public
+configuration:
+  column_config: {}
+  custom_column_names: {}
+  custom_name: discord_guilds
+  custom_root_fields: {}
+array_relationships:
+  - name: matches
+    using:
+      foreign_key_constraint_on:
+        column: discord_guild_id
+        table:
+          name: matches
+          schema: public
+insert_permissions:
+  - role: administrator
+    permission:
+      check: {}
+      columns:
+        - id
+        - name
+        - icon
+        - owner_id
+        - category_channel_id
+        - queue_mix_channel_id
+        - afk_channel_id
+    comment: ""
+select_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - id
+        - name
+        - icon
+        - owner_id
+        - category_channel_id
+        - queue_mix_channel_id
+        - afk_channel_id
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: guest
+    permission:
+      columns:
+        - id
+        - name
+        - icon
+        - created_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - id
+        - name
+        - icon
+        - owner_id
+        - category_channel_id
+        - queue_mix_channel_id
+        - afk_channel_id
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - name
+        - icon
+        - owner_id
+        - category_channel_id
+        - queue_mix_channel_id
+        - afk_channel_id
+      filter: {}
+      check: {}
+    comment: ""

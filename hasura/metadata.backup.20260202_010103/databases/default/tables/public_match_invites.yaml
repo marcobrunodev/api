@@ -1,0 +1,73 @@
+table:
+  name: match_invites
+  schema: public
+object_relationships:
+  - name: invited_by
+    using:
+      foreign_key_constraint_on: invited_by_player_steam_id
+  - name: match
+    using:
+      foreign_key_constraint_on: match_id
+  - name: player
+    using:
+      foreign_key_constraint_on: steam_id
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        _and:
+          - steam_id:
+              _neq: X-Hasura-User-Id
+          - match:
+              _and:
+                - status:
+                    _eq: PickingPlayers
+                - _or:
+                    - is_organizer:
+                        _eq: true
+                    - options:
+                        lobby_access:
+                          _in:
+                            - Open
+                            - Friends
+                            - Invite
+      set:
+        invited_by_player_steam_id: x-hasura-User-Id
+      columns:
+        - match_id
+        - steam_id
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - invited_by_player_steam_id
+        - steam_id
+        - created_at
+        - id
+        - match_id
+      filter:
+        _or:
+          - steam_id:
+              _eq: X-Hasura-User-Id
+          - match:
+              _or:
+                - is_in_lineup:
+                    _eq: true
+                - is_organizer:
+                    _eq: true
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        _or:
+          - steam_id:
+              _eq: X-Hasura-User-Id
+          - _and:
+              - match:
+                  is_in_lineup:
+                    _eq: true
+              - invited_by_player_steam_id:
+                  _eq: X-Hasura-User-Id
+    comment: ""

@@ -1,0 +1,41 @@
+table:
+  name: v_player_elo
+  schema: public
+object_relationships:
+  - name: match
+    using:
+      manual_configuration:
+        column_mapping:
+          match_id: id
+        insertion_order: null
+        remote_table:
+          name: matches
+          schema: public
+select_permissions:
+  - role: guest
+    permission:
+      columns:
+        - actual_score
+        - assists
+        - current_elo
+        - damage
+        - damage_percent
+        - deaths
+        - elo_change
+        - expected_score
+        - k_factor
+        - kda
+        - kills
+        - match_created_at
+        - match_id
+        - match_result
+        - opponent_team_elo_avg
+        - performance_multiplier
+        - player_name
+        - player_steam_id
+        - player_team_elo_avg
+        - team_avg_kda
+        - type
+        - updated_elo
+      filter: {}
+    comment: ""

@@ -1,0 +1,201 @@
+table:
+  name: match_lineup_players
+  schema: public
+object_relationships:
+  - name: lineup
+    using:
+      foreign_key_constraint_on: match_lineup_id
+  - name: player
+    using:
+      foreign_key_constraint_on: steam_id
+insert_permissions:
+  - role: match_organizer
+    permission:
+      check: {}
+      columns:
+        - captain
+        - match_lineup_id
+        - steam_id
+    comment: ""
+  - role: streamer
+    permission:
+      check:
+        _and:
+          - lineup:
+              v_match_lineup:
+                match:
+                  is_organizer:
+                    _eq: true
+          - _or:
+              - _not:
+                  _exists:
+                    _table:
+                      name: settings
+                      schema: public
+                    _where:
+                      _and:
+                        - name:
+                            _eq: public.lineup_add_without_invite
+              - _exists:
+                  _table:
+                    name: settings
+                    schema: public
+                  _where:
+                    _and:
+                      - name:
+                          _eq: public.lineup_add_without_invite
+                      - value:
+                          _in:
+                            - user
+                            - verified_user
+                            - streamer
+      columns:
+        - captain
+        - match_lineup_id
+        - steam_id
+    comment: ""
+  - role: user
+    permission:
+      check:
+        _and:
+          - lineup:
+              v_match_lineup:
+                match:
+                  is_organizer:
+                    _eq: true
+          - _or:
+              - _not:
+                  _exists:
+                    _table:
+                      name: settings
+                      schema: public
+                    _where:
+                      _and:
+                        - name:
+                            _eq: public.lineup_add_without_invite
+              - _exists:
+                  _table:
+                    name: settings
+                    schema: public
+                  _where:
+                    _and:
+                      - name:
+                          _eq: public.lineup_add_without_invite
+                      - value:
+                          _eq: user
+              - steam_id:
+                  _eq: X-Hasura-User-Id
+      columns:
+        - captain
+        - match_lineup_id
+        - steam_id
+    comment: ""
+  - role: verified_user
+    permission:
+      check:
+        _and:
+          - lineup:
+              v_match_lineup:
+                match:
+                  is_organizer:
+                    _eq: true
+          - _or:
+              - _not:
+                  _exists:
+                    _table:
+                      name: settings
+                      schema: public
+                    _where:
+                      _and:
+                        - name:
+                            _eq: public.lineup_add_without_invite
+              - _exists:
+                  _table:
+                    name: settings
+                    schema: public
+                  _where:
+                    _and:
+                      - name:
+                          _eq: public.lineup_add_without_invite
+                      - value:
+                          _in:
+                            - user
+                            - verified_user
+      columns:
+        - captain
+        - match_lineup_id
+        - steam_id
+    comment: ""
+select_permissions:
+  - role: guest
+    permission:
+      columns:
+        - steam_id
+        - captain
+        - checked_in
+        - discord_id
+        - placeholder_name
+        - id
+        - match_lineup_id
+      filter: {}
+    comment: ""
+update_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - captain
+        - match_lineup_id
+      filter: {}
+      check: null
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - captain
+        - match_lineup_id
+      filter:
+        lineup:
+          v_match_lineup:
+            match:
+              is_organizer:
+                _eq: true
+      check:
+        lineup:
+          v_match_lineup:
+            match:
+              is_organizer:
+                _eq: true
+    comment: ""
+delete_permissions:
+  - role: administrator
+    permission:
+      filter: {}
+    comment: ""
+  - role: user
+    permission:
+      filter:
+        _or:
+          - lineup:
+              v_match_lineup:
+                match:
+                  is_organizer:
+                    _eq: true
+          - steam_id:
+              _eq: X-Hasura-User-Id
+    comment: ""
+event_triggers:
+  - name: match_lineup_players
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns:
+          - captain
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'

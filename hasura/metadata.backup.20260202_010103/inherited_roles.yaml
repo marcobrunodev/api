@@ -1,0 +1,18 @@
+- role_name: administrator
+  role_set:
+    - tournament_organizer
+- role_name: match_organizer
+  role_set:
+    - verified_user
+- role_name: streamer
+  role_set:
+    - verified_user
+- role_name: tournament_organizer
+  role_set:
+    - match_organizer
+- role_name: user
+  role_set:
+    - guest
+- role_name: verified_user
+  role_set:
+    - user

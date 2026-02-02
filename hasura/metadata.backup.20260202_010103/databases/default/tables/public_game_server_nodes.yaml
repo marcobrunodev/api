@@ -1,0 +1,144 @@
+table:
+  name: game_server_nodes
+  schema: public
+object_relationships:
+  - name: e_region
+    using:
+      foreign_key_constraint_on: region
+  - name: e_status
+    using:
+      foreign_key_constraint_on: status
+  - name: pinned_version
+    using:
+      manual_configuration:
+        column_mapping:
+          pin_build_id: build_id
+        insertion_order: null
+        remote_table:
+          name: game_versions
+          schema: public
+  - name: version
+    using:
+      manual_configuration:
+        column_mapping:
+          build_id: build_id
+        insertion_order: null
+        remote_table:
+          name: game_versions
+          schema: public
+array_relationships:
+  - name: servers
+    using:
+      foreign_key_constraint_on:
+        column: game_server_node_id
+        table:
+          name: servers
+          schema: public
+computed_fields:
+  - name: available_server_count
+    definition:
+      function:
+        name: available_node_server_count
+        schema: public
+  - name: plugin_supported
+    definition:
+      function:
+        name: game_server_node_plugin_supported
+        schema: public
+  - name: total_server_count
+    definition:
+      function:
+        name: total_node_server_count
+        schema: public
+select_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - build_id
+        - cpu_cores_per_socket
+        - cpu_frequency_info
+        - cpu_governor_info
+        - cpu_sockets
+        - cpu_threads_per_core
+        - demo_network_limiter
+        - enabled
+        - end_port_range
+        - gpu
+        - id
+        - label
+        - lan_ip
+        - node_ip
+        - offline_at
+        - pin_build_id
+        - pin_plugin_version
+        - public_ip
+        - region
+        - start_port_range
+        - status
+        - supports_cpu_pinning
+        - supports_low_latency
+        - update_status
+      computed_fields:
+        - available_server_count
+        - plugin_supported
+        - total_server_count
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - demo_network_limiter
+        - enabled
+        - end_port_range
+        - label
+        - pin_build_id
+        - pin_plugin_version
+        - region
+        - start_port_range
+      filter: {}
+      check: null
+    comment: ""
+delete_permissions:
+  - role: administrator
+    permission:
+      filter: {}
+    comment: ""
+event_triggers:
+  - name: demo_network_limiter
+    definition:
+      enable_manual: false
+      update:
+        columns:
+          - demo_network_limiter
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'
+  - name: game_server_cs_build_changed
+    definition:
+      enable_manual: false
+      update:
+        columns:
+          - build_id
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'
+  - name: node_server_availability
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns:
+          - status
+          - region
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'

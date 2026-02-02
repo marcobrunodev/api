@@ -1,0 +1,214 @@
+table:
+  name: servers
+  schema: public
+object_relationships:
+  - name: current_match
+    using:
+      manual_configuration:
+        column_mapping:
+          reserved_by_match_id: id
+        insertion_order: null
+        remote_table:
+          name: matches
+          schema: public
+  - name: game_server_node
+    using:
+      foreign_key_constraint_on: game_server_node_id
+  - name: server_region
+    using:
+      manual_configuration:
+        column_mapping:
+          region: value
+        insertion_order: null
+        remote_table:
+          name: server_regions
+          schema: public
+array_relationships:
+  - name: matches
+    using:
+      foreign_key_constraint_on:
+        column: server_id
+        table:
+          name: matches
+          schema: public
+computed_fields:
+  - name: connection_link
+    definition:
+      function:
+        name: get_server_connection_link
+        schema: public
+      session_argument: hasura_session
+  - name: connection_string
+    definition:
+      function:
+        name: get_server_connection_string
+        schema: public
+      session_argument: hasura_session
+insert_permissions:
+  - role: administrator
+    permission:
+      check: {}
+      set:
+        is_dedicated: "true"
+      columns:
+        - connect_password
+        - enabled
+        - game_server_node_id
+        - host
+        - label
+        - max_players
+        - port
+        - rcon_password
+        - region
+        - tv_port
+        - type
+    comment: ""
+select_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - api_password
+        - connect_password
+        - connected
+        - enabled
+        - game_server_node_id
+        - host
+        - id
+        - is_dedicated
+        - label
+        - max_players
+        - offline_at
+        - plugin_version
+        - port
+        - rcon_status
+        - region
+        - reserved_by_match_id
+        - tv_port
+        - type
+      computed_fields:
+        - connection_link
+        - connection_string
+      filter:
+        is_dedicated:
+          _eq: true
+      allow_aggregations: true
+    comment: ""
+  - role: guest
+    permission:
+      columns:
+        - connected
+        - enabled
+        - host
+        - id
+        - label
+        - max_players
+        - plugin_version
+        - port
+        - rcon_status
+        - region
+        - reserved_by_match_id
+        - tv_port
+        - type
+      computed_fields:
+        - connection_link
+        - connection_string
+      filter:
+        type:
+          _neq: Ranked
+    comment: ""
+  - role: match_organizer
+    permission:
+      columns:
+        - connected
+        - enabled
+        - host
+        - id
+        - is_dedicated
+        - label
+        - max_players
+        - plugin_version
+        - port
+        - rcon_status
+        - region
+        - reserved_by_match_id
+        - tv_port
+        - type
+      computed_fields:
+        - connection_link
+        - connection_string
+      filter:
+        is_dedicated:
+          _eq: true
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: administrator
+    permission:
+      columns:
+        - connect_password
+        - enabled
+        - game_server_node_id
+        - host
+        - is_dedicated
+        - label
+        - max_players
+        - port
+        - rcon_password
+        - region
+        - tv_port
+        - type
+      filter:
+        is_dedicated:
+          _eq: true
+      check:
+        is_dedicated:
+          _eq: true
+    comment: ""
+delete_permissions:
+  - role: administrator
+    permission:
+      filter:
+        is_dedicated:
+          _eq: true
+    comment: ""
+event_triggers:
+  - name: server_availability
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns:
+          - reserved_by_match_id
+          - region
+          - enabled
+          - connected
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'
+  - name: servers
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+      insert:
+        columns: '*'
+      update:
+        columns:
+          - max_players
+          - is_dedicated
+          - enabled
+          - tv_port
+          - port
+          - rcon_password
+          - host
+          - label
+          - game_server_node_id
+          - type
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'

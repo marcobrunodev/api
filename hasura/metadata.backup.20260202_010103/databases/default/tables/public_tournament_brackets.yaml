@@ -1,0 +1,80 @@
+table:
+  name: tournament_brackets
+  schema: public
+object_relationships:
+  - name: loser_bracket
+    using:
+      manual_configuration:
+        column_mapping:
+          loser_parent_bracket_id: id
+        insertion_order: null
+        remote_table:
+          name: tournament_brackets
+          schema: public
+  - name: match
+    using:
+      foreign_key_constraint_on: match_id
+  - name: options
+    using:
+      manual_configuration:
+        column_mapping:
+          match_options_id: id
+        insertion_order: null
+        remote_table:
+          name: match_options
+          schema: public
+  - name: parent_bracket
+    using:
+      manual_configuration:
+        column_mapping:
+          parent_bracket_id: id
+        insertion_order: null
+        remote_table:
+          name: tournament_brackets
+          schema: public
+  - name: stage
+    using:
+      foreign_key_constraint_on: tournament_stage_id
+  - name: team_1
+    using:
+      foreign_key_constraint_on: tournament_team_id_1
+  - name: team_2
+    using:
+      foreign_key_constraint_on: tournament_team_id_2
+select_permissions:
+  - role: guest
+    permission:
+      columns:
+        - bye
+        - created_at
+        - finished
+        - group
+        - id
+        - loser_parent_bracket_id
+        - match_id
+        - match_number
+        - match_options_id
+        - parent_bracket_id
+        - path
+        - round
+        - scheduled_eta
+        - team_1_seed
+        - team_2_seed
+        - tournament_stage_id
+        - tournament_team_id_1
+        - tournament_team_id_2
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - match_options_id
+      filter: {}
+      check:
+        stage:
+          tournament:
+            is_organizer:
+              _eq: true
+    comment: ""
