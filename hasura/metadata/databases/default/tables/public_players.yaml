@@ -1,6 +1,16 @@
 table:
   name: players
   schema: public
+object_relationships:
+  - name: stats
+    using:
+      manual_configuration:
+        column_mapping:
+          steam_id: player_steam_id
+        insertion_order: null
+        remote_table:
+          name: player_stats
+          schema: public
 array_relationships:
   - name: abandoned_matches
     using:
@@ -96,6 +106,13 @@ array_relationships:
         column: attacker_steam_id
         table:
           name: player_kills
+          schema: public
+  - name: kills_by_weapons
+    using:
+      foreign_key_constraint_on:
+        column: player_steam_id
+        table:
+          name: player_kills_by_weapon
           schema: public
   - name: lobby_players
     using:

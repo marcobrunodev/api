@@ -44,11 +44,12 @@ BEGIN
         end if;
 
         next_stage_max_teams := COALESCE((select max_teams from tournament_stages ts2 where ts2.tournament_id = _tournament_id and ts2."order" = stage."order" + 1), 1);
-        teams_per_group := CEIL(effective_teams::float / stage.groups);
+
+        RAISE NOTICE 'Stage % : effective_teams=%, next_stage_max_teams=%, groups=%', stage."order", effective_teams, next_stage_max_teams, stage.groups;
+        teams_per_group := CEIL(effective_teams::float / stage.groups); 
         
         IF stage_type = 'RoundRobin' THEN
-            RAISE NOTICE 'Stage % : RoundRobin detected, teams_per_group=%, groups=%', 
-                stage."order", teams_per_group, stage.groups;
+            RAISE NOTICE 'Stage % : RoundRobin detected', stage."order";
             
             -- For round robin, we generate all pairings
             -- Each group needs (teams_per_group * (teams_per_group - 1)) / 2 matches total
@@ -145,7 +146,7 @@ BEGIN
             
             -- First round requires even number (all teams start at 0-0, same pool)
             IF effective_teams % 2 != 0 THEN
-                RAISE EXCEPTION 'Swiss tournament first round must have an even number of teams. Current: %', effective_teams;
+                RAISE EXCEPTION 'Swiss tournament first round must have an even number of teams. Current: %', effective_teams USING ERRCODE = '22000';
             END IF;
             
             PERFORM generate_swiss_bracket(stage.id, effective_teams);
@@ -289,10 +290,10 @@ BEGIN
         -- For N winner groups (1..N), we create N loser groups (N+1..2N) with path='LB'.
         IF stage_type = 'DoubleElimination' THEN
             PERFORM generate_double_elimination_bracket(stage.id, teams_per_group, stage.groups, next_stage_max_teams);
+        ELSE
+            RAISE NOTICE '  => Linking matches within stage %', stage."order";
+            PERFORM link_tournament_stage_matches(stage.id);
         END IF;
-
-        RAISE NOTICE '  => Linking matches within stage %', stage."order";
-        PERFORM link_tournament_stage_matches(stage.id);
     END LOOP;
 
     RAISE NOTICE '--- LINKING TOURNAMENT STAGES ---';

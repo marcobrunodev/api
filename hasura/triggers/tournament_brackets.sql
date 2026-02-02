@@ -4,6 +4,7 @@ CREATE OR REPLACE FUNCTION public.tau_tournament_brackets() RETURNS TRIGGER
 DECLARE
     stage_type text;
     stage_has_matches boolean;
+    tournament_status text;
 BEGIN
      IF OLD.match_id IS NOT NULL THEN
         return NEW;
@@ -26,13 +27,9 @@ BEGIN
              RETURN NEW;  -- Skip scheduling for round > 1 in RoundRobin
          END IF;
          
-         -- Normal case: schedule when both teams are present
+         raise notice 'Scheduling match for bracket %', NEW.id;
          IF NEW.tournament_team_id_1 IS NOT NULL AND NEW.tournament_team_id_2 IS NOT NULL THEN
-             PERFORM schedule_tournament_match(NEW);
-         -- Losers bracket special case: allow schedule_tournament_match to decide if this should be a bye
-         ELSIF COALESCE(NEW.path, 'WB') = 'LB' AND
-               (NEW.tournament_team_id_1 IS NOT NULL OR NEW.tournament_team_id_2 IS NOT NULL) THEN
-             PERFORM schedule_tournament_match(NEW);
+            PERFORM schedule_tournament_match(NEW);
          END IF;
      END IF;
 
@@ -44,9 +41,20 @@ BEGIN
         AND tb.match_id IS NOT NULL
     ) INTO stage_has_matches;
 
+    IF OLD.match_options_id IS DISTINCT FROM NEW.match_options_id THEN
+        SELECT t.status INTO tournament_status
+        FROM tournaments t
+        JOIN tournament_stages ts ON ts.tournament_id = t.id
+        WHERE ts.id = NEW.tournament_stage_id;
+
+        IF tournament_status NOT IN ('RegistrationClosed', 'Live') THEN
+            RAISE EXCEPTION 'Tournament status must be Registration Closed or Live' USING ERRCODE = '22000';
+        END IF;
+    END IF;
+
     -- Prevent match_options_id changes once bracket has started
     IF stage_has_matches AND OLD.match_options_id IS DISTINCT FROM NEW.match_options_id THEN
-        RAISE EXCEPTION 'Unable to modify match options for a bracket that has already started';
+        RAISE EXCEPTION 'Unable to modify match options for a bracket that has already started' USING ERRCODE = '22000';
     END IF;
 
 	RETURN NEW;

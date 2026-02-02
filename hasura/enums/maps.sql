@@ -44,10 +44,15 @@ WITH map_data AS (
         ('de_palais', '2891200262', '/img/maps/screenshots/de_palais.webp', '/img/maps/icons/de_palais.svg', null),
         ('de_whistle', '3308613773', '/img/maps/screenshots/de_whistle.webp', '/img/maps/icons/de_whistle.svg', null),
         ('de_dogtown', '3414036782', '/img/maps/screenshots/de_dogtown.webp', '/img/maps/icons/de_dogtown.svg', null),
-        ('de_golden', null, '/img/maps/screenshots/de_golden.webp', '/img/maps/icons/de_golden.svg', null),
-        ('de_palacio', null, '/img/maps/screenshots/de_palacio.webp', '/img/maps/icons/de_palacio.svg', null),
-        ('de_rooftop', null, '/img/maps/screenshots/de_rooftop.webp', '/img/maps/icons/de_rooftop.svg', null),
-        ('de_transit', '3542662073', '/img/maps/screenshots/de_transit.webp', '/img/maps/icons/de_transit.svg', null)
+        ('de_golden', '3286163323', '/img/maps/screenshots/de_golden.webp', '/img/maps/icons/de_golden.svg', null),
+        ('de_palacio', '3249860053', '/img/maps/screenshots/de_palacio.webp', '/img/maps/icons/de_palacio.svg', null),
+        ('de_rooftop', '3536622725', '/img/maps/screenshots/de_rooftop.webp', '/img/maps/icons/de_rooftop.svg', null),
+        ('de_transit', '3542662073', '/img/maps/screenshots/de_transit.webp', '/img/maps/icons/de_transit.svg', null),
+        ('de_poseidon', null, '/img/maps/screenshots/de_poseidon.webp', '/img/maps/icons/de_poseidon.svg', null),
+        ('de_sanctum', null, '/img/maps/screenshots/de_sanctum.webp', '/img/maps/icons/de_sanctum.svg', null),
+        ('de_stronghold', null, '/img/maps/screenshots/de_stronghold.webp', '/img/maps/icons/de_stronghold.svg', null),
+        ('de_warden', null, '/img/maps/screenshots/de_warden.webp', '/img/maps/icons/de_warden.svg', null)
+
     ) AS data(name, workshop_map_id, poster, patch, label)
 ),
 map_type_config AS (
@@ -55,7 +60,7 @@ map_type_config AS (
         -- Competitive maps
         ('de_ancient', 'Competitive', true),
         ('de_ancient_night', 'Competitive', false),
-        ('de_anubis', 'Competitive', false),
+        ('de_anubis', 'Competitive', true),
         ('de_inferno', 'Competitive', true),
         ('de_inferno_night', 'Competitive', false),
         ('de_mirage', 'Competitive', true),
@@ -66,7 +71,7 @@ map_type_config AS (
         ('de_vertigo', 'Competitive', false),
         ('de_dust2', 'Competitive', true),
         ('de_dust2_night', 'Competitive', false),
-        ('de_train', 'Competitive', true),
+        ('de_train', 'Competitive', false),
         ('de_cache', 'Competitive', false),
         ('de_thera', 'Competitive', false),
         ('de_mills', 'Competitive', false),
@@ -76,6 +81,11 @@ map_type_config AS (
         ('de_jura', 'Competitive', false),
         ('de_golden', 'Competitive', false),
         ('de_palacio', 'Competitive', false),
+        ('de_stronghold', 'Competitive', false),
+        ('de_warden', 'Competitive', false),
+
+
+
         -- Wingman maps
         ('de_inferno', 'Wingman', true),
         ('de_nuke', 'Wingman', true),
@@ -87,8 +97,11 @@ map_type_config AS (
         ('de_palais', 'Wingman', false),
         ('de_whistle', 'Wingman', false),
         ('de_dogtown', 'Wingman', false),
-        ('de_rooftop', 'Wingman', true),
+        ('de_rooftop', 'Wingman', false),
         ('de_transit', 'Wingman', false),
+        ('de_poseidon', 'Wingman', true),
+        ('de_sanctum', 'Wingman', true),
+
         -- Duel maps
         ('de_inferno', 'Duel', true),
         ('de_nuke', 'Duel', true),
@@ -100,8 +113,11 @@ map_type_config AS (
         ('de_palais', 'Duel', false),
         ('de_whistle', 'Duel', false),
         ('de_dogtown', 'Duel', false),
-        ('de_rooftop', 'Duel', true),
-        ('de_transit', 'Duel', false)
+        ('de_rooftop', 'Duel', false),
+        ('de_transit', 'Duel', false),
+        ('de_poseidon', 'Duel', true),
+        ('de_sanctum', 'Duel', true)
+
     ) AS data(name, type, active_pool)
 ),
 all_maps AS (
@@ -148,7 +164,39 @@ insert into e_map_pool_types ("value", "description") values
     ('Custom', 'Custom')
 on conflict(value) do update set "description" = EXCLUDED."description";
 
--- create seed map pools
+-- create seed map pools with conflict detection
+WITH expected_maps AS (
+  SELECT
+    type,
+    array_agg(name ORDER BY name) as expected_map_names
+  FROM maps
+  WHERE active_pool = true
+  GROUP BY type
+),
+existing_pools AS (
+  SELECT
+    mp.id,
+    mp.type,
+    array_agg(m.name ORDER BY m.name) as current_map_names
+  FROM map_pools mp
+  LEFT JOIN _map_pool mp_rel ON mp.id = mp_rel.map_pool_id
+  LEFT JOIN maps m ON mp_rel.map_id = m.id
+  WHERE mp.seed = true AND mp.type IN ('Competitive', 'Wingman', 'Duel') AND mp.enabled = true
+  GROUP BY mp.id, mp.type
+),
+pools_to_disable AS (
+  SELECT
+    ep.id
+  FROM existing_pools ep
+  JOIN expected_maps em ON ep.type = em.type
+  WHERE ep.current_map_names != em.expected_map_names
+)
+-- Disable mismatched pools
+UPDATE map_pools
+SET enabled = false
+WHERE id IN (SELECT id FROM pools_to_disable);
+
+-- Create new seed pools
 WITH new_rows AS (
   SELECT *
   FROM (VALUES
@@ -164,7 +212,8 @@ WHERE NOT EXISTS (
   SELECT 1
   FROM map_pools
   WHERE map_pools.type = new_rows.type
-    AND map_pools.seed = true
+    AND map_pools.seed = true and
+    map_pools.enabled = true
 );
 
 create or replace function update_map_pools()
@@ -183,15 +232,10 @@ begin
     end if;
 
     if(update_map_pools = 'true') then
-        DELETE FROM _map_pool
-        WHERE map_pool_id IN (
-            SELECT id FROM map_pools WHERE type IN ('Competitive', 'Wingman', 'Duel')
-        );
-        
         WITH pool_ids AS (
             SELECT id, type
             FROM map_pools
-            WHERE type IN ('Competitive', 'Wingman', 'Duel')
+            WHERE type IN ('Competitive', 'Wingman', 'Duel') and seed = true and enabled = true
             ORDER BY type
         )
         INSERT INTO _map_pool (map_id, map_pool_id)

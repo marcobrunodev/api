@@ -47,21 +47,23 @@ export class LoggingService {
 
       archive.on("error", (err) => {
         this.logger.error("Archive stream error", err);
-
         try {
-          stream.destroy(err);
-        } catch {
-          stream.end();
+          if (!stream.destroyed) {
+            stream.destroy(err);
+          }
+        } catch (error) {
+          this.logger.error("Error destroying stream", error);
         }
       });
 
       stream.on("error", (err) => {
         this.logger.error("Output stream error", err);
-
         try {
-          archive.abort();
-        } catch {
-          archive.end();
+          if (archive) {
+            archive.abort();
+          }
+        } catch (error) {
+          this.logger.error("Error handling archive abort", error);
         }
       });
 
@@ -78,7 +80,55 @@ export class LoggingService {
       pods = await this.getPodsFromService(service);
     }
 
+    if (pods.length === 0) {
+      if (download && archive) {
+        void archive.finalize();
+        return;
+      }
+      stream.end();
+      return;
+    }
+
     const podLogs: Promise<void>[] = [];
+    let completedContainers = 0;
+    let archiveFinalizePromise: Promise<void> | null = null;
+    let archiveFinalizeResolve: (() => void) | null = null;
+
+    // Set up archive finalization promise if in download mode
+    if (download && archive) {
+      archiveFinalizePromise = new Promise<void>((resolve) => {
+        archiveFinalizeResolve = resolve;
+      });
+
+      let resolved = false;
+      const resolveOnce = () => {
+        if (!resolved) {
+          resolved = true;
+          archiveFinalizeResolve?.();
+        }
+      };
+
+      // Resolve when archive finishes (this is the main event)
+      archive.on("finish", resolveOnce);
+
+      // Also resolve on end as backup
+      archive.on("end", resolveOnce);
+
+      // Resolve when stream finishes (archive should have finished by then)
+      stream.on("finish", resolveOnce);
+    }
+
+    const finalizeArchive = () => {
+      completedContainers++;
+      if (download && archive) {
+        try {
+          void archive.finalize();
+        } catch (error) {
+          this.logger.error("Error finalizing archive", error);
+          archiveFinalizeResolve?.();
+        }
+      }
+    };
 
     for (const pod of pods) {
       podLogs.push(
@@ -90,14 +140,16 @@ export class LoggingService {
           archive,
           download ? undefined : tailLines,
           since,
+          finalizeArchive,
         ),
       );
     }
 
     await Promise.all(podLogs);
 
-    if (pods.length === 0) {
-      stream.end();
+    // If in download mode, wait for archive to finish
+    if (download && archiveFinalizePromise) {
+      await archiveFinalizePromise;
     }
   }
 
@@ -177,7 +229,9 @@ export class LoggingService {
 
       stream.on("error", () => {
         podLogs?.abort();
-        stream.end();
+        if (!download) {
+          stream.end();
+        }
       });
 
       podLogs = await logApi.log(
@@ -212,7 +266,9 @@ export class LoggingService {
         error,
       );
 
-      stream.end();
+      if (!download) {
+        stream.end();
+      }
     }
   }
 
@@ -227,24 +283,29 @@ export class LoggingService {
       start: string;
       until: string;
     },
+    onContainerComplete?: () => void,
   ) {
     let totalAdded = 0;
     let streamEnded = false;
 
-    let oldestTimestamp: Date;
+    let oldestTimestamp = new Date();
     const until = since ? new Date(since.until) : undefined;
 
     const endStream = () => {
-      if (oldestTimestamp) {
-        stream.emit(
-          "data",
-          JSON.stringify({
-            oldest_timestamp: oldestTimestamp.toISOString(),
-          }),
-        );
+      if (!archive) {
+        // Only emit metadata when not in download mode
+        if (oldestTimestamp) {
+          stream.emit(
+            "data",
+            JSON.stringify({
+              oldest_timestamp: oldestTimestamp.toISOString(),
+            }),
+          );
+        }
       }
 
-      if (!streamEnded) {
+      if (!streamEnded && !archive) {
+        // Don't end stream directly when using archive - let archive finalize
         streamEnded = true;
         stream.end();
       }
@@ -257,11 +318,7 @@ export class LoggingService {
       logStream.on("end", async () => {
         ++totalAdded;
 
-        if (totalLines < tailLines) {
-          this.logger.log(
-            `loading more logs from service ${pod.metadata.name}...`,
-          );
-
+        if (since && totalLines < 250) {
           const firstLogTimestamp = await this.getFirstLogTimestamp(
             logApi,
             this.namespace,
@@ -273,8 +330,11 @@ export class LoggingService {
           const until = new Date(oldestTimestamp.toISOString());
           oldestTimestamp.setMinutes(oldestTimestamp.getMinutes() - 60);
 
-          if (oldestTimestamp < firstLogTimestamp) {
-            endStream();
+          if (!firstLogTimestamp || oldestTimestamp < firstLogTimestamp) {
+            if (!archive) {
+              endStream();
+            }
+            onContainerComplete?.();
             return;
           }
 
@@ -284,19 +344,21 @@ export class LoggingService {
             download,
             previous,
             archive,
-            tailLines - totalLines,
+            250 - totalLines,
             {
               start: oldestTimestamp.toISOString(),
               until: until.toISOString(),
             },
+            onContainerComplete,
           );
           return;
         }
 
-        if (archive && totalAdded == pod.spec.containers.length) {
-          void archive.finalize();
+        onContainerComplete?.();
+
+        if (!archive && totalAdded === pod.spec.containers.length) {
+          endStream();
         }
-        endStream();
       });
 
       logStream.on("data", (chunk: Buffer) => {
@@ -313,9 +375,9 @@ export class LoggingService {
         for (let data of text.split(/\n/)) {
           const { timestamp, log } = this.parseLog(data);
 
-          if (new Date(timestamp)) {
-            const latestTimestamp = new Date(timestamp);
+          const latestTimestamp = new Date(timestamp);
 
+          if (latestTimestamp && !Number.isNaN(latestTimestamp.getTime())) {
             if (!oldestTimestamp || oldestTimestamp > latestTimestamp) {
               if (!oldestTimestamp) {
                 stream.emit(
@@ -349,11 +411,17 @@ export class LoggingService {
 
       logStream.on("error", (error) => {
         this.logger.error("Log stream error", error);
-        endStream();
+        if (!archive) {
+          endStream();
+          return;
+        }
+        onContainerComplete?.();
       });
 
       logStream.on("close", () => {
-        endStream();
+        if (!archive) {
+          endStream();
+        }
       });
 
       if (archive) {
@@ -363,6 +431,10 @@ export class LoggingService {
       }
 
       const logApi = new Log(this.kubeConfig);
+
+      if (since) {
+        tailLines = undefined;
+      }
 
       await this.tryGetPodLogs(
         logApi,

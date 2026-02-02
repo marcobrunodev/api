@@ -199,8 +199,8 @@ BEGIN
     FROM tournaments t
     WHERE t.id = NEW.tournament_id;
 
-    IF tournament_status != 'Setup' THEN
-        RAISE EXCEPTION 'Unable to modify stage since the tournament has been started';
+    IF tournament_status = 'Live' OR tournament_status = 'Finished' THEN
+        RAISE EXCEPTION 'Unable to modify stage since the tournament has been started' USING ERRCODE = '22000';
     END IF;
 
     -- Check if stage has started (has at least one match created)
@@ -213,7 +213,7 @@ BEGIN
 
     -- Prevent match_options_id changes once stage has started
     IF stage_has_matches AND OLD.match_options_id IS DISTINCT FROM NEW.match_options_id THEN
-        RAISE EXCEPTION 'Unable to modify match options for a stage that has already started';
+        RAISE EXCEPTION 'Unable to modify match options for a stage that has already started' USING ERRCODE = '22000';
     END IF;
 
     IF OLD.max_teams != NEW.max_teams THEN
@@ -262,3 +262,16 @@ CREATE TRIGGER tbd_tournament_stages
     FOR EACH ROW
     EXECUTE FUNCTION public.tbd_tournament_stages();
 
+
+CREATE OR REPLACE FUNCTION public.tad_tournament_stages() RETURNS TRIGGER
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    PERFORM update_tournament_stages(OLD.tournament_id);
+    RETURN OLD;
+END;
+$$;
+
+
+DROP TRIGGER IF EXISTS tad_tournament_stages ON public.tournament_stages;
+CREATE TRIGGER tad_tournament_stages AFTER DELETE ON public.tournament_stages FOR EACH ROW EXECUTE FUNCTION public.tad_tournament_stages(); 

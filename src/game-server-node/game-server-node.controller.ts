@@ -198,6 +198,11 @@ export class GameServerNodeController {
     const scriptContent = `
         sudo -i
         
+        mkdir -p /opt/5stack/demos
+        mkdir -p /opt/5stack/steamcmd
+        mkdir -p /opt/5stack/serverfiles
+        mkdir -p /opt/5stack/custom-plugins
+
         echo "Connecting to secure network";
       
         curl -fsSL https://tailscale.com/install.sh | sh
@@ -220,13 +225,53 @@ export class GameServerNodeController {
           sudo sysctl -p /etc/sysctl.conf
         fi
 
-        echo "Installing k3s";
-        curl -sfL https://get.k3s.io | K3S_URL=https://${process.env.TAILSCALE_NODE_IP}:6443 K3S_TOKEN=${process.env.K3S_TOKEN} sh -s - --node-name ${gameServerNodeId} --vpn-auth="name=tailscale,joinKey=${game_server_nodes_by_pk.token}";
+        rm -f /etc/rancher/k3s/config.yaml
+        rm -f /var/lib/kubelet/cpu_manager_state
 
-        mkdir -p /opt/5stack/demos
-        mkdir -p /opt/5stack/steamcmd
-        mkdir -p /opt/5stack/serverfiles
-        mkdir -p /opt/5stack/custom-plugins
+        echo "Installing k3s";
+        curl -sfL https://get.k3s.io | K3S_URL=https://${process.env.TAILSCALE_NODE_IP}:6443 K3S_TOKEN=${process.env.K3S_TOKEN} sh -s - --node-name ${gameServerNodeId} --vpn-auth="name=tailscale,joinKey=${game_server_nodes_by_pk.token}"
+
+        echo "Waiting for k3s agent and tailscale ip to be available...";
+
+        for i in {1..60}; do
+          TAILSCALE_IP=$(tailscale ip -4 2>/dev/null | head -n 1)
+          if [ -n "$TAILSCALE_IP" ]; then
+            break
+          fi
+          sleep 2
+        done
+
+        if [ -z "$TAILSCALE_IP" ]; then
+            echo "Failed to get Tailscale IP automatically. Please enter the IP manually (find it at https://login.tailscale.com/admin/machines):"
+            while true; do
+                read -p "Tailscale IP: " TAILSCALE_IP
+                if [ -n "$TAILSCALE_IP" ]; then
+                    break
+                else
+                    echo "Tailscale IP cannot be empty. Please enter a valid IP."
+                fi
+            done
+        else
+            echo "Tailscale IP detected: $TAILSCALE_IP"
+        fi
+
+        mkdir -p /etc/rancher/k3s
+
+        rm -f /etc/rancher/k3s/config.yaml
+
+cat <<-EOF >/etc/rancher/k3s/config.yaml
+	node-ip: $TAILSCALE_IP
+
+	kubelet-arg:
+	  - "cpu-manager-policy=static"
+	  - "cpu-manager-reconcile-period=5s"
+	  - "system-reserved=cpu=1"
+	  - "kube-reserved=cpu=1"
+EOF
+
+        rm -f /var/lib/kubelet/cpu_manager_state
+
+        systemctl restart k3s-agent
     `;
 
     response.setHeader("Content-Length", Buffer.byteLength(scriptContent));

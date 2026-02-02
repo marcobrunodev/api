@@ -70,6 +70,23 @@ async function bootstrap() {
 
   const appConfig = configService.get<AppConfig>("app");
 
+  const allowedOrigins = [
+    appConfig.webDomain,
+    appConfig.apiDomain,
+    appConfig.relayDomain,
+    appConfig.demosDomain,
+    appConfig.wsDomain,
+  ];
+
+  if (process.env.DEV) {
+    allowedOrigins.push("http://localhost:3000", "http://0.0.0.0:3000");
+  }
+
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+  });
+
   app.use(
     session({
       rolling: true,
