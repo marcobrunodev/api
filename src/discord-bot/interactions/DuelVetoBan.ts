@@ -18,6 +18,7 @@ import {
   DuelVetoSession,
   DuelMap,
 } from "../helpers/duel-veto.helper";
+import { checkServerAvailability } from "../helpers/server-availability.helper";
 import { AppConfig } from "src/configs/types/AppConfig";
 
 @BotButtonInteraction(ButtonActions.DuelVetoBan)
@@ -165,6 +166,34 @@ export default class DuelVetoBan extends DiscordInteraction {
   ) {
     console.log(`🎮 [DUEL] Creating duel match with map: ${selectedMap.name} (${selectedMap.id})`);
 
+    // Verificar disponibilidade de servidores
+    const serverStatus = await checkServerAvailability(this.hasura);
+    
+    if (!serverStatus.available) {
+      console.log(`⚠️ [DUEL] No servers available (${serverStatus.availableServers}/${serverStatus.totalServers})`);
+      
+      const waitingEmbed = new EmbedBuilder()
+        .setColor(0xFF9900)
+        .setTitle('⏳ Waiting for Server')
+        .setDescription(
+          `### <@${session.challengerId}>  ⚔️ VS ⚔️  <@${session.opponentId}>\n\n` +
+          `**All servers are currently in use!**\n\n` +
+          `**Map:** ${formatMapName(selectedMap.name)}\n` +
+          `**Servers:** 0/${serverStatus.totalServers} available\n\n` +
+          `Your duel will start automatically when a server becomes available.\n` +
+          `You will be notified here when the server is ready.`
+        )
+        .setFooter({
+          text: 'From BananaServer.xyz with 🍌',
+        })
+        .setTimestamp();
+
+      await channel.send({
+        content: `<@${session.challengerId}> <@${session.opponentId}>`,
+        embeds: [waitingEmbed],
+      });
+    }
+
     // Verificar se o guild está registrado no banco
     let discordGuildId: string | undefined;
     try {
@@ -270,6 +299,8 @@ export default class DuelVetoBan extends DiscordInteraction {
       const server = matches_by_pk.server;
       const serverIp = server.game_server_node?.public_ip || server.host;
       const connectCommand = `connect ${serverIp}:${server.port}`;
+      const tvCommand = server.tv_port ? `connect ${serverIp}:${server.tv_port}` : null;
+      const tvSection = tvCommand ? `\n**GOTV (Spectate):**\n\`\`\`\n${tvCommand}\n\`\`\`\n` : '';
 
       // Criar URL para abrir Steam diretamente
       const steamConnectUrl = `steam://run/730//+connect%20${serverIp}:${server.port}`;
@@ -286,6 +317,7 @@ export default class DuelVetoBan extends DiscordInteraction {
           `**Map:** ${formatMapName(selectedMap.name)}\n` +
           `**Status:** ${matches_by_pk.status}\n\n` +
           `**Connect to Server:**\n\`\`\`\n${connectCommand}\n\`\`\`\n` +
+          tvSection +
           `Good luck and have fun! 🍌`
         )
         .setFooter({

@@ -1,9 +1,10 @@
-import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ChannelType, PermissionFlagsBits } from "discord.js";
+import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ChannelType, PermissionFlagsBits, EmbedBuilder } from "discord.js";
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotButtonInteraction } from "./interactions";
 import { AppConfig } from "src/configs/types/AppConfig";
 import { sendChannelOnboarding, OnboardingChannelType } from "../helpers/channel-onboarding.helper";
+import { checkServerAvailability } from "../helpers/server-availability.helper";
 
 // Pool de mapas do competitive CS2
 const COMPETITIVE_MAPS = [
@@ -216,6 +217,34 @@ ${bannedMapsList}
   }
 
   private async createCompetitiveMatch(session: ReturnType<typeof getVetoSession>, selectedMap: string, channel: any) {
+    // Verificar disponibilidade de servidores
+    const serverStatus = await checkServerAvailability(this.hasura);
+    
+    if (!serverStatus.available) {
+      console.log(`⚠️ [MAP VETO] No servers available (${serverStatus.availableServers}/${serverStatus.totalServers})`);
+      
+      const waitingEmbed = new EmbedBuilder()
+        .setColor(0xFF9900)
+        .setTitle('⏳ Waiting for Server')
+        .setDescription(
+          `**All servers are currently in use!**\n\n` +
+          `**Map:** ${selectedMap}\n` +
+          `**Servers:** 0/${serverStatus.totalServers} available\n\n` +
+          `**Team ${session.captain1Fruit}:**\n${session.team1.map((id: string) => `<@${id}>`).join(', ')}\n\n` +
+          `**Team ${session.captain2Fruit}:**\n${session.team2.map((id: string) => `<@${id}>`).join(', ')}\n\n` +
+          `Your match will start automatically when a server becomes available.\n` +
+          `You will be notified here when the server is ready.`
+        )
+        .setFooter({
+          text: 'From BananaServer.xyz with 🍌',
+        })
+        .setTimestamp();
+
+      await channel.send({
+        embeds: [waitingEmbed],
+      });
+    }
+
     // Converter nome amigável para nome técnico do banco
     const dbMapName = MAP_DISPLAY_TO_DB[selectedMap];
 
