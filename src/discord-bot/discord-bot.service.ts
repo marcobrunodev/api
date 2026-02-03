@@ -53,6 +53,14 @@ export class DiscordBotService {
     team2PlayerIds: string[];
   }>();
 
+  // Mapa para rastrear partidas de Duel
+  private duelMatches = new Map<string, {
+    guildId: string;
+    categoryId: string;
+    challengerId: string;
+    opponentId: string;
+  }>();
+
   // Mapa para rastrear canais de log das partidas
   private matchLogChannels = new Map<string, {
     channelId: string;
@@ -364,7 +372,11 @@ export class DiscordBotService {
       const category = channelLeft.parent;
       if (!category) return;
 
-      if (!category.name.startsWith('Banana Mix')) return;
+      // Check for both Banana Mix and Banana Duel categories
+      const isBananaMix = category.name.startsWith('Banana Mix');
+      const isBananaDuel = category.name.startsWith('Banana Duel');
+      
+      if (!isBananaMix && !isBananaDuel) return;
 
       const voiceChannels = category.children.cache.filter(
         (channel: any) => channel.type === ChannelType.GuildVoice
@@ -375,13 +387,14 @@ export class DiscordBotService {
       );
 
       if (!hasMembers) {
-        this.logger.log(`Cleaning up empty Banana Mix category: ${category.name}`);
+        const categoryType = isBananaDuel ? 'Banana Duel' : 'Banana Mix';
+        this.logger.log(`Cleaning up empty ${categoryType} category: ${category.name}`);
 
         for (const [_, channel] of category.children.cache) {
-          await channel.delete('No users in Banana Mix voice channels');
+          await channel.delete(`No users in ${categoryType} voice channels`);
         }
 
-        await category.delete('No users in Banana Mix voice channels');
+        await category.delete(`No users in ${categoryType} voice channels`);
 
         this.logger.log(`Successfully deleted category: ${category.name}`);
       }
@@ -425,6 +438,15 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.ScheduleMix)
           .setDescription("Creates a Mix Match"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.MixDuel)
+          .setDescription("Creates a Mix Duel Match")
+          .addUserOption((option) =>
+            option
+              .setName("opponent")
+              .setDescription("The player you want to challenge")
+              .setRequired(true),
+          ),
         new SlashCommandBuilder()
           .setName(ChatCommands.Init)
           .setDescription("Initialize BananaServer.xyz Mix category and Queue Mix channel"),
@@ -804,6 +826,19 @@ export class DiscordBotService {
   }
 
   /**
+   * Registra uma partida de Duel
+   */
+  public registerDuelMatch(matchId: string, guildId: string, categoryId: string, challengerId: string, opponentId: string) {
+    this.duelMatches.set(matchId, {
+      guildId,
+      categoryId,
+      challengerId,
+      opponentId,
+    });
+    this.logger.log(`[Duel Match] Registered match ${matchId} for guild ${guildId}`);
+  }
+
+  /**
    * Salva o canal de log da partida
    */
   public async setMatchLogChannel(matchId: string, channelId: string, messageId: string) {
@@ -1104,6 +1139,88 @@ export class DiscordBotService {
     } finally {
       // Remover da lista de partidas ativas
       this.mixMatches.delete(matchId);
+    }
+  }
+
+  /**
+   * Processa o fim de uma partida de Duel
+   */
+  public async handleDuelMatchEnd(matchId: string) {
+    const duelMatch = this.duelMatches.get(matchId);
+
+    if (!duelMatch) {
+      // Não é uma partida de duel, ignorar
+      return;
+    }
+
+    this.logger.log(`[Duel Match] Processing end of match ${matchId}`);
+
+    const { guildId, categoryId, challengerId, opponentId } = duelMatch;
+
+    try {
+      // Buscar guild e canal Queue Mix do banco de dados
+      const { discord_guilds_by_pk } = await this.hasura.query({
+        discord_guilds_by_pk: {
+          __args: {
+            id: guildId,
+          },
+          queue_mix_channel_id: true,
+        },
+      });
+
+      const guild = await this.client.guilds.fetch(guildId);
+      const queueMixChannelId = discord_guilds_by_pk?.queue_mix_channel_id;
+
+      if (queueMixChannelId) {
+        // Mover challenger para Queue Mix
+        try {
+          const challengerMember = await guild.members.fetch(challengerId);
+          if (challengerMember.voice.channel && challengerMember.voice.channel.parent?.name?.startsWith('Banana Duel')) {
+            await challengerMember.voice.setChannel(queueMixChannelId);
+            this.logger.log(`[Duel Match] Moved challenger ${challengerId} back to Queue Mix`);
+          }
+        } catch (error) {
+          this.logger.warn(`[Duel Match] Failed to move challenger ${challengerId} back to Queue Mix:`, error);
+        }
+
+        // Mover opponent para Queue Mix
+        try {
+          const opponentMember = await guild.members.fetch(opponentId);
+          if (opponentMember.voice.channel && opponentMember.voice.channel.parent?.name?.startsWith('Banana Duel')) {
+            await opponentMember.voice.setChannel(queueMixChannelId);
+            this.logger.log(`[Duel Match] Moved opponent ${opponentId} back to Queue Mix`);
+          }
+        } catch (error) {
+          this.logger.warn(`[Duel Match] Failed to move opponent ${opponentId} back to Queue Mix:`, error);
+        }
+      } else {
+        this.logger.warn(`[Duel Match] Queue Mix channel not found in database for guild ${guildId}`);
+      }
+
+      // Deletar categoria do duel se ainda existir
+      try {
+        const category = guild.channels.cache.get(categoryId);
+        if (category) {
+          // Deletar todos os canais dentro da categoria
+          const channels = guild.channels.cache.filter(ch => ch.parentId === categoryId);
+          for (const [, channel] of channels) {
+            await channel.delete();
+            this.logger.log(`[Duel Match] Deleted channel: ${channel.name}`);
+          }
+          // Deletar a categoria
+          await category.delete();
+          this.logger.log(`[Duel Match] Deleted category: ${category.name}`);
+        }
+      } catch (error) {
+        this.logger.warn(`[Duel Match] Failed to delete duel category:`, error);
+      }
+
+      this.logger.log(`[Duel Match] Successfully processed end of match ${matchId}`);
+    } catch (error) {
+      this.logger.error(`[Duel Match] Error processing end of match ${matchId}:`, error);
+    } finally {
+      // Remover da lista de partidas ativas
+      this.duelMatches.delete(matchId);
     }
   }
 }

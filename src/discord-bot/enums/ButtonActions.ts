@@ -11,4 +11,8 @@ export enum ButtonActions {
   VetoMap = "vm",
   RequestRemake = "rr",
   VoteRemake = "vr",
+  AcceptMixDuel = "amd",
+  DeclineMixDuel = "dmd",
+  JoinDuelVoice = "jdv",
+  DuelVetoBan = "dvb",
 }

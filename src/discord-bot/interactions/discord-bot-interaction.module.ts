@@ -29,6 +29,11 @@ import PickPlayer from "./PickPlayer";
 import MapVeto from "./MapVeto";
 import RequestRemake from "./RemakeVote";
 import CheckSteamId from "./CheckSteamId";
+import MixDuel from "./MixDuel";
+import DeclineMixDuel from "./DeclineMixDuel";
+import AcceptMixDuel from "./AcceptMixDuel";
+import JoinDuelVoice from "./JoinDuelVoice";
+import DuelVetoBan from "./DuelVetoBan";
 
 @Module({
   imports: [
@@ -63,6 +68,11 @@ import CheckSteamId from "./CheckSteamId";
     CancelSteamId,
     OpenRegisterSteamIdModal,
     CheckSteamId,
+    MixDuel,
+    DeclineMixDuel,
+    AcceptMixDuel,
+    JoinDuelVoice,
+    DuelVetoBan,
   ],
   providers: [
     LinkDiscord,
@@ -90,6 +100,11 @@ import CheckSteamId from "./CheckSteamId";
     CancelSteamId,
     OpenRegisterSteamIdModal,
     CheckSteamId,
+    MixDuel,
+    DeclineMixDuel,
+    AcceptMixDuel,
+    JoinDuelVoice,
+    DuelVetoBan,
     loggerFactory(),
   ],
 })

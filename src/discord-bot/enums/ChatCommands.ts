@@ -3,6 +3,7 @@ export enum ChatCommands {
   ScheduleWingMan = "wingman",
   ScheduleDuel = "duel",
   ScheduleMix = "mix",
+  MixDuel = "mix-duel",
   LinkDiscord = "link",
   Init = "init",
   Queue = "queue",

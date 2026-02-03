@@ -337,6 +337,9 @@ export class MatchesController {
       // Processar fim de partida do Discord Mix
       await this.discordBotService.handleMixMatchEnd(matchId, data.new?.winning_lineup_id);
 
+      // Processar fim de partida de Duel
+      await this.discordBotService.handleDuelMatchEnd(matchId);
+
       await this.eloCalculationQueue.add(EloCalculation.name, {
         matchId,
       });
