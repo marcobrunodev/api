@@ -7,6 +7,7 @@ export enum ChatCommands {
   LinkDiscord = "link",
   Init = "init",
   Queue = "queue",
+  Ranking = "ranking",
   TestVote = "test-vote",
   TestAutoVoteCaptains = "test-auto-vote-captains",
   TestAutoReady = "test-auto-ready",

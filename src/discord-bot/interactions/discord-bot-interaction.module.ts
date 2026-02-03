@@ -34,6 +34,7 @@ import DeclineMixDuel from "./DeclineMixDuel";
 import AcceptMixDuel from "./AcceptMixDuel";
 import JoinDuelVoice from "./JoinDuelVoice";
 import DuelVetoBan from "./DuelVetoBan";
+import Ranking from "./Ranking";
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import DuelVetoBan from "./DuelVetoBan";
     AcceptMixDuel,
     JoinDuelVoice,
     DuelVetoBan,
+    Ranking,
   ],
   providers: [
     LinkDiscord,
@@ -105,6 +107,7 @@ import DuelVetoBan from "./DuelVetoBan";
     AcceptMixDuel,
     JoinDuelVoice,
     DuelVetoBan,
+    Ranking,
     loggerFactory(),
   ],
 })

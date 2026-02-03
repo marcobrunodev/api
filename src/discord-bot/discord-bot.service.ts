@@ -454,6 +454,20 @@ export class DiscordBotService {
           .setName(ChatCommands.Queue)
           .setDescription("Show the Queue Mix player order"),
         new SlashCommandBuilder()
+          .setName(ChatCommands.Ranking)
+          .setDescription("Show the ranking based on wins, K/D and assists")
+          .addStringOption((option) =>
+            option
+              .setName("type")
+              .setDescription("Filter by match type")
+              .setRequired(false)
+              .addChoices(
+                { name: "All", value: "all" },
+                { name: "Mix (5v5)", value: "mix" },
+                { name: "Duel (1v1)", value: "duel" },
+              ),
+          ),
+        new SlashCommandBuilder()
           .setName(ChatCommands.KickPlayer)
           .setDescription("Kick a player from the queue")
           .addUserOption((option) =>
