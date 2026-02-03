@@ -199,7 +199,7 @@ export default class Ranking extends DiscordInteraction {
         stats.kd = stats.deaths > 0 ? stats.kills / stats.deaths : stats.kills;
       }
 
-      // Ordenar: vitórias (desc), K/D (desc), assists (desc)
+      // Sort by: wins (desc), K/D (desc), assists (desc)
       const sortedPlayers = Array.from(playerStats.values())
         .filter(p => p.matches_played > 0)
         .sort((a, b) => {
@@ -215,12 +215,12 @@ export default class Ranking extends DiscordInteraction {
         return;
       }
 
-      // Encontrar posição do jogador que executou o comando
+      // Find the position of the player who executed the command
       const userRankIndex = sortedPlayers.findIndex(p => p.discord_id === userId);
       const userRank = userRankIndex >= 0 ? userRankIndex + 1 : null;
       const userStats = userRankIndex >= 0 ? sortedPlayers[userRankIndex] : null;
 
-      // Criar embed
+      // Create embed
       const typeLabel = matchType === "all" ? "Mix & Duel" : matchType === "mix" ? "Mix" : "Duel";
       const embed = new EmbedBuilder()
         .setColor(0xf5a623)
@@ -251,10 +251,10 @@ export default class Ranking extends DiscordInteraction {
         description += `🎯 ${player.kills}K/${player.deaths}D/${player.assists}A\n\n`;
       }
 
-      // Se o jogador não está no top 10, mostrar sua posição
+      // If the player is not in the top 10, show their position
       if (userRank && userRank > 10 && userStats) {
         description += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-        description += `**${userRank}.** <@${userId}> (Você)\n`;
+        description += `**${userRank}.** <@${userId}> (You)\n`;
         const winRate = userStats.matches_played > 0 
           ? ((userStats.wins / userStats.matches_played) * 100).toFixed(0) 
           : "0";
@@ -263,17 +263,17 @@ export default class Ranking extends DiscordInteraction {
         description += `🎯 ${userStats.kills}K/${userStats.deaths}D/${userStats.assists}A\n`;
       } else if (!userRank) {
         description += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-        description += `Você ainda não jogou nenhuma partida.\n`;
+        description += `You haven't played any matches yet.\n`;
       }
 
       embed.setDescription(description);
 
-      // Adicionar estatísticas gerais
+      // Add general statistics
       const totalMatches = matches.length;
       const totalPlayers = sortedPlayers.length;
       embed.addFields({
-        name: "📊 Estatísticas do Servidor",
-        value: `**${totalMatches}** partidas finalizadas • **${totalPlayers}** jogadores`,
+        name: "📊 Server Statistics",
+        value: `**${totalMatches}** matches completed • **${totalPlayers}** players`,
         inline: false,
       });
 
