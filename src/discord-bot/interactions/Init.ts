@@ -125,6 +125,33 @@ export default class Init extends DiscordInteraction {
         results.push('⚠️ Warning: Could not save guild information to database');
       }
 
+      // Create TEAMS category at the end of the server
+      const teamsCategoryName = "🍌⬇️ TEAMS ⬇️🍌";
+      let teamsCategory = guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildCategory &&
+          channel.name === teamsCategoryName
+      );
+
+      if (!teamsCategory) {
+        teamsCategory = await guild.channels.create({
+          name: teamsCategoryName,
+          type: ChannelType.GuildCategory,
+        });
+        // Position at the end (high number = bottom)
+        const maxPosition = Math.max(
+          ...guild.channels.cache
+            .filter((c) => c.type === ChannelType.GuildCategory)
+            .map((c) => c.position),
+          0
+        );
+        await teamsCategory.setPosition(maxPosition + 1);
+        results.push(`✅ Created category: **${teamsCategoryName}**`);
+        this.initLogger.log(`Created TEAMS category in guild: ${guild.name}`);
+      } else {
+        results.push(`ℹ️ Category **${teamsCategoryName}** already exists`);
+      }
+
       // Criar canal de texto para enviar mensagens de onboarding (se não existir)
       let infoChannel = guild.channels.cache.find(
         (channel) =>

@@ -146,6 +146,14 @@ export default class CreateTeamModal extends DiscordInteraction {
         return;
       }
 
+      // Find the TEAMS parent category to position after it
+      const teamsCategoryName = "🍌⬇️ TEAMS ⬇️🍌";
+      const teamsParentCategory = guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildCategory &&
+          channel.name === teamsCategoryName,
+      );
+
       // Create the category with permissions
       // Everyone can view, but only team members can send messages
       const category = await guild.channels.create({
@@ -175,6 +183,11 @@ export default class CreateTeamModal extends DiscordInteraction {
           },
         ],
       });
+
+      // Position the team category right after the TEAMS parent category
+      if (teamsParentCategory && teamsParentCategory.type === ChannelType.GuildCategory) {
+        await category.setPosition(teamsParentCategory.position + 1);
+      }
 
       console.log(`Created category ${categoryName} for team ${team.name}`);
 
