@@ -476,6 +476,9 @@ export class DiscordBotService {
               .setDescription("The player to kick from the queue")
               .setRequired(true),
           ),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.CreateTeam)
+          .setDescription("Create a new team"),
       ];
 
       // if (process.env.NODE_ENV === 'development') {

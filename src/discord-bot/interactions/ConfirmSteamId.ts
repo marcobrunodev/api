@@ -10,6 +10,10 @@ import {
   deletePendingDuel,
 } from "../helpers/pending-duel.helper";
 import { createDuelRooms } from "../helpers/create-duel-rooms.helper";
+import {
+  getPendingTeamCreation,
+  deletePendingTeamCreation,
+} from "../helpers/pending-team.helper";
 
 @BotButtonInteraction(ButtonActions.ConfirmSteamId)
 export default class ConfirmSteamId extends DiscordInteraction {
@@ -79,6 +83,13 @@ export default class ConfirmSteamId extends DiscordInteraction {
         await this.checkAndProcessPendingDuel(interaction.user.id);
       } catch (duelError) {
         console.error('Error processing pending duel:', duelError);
+      }
+
+      // Verificar se há uma criação de time pendente para este usuário
+      try {
+        await this.checkAndProcessPendingTeamCreation(interaction);
+      } catch (teamError) {
+        console.error('Error processing pending team creation:', teamError);
       }
 
     } catch (error) {
@@ -174,5 +185,38 @@ export default class ConfirmSteamId extends DiscordInteraction {
     } catch (error) {
       console.error('Error processing pending duel after registration:', error);
     }
+  }
+
+  private async checkAndProcessPendingTeamCreation(interaction: ButtonInteraction) {
+    const pendingTeam = getPendingTeamCreation(interaction.user.id);
+
+    if (!pendingTeam) {
+      return; // Não há criação de time pendente para este usuário
+    }
+
+    // Mostrar botão para continuar criação do time
+    const createTeamButton = new ButtonBuilder()
+      .setCustomId(ButtonActions.OpenCreateTeamModal)
+      .setLabel('Create Team')
+      .setStyle(ButtonStyle.Success);
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(createTeamButton);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x00ff00)
+      .setTitle('Continue Creating Your Team')
+      .setDescription(
+        `Your SteamID has been registered successfully!\n\n` +
+        `Click the button below to continue creating your team.`,
+      )
+      .setThumbnail(interaction.user.displayAvatarURL({ size: 256 }))
+      .setFooter({ text: "BananaServer.xyz" })
+      .setTimestamp();
+
+    await interaction.followUp({
+      embeds: [embed],
+      components: [row],
+      ephemeral: true,
+    });
   }
 }

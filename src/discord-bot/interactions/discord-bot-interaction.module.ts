@@ -35,6 +35,12 @@ import AcceptMixDuel from "./AcceptMixDuel";
 import JoinDuelVoice from "./JoinDuelVoice";
 import DuelVetoBan from "./DuelVetoBan";
 import Ranking from "./Ranking";
+import CreateTeam from "./CreateTeam";
+import CreateTeamModal from "./CreateTeamModal";
+import OpenCreateTeamModal from "./OpenCreateTeamModal";
+import JoinTeam from "./JoinTeam";
+import AcceptTeamMember from "./AcceptTeamMember";
+import DeclineTeamMember from "./DeclineTeamMember";
 
 @Module({
   imports: [
@@ -75,6 +81,12 @@ import Ranking from "./Ranking";
     JoinDuelVoice,
     DuelVetoBan,
     Ranking,
+    CreateTeam,
+    CreateTeamModal,
+    OpenCreateTeamModal,
+    JoinTeam,
+    AcceptTeamMember,
+    DeclineTeamMember,
   ],
   providers: [
     LinkDiscord,
@@ -108,6 +120,12 @@ import Ranking from "./Ranking";
     JoinDuelVoice,
     DuelVetoBan,
     Ranking,
+    CreateTeam,
+    CreateTeamModal,
+    OpenCreateTeamModal,
+    JoinTeam,
+    AcceptTeamMember,
+    DeclineTeamMember,
     loggerFactory(),
   ],
 })

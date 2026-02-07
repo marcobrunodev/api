@@ -3,7 +3,17 @@ CREATE OR REPLACE FUNCTION public.tbi_team_roster() RETURNS TRIGGER
     AS $$
 DECLARE
     _owner_steam_id bigint;
+    _existing_team_count int;
 BEGIN
+    -- Check if player is already in another team (can only be in one team)
+    SELECT COUNT(*) INTO _existing_team_count
+    FROM team_roster
+    WHERE player_steam_id = NEW.player_steam_id;
+
+    IF _existing_team_count > 0 THEN
+        RAISE EXCEPTION 'Player can only be part of one team';
+    END IF;
+
     NEW.role = 'Member';
 
     SELECT owner_steam_id INTO _owner_steam_id FROM teams WHERE id = NEW.team_id;
