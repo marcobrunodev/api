@@ -235,7 +235,13 @@ export default class CreateTeamModal extends DiscordInteraction {
         .setStyle(ButtonStyle.Primary)
         .setEmoji("🎮");
 
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton);
+      const leaveButton = new ButtonBuilder()
+        .setCustomId(`${ButtonActions.LeaveTeam}:${team.id}`)
+        .setLabel("Leave Team")
+        .setStyle(ButtonStyle.Danger)
+        .setEmoji("🚪");
+
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton, leaveButton);
 
       try {
         await recruitChannel.send({
@@ -245,6 +251,57 @@ export default class CreateTeamModal extends DiscordInteraction {
         console.log(`Sent embed to recruitment channel for team ${team.name}`);
       } catch (sendError) {
         console.error("Error sending embed to recruitment channel:", sendError);
+      }
+
+      // Create a private text channel for team members
+      try {
+        const teamChannel = await guild.channels.create({
+          name: `💬-${team.short_name.toLowerCase()}`,
+          type: ChannelType.GuildText,
+          parent: category.id,
+          permissionOverwrites: [
+            {
+              id: guild.id, // @everyone role - cannot see
+              deny: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+              ],
+            },
+            {
+              id: interaction.user.id, // Team owner
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ManageMessages,
+              ],
+            },
+            {
+              id: this.bot.client.user.id, // Bot has full control
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ManageMessages,
+                PermissionsBitField.Flags.ManageChannels,
+              ],
+            },
+          ],
+        });
+
+        // Add administrator role permission if exists
+        const adminRole = guild.roles.cache.find(
+          (role) => role.permissions.has(PermissionsBitField.Flags.Administrator),
+        );
+        if (adminRole) {
+          await teamChannel.permissionOverwrites.edit(adminRole.id, {
+            ViewChannel: true,
+            SendMessages: true,
+            ManageMessages: true,
+          });
+        }
+
+        console.log(`Created private team channel ${teamChannel.id} for team ${team.name}`);
+      } catch (teamChannelError) {
+        console.error("Error creating private team channel:", teamChannelError);
       }
     } catch (error) {
       console.error("Error creating team Discord category:", error);

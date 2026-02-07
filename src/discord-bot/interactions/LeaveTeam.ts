@@ -2,7 +2,6 @@ import {
   ButtonInteraction,
   MessageFlags,
   ChannelType,
-  PermissionsBitField,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
@@ -12,14 +11,14 @@ import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotButtonInteraction } from "./interactions";
 import { ButtonActions } from "../enums/ButtonActions";
 
-@BotButtonInteraction(ButtonActions.AcceptTeamMember)
-export default class AcceptTeamMember extends DiscordInteraction {
+@BotButtonInteraction(ButtonActions.LeaveTeam)
+export default class LeaveTeam extends DiscordInteraction {
   async handler(interaction: ButtonInteraction) {
-    // Extract team ID and player ID from custom ID (format: "accept_team_member:teamId:playerId")
-    const [, teamId, discordPlayerId] = interaction.customId.split(":");
+    // Extract team ID from custom ID (format: "leave_team:teamId")
+    const [, teamId] = interaction.customId.split(":");
 
     try {
-      // Get team info to check if the user clicking is the captain
+      // Get team info
       const { teams_by_pk: team } = await this.hasura.query({
         teams_by_pk: {
           __args: {
@@ -30,22 +29,23 @@ export default class AcceptTeamMember extends DiscordInteraction {
           short_name: true,
           owner: {
             discord_id: true,
+            steam_id: true,
           },
         },
       });
 
       if (!team) {
         await interaction.reply({
-          content: "❌ Team not found.",
+          content: "Team not found.",
           flags: MessageFlags.Ephemeral,
         });
         return;
       }
 
-      // Check if the user clicking is the captain
-      if (team.owner?.discord_id !== interaction.user.id) {
+      // Check if the user is the captain - captain cannot leave
+      if (team.owner?.discord_id === interaction.user.id) {
         await interaction.reply({
-          content: "❌ Only the team captain can accept join requests.",
+          content: "You are the captain of this team. You cannot leave. Transfer ownership or delete the team instead.",
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -57,7 +57,7 @@ export default class AcceptTeamMember extends DiscordInteraction {
           __args: {
             where: {
               discord_id: {
-                _eq: discordPlayerId,
+                _eq: interaction.user.id,
               },
             },
           },
@@ -70,17 +70,20 @@ export default class AcceptTeamMember extends DiscordInteraction {
 
       if (!player) {
         await interaction.reply({
-          content: "❌ Player not found. They may need to register their SteamID first.",
+          content: "You need to register your SteamID first using `/steamid`.",
           flags: MessageFlags.Ephemeral,
         });
         return;
       }
 
-      // Check if player is already in a team
-      const { team_roster: existingRoster } = await this.hasura.query({
+      // Check if player is actually in this team
+      const { team_roster: roster } = await this.hasura.query({
         team_roster: {
           __args: {
             where: {
+              team_id: {
+                _eq: teamId,
+              },
               player_steam_id: {
                 _eq: player.steam_id,
               },
@@ -90,39 +93,32 @@ export default class AcceptTeamMember extends DiscordInteraction {
         },
       });
 
-      if (existingRoster && existingRoster.length > 0) {
+      if (!roster || roster.length === 0) {
         await interaction.reply({
-          content: "❌ This player is already a member of a team.",
+          content: "You are not a member of this team.",
           flags: MessageFlags.Ephemeral,
         });
         return;
       }
 
-      // Add player to the team roster
+      // Remove player from the team roster
       await this.hasura.mutation({
-        insert_team_roster_one: {
+        delete_team_roster: {
           __args: {
-            object: {
-              team_id: teamId,
-              player_steam_id: player.steam_id,
-              role: "Member",
+            where: {
+              team_id: {
+                _eq: teamId,
+              },
+              player_steam_id: {
+                _eq: player.steam_id,
+              },
             },
           },
-          team_id: true,
+          affected_rows: true,
         },
       });
 
-      // Acknowledge the interaction
-      await interaction.deferUpdate();
-
-      // Delete the join request message
-      try {
-        await interaction.message.delete();
-      } catch (deleteError) {
-        console.error("Error deleting join request message:", deleteError);
-      }
-
-      // Add permission to the private team channel
+      // Remove permission from the private team channel
       const guild = interaction.guild;
       if (guild) {
         const categoryName = `🏆 ${team.short_name}`;
@@ -143,39 +139,29 @@ export default class AcceptTeamMember extends DiscordInteraction {
 
           if (teamChannel && teamChannel.type === ChannelType.GuildText) {
             try {
-              await teamChannel.permissionOverwrites.edit(discordPlayerId, {
-                ViewChannel: true,
-                SendMessages: true,
-              });
-              console.log(`Added ${discordPlayerId} to team channel ${teamChannel.name}`);
+              await teamChannel.permissionOverwrites.delete(interaction.user.id);
+              console.log(`Removed ${interaction.user.id} from team channel ${teamChannel.name}`);
             } catch (permError) {
-              console.error("Error adding permission to team channel:", permError);
+              console.error("Error removing permission from team channel:", permError);
             }
           }
         }
       }
 
-      // Try to send a DM to the player who was accepted
-      try {
-        const acceptedUser = await interaction.client.users.fetch(discordPlayerId);
-        await acceptedUser.send({
-          content: `🎉 Congratulations! You have been accepted into **${team.name}**!\n\n` +
-            `You now have access to the team's private channel.\n\n` +
-            `_This message is only visible to you._`,
-        });
-      } catch (dmError) {
-        console.warn(`Could not send DM to accepted player ${discordPlayerId}:`, dmError);
-      }
-
       // Update recruitment embed to show current team members
       await this.updateRecruitmentEmbed(interaction, team);
 
-      console.log(`Player ${player.steam_id} was added to team ${team.name}`);
+      await interaction.reply({
+        content: `You have left **${team.name}**.`,
+        flags: MessageFlags.Ephemeral,
+      });
+
+      console.log(`Player ${player.steam_id} left team ${team.name}`);
 
     } catch (error) {
-      console.error("Error accepting team member:", error);
+      console.error("Error leaving team:", error);
       await interaction.reply({
-        content: "❌ An error occurred while processing the request.",
+        content: "An error occurred while processing the request.",
         flags: MessageFlags.Ephemeral,
       });
     }

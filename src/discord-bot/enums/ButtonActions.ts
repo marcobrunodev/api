@@ -19,4 +19,5 @@ export enum ButtonActions {
   JoinTeam = "join_team",
   AcceptTeamMember = "accept_team_member",
   DeclineTeamMember = "decline_team_member",
+  LeaveTeam = "leave_team",
 }

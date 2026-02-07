@@ -41,6 +41,7 @@ import OpenCreateTeamModal from "./OpenCreateTeamModal";
 import JoinTeam from "./JoinTeam";
 import AcceptTeamMember from "./AcceptTeamMember";
 import DeclineTeamMember from "./DeclineTeamMember";
+import LeaveTeam from "./LeaveTeam";
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import DeclineTeamMember from "./DeclineTeamMember";
     JoinTeam,
     AcceptTeamMember,
     DeclineTeamMember,
+    LeaveTeam,
   ],
   providers: [
     LinkDiscord,
@@ -126,6 +128,7 @@ import DeclineTeamMember from "./DeclineTeamMember";
     JoinTeam,
     AcceptTeamMember,
     DeclineTeamMember,
+    LeaveTeam,
     loggerFactory(),
   ],
 })
