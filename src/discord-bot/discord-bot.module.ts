@@ -20,6 +20,7 @@ import { loggerFactory } from "../utilities/LoggerFactory";
 import { getQueuesProcessors } from "../utilities/QueueProcessors";
 import { DiscordBotInteractionModule } from "./interactions/discord-bot-interaction.module";
 import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
+import { TeamsController } from "./teams/teams.controller";
 
 @Module({
   imports: [
@@ -58,6 +59,6 @@ import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
     DiscordPickPlayerService,
     DiscordBotScoreboardService,
   ],
-  controllers: [DiscordBotController],
+  controllers: [DiscordBotController, TeamsController],
 })
 export class DiscordBotModule {}

@@ -122,3 +122,14 @@ delete_permissions:
         owner_steam_id:
           _eq: x-hasura-user-id
     comment: ""
+event_triggers:
+  - name: team_deleted
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'
