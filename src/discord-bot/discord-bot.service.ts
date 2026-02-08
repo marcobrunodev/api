@@ -479,10 +479,15 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.CreateTeam)
           .setDescription("Create a new team"),
-        new SlashCommandBuilder()
-          .setName(ChatCommands.Migrate)
-          .setDescription("Show all players with Steam ID and Discord linked"),
       ];
+
+      if (process.env.ENABLE_MIGRATE_COMMAND === 'true') {
+        commands.push(
+          new SlashCommandBuilder()
+            .setName(ChatCommands.Migrate)
+            .setDescription("Show all players with Steam ID and Discord linked"),
+        );
+      }
 
       // if (process.env.NODE_ENV === 'development') {
         commands.push(

@@ -75,6 +75,25 @@ export default class ConfirmSteamId extends DiscordInteraction {
 
       console.log(`New player registered via Discord: ${insert_players_one.name} (${insert_players_one.steam_id}) - Discord: ${interaction.user.tag}`);
 
+      // Add @banana-mix role to the user
+      try {
+        const guild = interaction.guild;
+        if (guild) {
+          const bananaMixRole = guild.roles.cache.find(
+            (role) => role.name === "banana-mix"
+          );
+          if (bananaMixRole) {
+            const member = await guild.members.fetch(interaction.user.id);
+            if (!member.roles.cache.has(bananaMixRole.id)) {
+              await member.roles.add(bananaMixRole);
+              console.log(`Added @banana-mix role to ${interaction.user.tag}`);
+            }
+          }
+        }
+      } catch (roleError) {
+        console.error('Error adding banana-mix role:', roleError);
+      }
+
       // Limpar dados pendentes
       deletePendingRegistration(messageId);
 
