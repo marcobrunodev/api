@@ -5,6 +5,7 @@ import {
   ChatInputCommandInteraction,
   ChannelType,
   MessageFlags,
+  PermissionFlagsBits,
 } from "discord.js";
 import { Logger } from "@nestjs/common";
 import { sendChannelOnboarding, OnboardingChannelType } from "../helpers/channel-onboarding.helper";
@@ -93,6 +94,71 @@ export default class Init extends DiscordInteraction {
         }
       }
 
+      // Create notification channel
+      let notificationChannel = guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildText &&
+          channel.name === '🍌-notification'
+      );
+
+      const botId = interaction.client.user?.id;
+
+      if (!notificationChannel) {
+        const permissionOverwrites: any[] = [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads],
+          },
+        ];
+
+        // Allow bot to send messages
+        if (botId) {
+          permissionOverwrites.push({
+            id: botId,
+            allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks],
+          });
+        }
+
+        notificationChannel = await guild.channels.create({
+          name: '🍌-notification',
+          type: ChannelType.GuildText,
+          parent: category?.id,
+          topic: 'BananaServer.xyz Mix notifications',
+          permissionOverwrites,
+        });
+        results.push('✅ Created text channel: **🍌-notification** (read-only)');
+        this.initLogger.log(`Created notification channel in guild: ${guild.name}`);
+      } else {
+        results.push('ℹ️ Text channel **🍌-notification** already exists');
+
+        if ('setParent' in notificationChannel && notificationChannel.parentId !== category?.id && category) {
+          await (notificationChannel as any).setParent(category.id);
+          results.push('✅ Moved **🍌-notification** to the correct category');
+        }
+
+        // Ensure read-only permissions for @everyone
+        if ('permissionOverwrites' in notificationChannel) {
+          await (notificationChannel as any).permissionOverwrites.edit(guild.roles.everyone, {
+            ViewChannel: true,
+            ReadMessageHistory: true,
+            SendMessages: false,
+            CreatePublicThreads: false,
+            CreatePrivateThreads: false,
+          });
+
+          // Ensure bot can send messages
+          if (botId) {
+            await (notificationChannel as any).permissionOverwrites.edit(botId, {
+              SendMessages: true,
+              EmbedLinks: true,
+            });
+          }
+
+          results.push('✅ Updated **🍌-notification** permissions (read-only for users, bot can send)');
+        }
+      }
+
       // Create @banana-mix role
       let bananaMixRole = guild.roles.cache.find(
         (role) => role.name === 'banana-mix'
@@ -125,10 +191,11 @@ export default class Init extends DiscordInteraction {
                 category_channel_id: category?.id,
                 queue_mix_channel_id: queueMixChannel?.id,
                 afk_channel_id: afkChannel?.id,
+                notification_channel_id: notificationChannel?.id,
               },
               on_conflict: {
                 constraint: 'discord_guilds_pkey',
-                update_columns: ['name', 'icon', 'owner_id', 'category_channel_id', 'queue_mix_channel_id', 'afk_channel_id', 'updated_at'],
+                update_columns: ['name', 'icon', 'owner_id', 'category_channel_id', 'queue_mix_channel_id', 'afk_channel_id', 'notification_channel_id', 'updated_at'],
               },
             },
             id: true,

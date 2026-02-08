@@ -479,6 +479,9 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.CreateTeam)
           .setDescription("Create a new team"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.LfgMix)
+          .setDescription("Looking for group - Invite all players to join a mix"),
       ];
 
       if (process.env.ENABLE_MIGRATE_COMMAND === 'true') {

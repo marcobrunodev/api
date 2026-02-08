@@ -18,4 +18,5 @@ export enum ChatCommands {
   CheckSteamId = "check-steamid",
   CreateTeam = "create-team",
   Migrate = "migrate",
+  LfgMix = "lfg-mix",
 }
