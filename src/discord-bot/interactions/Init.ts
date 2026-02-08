@@ -93,6 +93,23 @@ export default class Init extends DiscordInteraction {
         }
       }
 
+      // Create @banana-mix role
+      let bananaMixRole = guild.roles.cache.find(
+        (role) => role.name === 'banana-mix'
+      );
+
+      if (!bananaMixRole) {
+        bananaMixRole = await guild.roles.create({
+          name: 'banana-mix',
+          color: 0xf5a623, // Orange/banana color
+          reason: 'BananaServer.xyz Mix role for players',
+        });
+        results.push('✅ Created role: **@banana-mix**');
+        this.initLogger.log(`Created banana-mix role in guild: ${guild.name}`);
+      } else {
+        results.push('ℹ️ Role **@banana-mix** already exists');
+      }
+
       // Salvar/atualizar informações da guild no banco de dados
       try {
         const guildOwner = await guild.fetchOwner();
