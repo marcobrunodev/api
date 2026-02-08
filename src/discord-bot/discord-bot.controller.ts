@@ -17,7 +17,7 @@ export class DiscordBotController {
 
   @Get("/discord-bot")
   public async bot(@Req() request: Request, @Res() response: Response) {
-    if (request.user.role !== "administrator") {
+    if (!request.user || request.user.role !== "administrator") {
       throw Error("not authorized");
     }
 

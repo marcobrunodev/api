@@ -74,8 +74,8 @@ export class DiscordBotScoreboardService {
           },
           id: true,
           status: true,
-          score_lineup_1: true,
-          score_lineup_2: true,
+          lineup_1_score: true,
+          lineup_2_score: true,
           map: {
             name: true,
           },
@@ -200,8 +200,8 @@ export class DiscordBotScoreboardService {
     const { match, playerStats } = data;
     const currentMap = match.match_maps?.[0];
 
-    const score1 = currentMap?.score_lineup_1 || 0;
-    const score2 = currentMap?.score_lineup_2 || 0;
+    const score1 = currentMap?.lineup_1_score || 0;
+    const score2 = currentMap?.lineup_2_score || 0;
     const mapName = currentMap?.map?.name || 'Unknown';
 
     // Separar players por lineup
