@@ -295,23 +295,36 @@ async function finalizePicks(interaction: ButtonInteraction, session: ReturnType
     })
     .join('\n');
 
-  // Buscar regiões disponíveis (não-LAN e com servidores)
+  // Buscar regiões disponíveis (servidores habilitados, regiões não-LAN)
+  const { servers } = await hasura.query({
+    servers: {
+      __args: {
+        where: {
+          enabled: { _eq: true },
+          region: { _is_null: false }
+        },
+        distinct_on: ["region"]
+      },
+      region: true,
+    }
+  });
+
+  // Filtrar regiões não-LAN
   const { server_regions } = await hasura.query({
     server_regions: {
       __args: {
         where: {
-          is_lan: { _eq: false },
-          servers: {
-            enabled: { _eq: true }
-          }
+          is_lan: { _eq: false }
         }
       },
       value: true,
-      description: true,
     }
   });
 
-  const availableRegions = server_regions?.map((r: any) => r.value) || [];
+  const nonLanRegions = new Set(server_regions?.map((r: any) => r.value) || []);
+  const availableRegions = servers
+    ?.map((s: any) => s.region)
+    .filter((r: string) => nonLanRegions.has(r)) || [];
 
   // Se há 2+ regiões, fazer region veto; senão, pular direto para map veto
   if (availableRegions.length >= 2) {
