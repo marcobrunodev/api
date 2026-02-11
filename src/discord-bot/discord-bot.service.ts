@@ -68,6 +68,17 @@ export class DiscordBotService {
     guildId: string;
   }>();
 
+  // Cache para IDs de canais do guild (TTL: 5 minutos)
+  private guildChannelIdsCache = new Map<string, {
+    data: {
+      queue_mix_channel_id?: string;
+      afk_channel_id?: string;
+      category_channel_id?: string;
+      notification_channel_id?: string;
+    };
+    expiresAt: number;
+  }>();
+
   constructor(
     readonly config: ConfigService,
     private readonly logger: Logger,
@@ -682,8 +693,12 @@ export class DiscordBotService {
       const guild = member.guild;
       if (!guild) return;
 
-      const isJoiningQueueMix = newChannel?.name === '🍌 Queue Mix';
-      const isLeavingQueueMix = oldChannel?.name === '🍌 Queue Mix';
+      // Buscar IDs dos canais do banco de dados (com cache)
+      const channelIds = await this.getGuildChannelIds(guild.id);
+      if (!channelIds.queue_mix_channel_id) return;
+
+      const isJoiningQueueMix = newChannel?.id === channelIds.queue_mix_channel_id;
+      const isLeavingQueueMix = oldChannel?.id === channelIds.queue_mix_channel_id;
 
       if (isJoiningQueueMix && !isLeavingQueueMix) {
         await this.addToQueueMix(guild.id, member.id);
@@ -711,6 +726,49 @@ export class DiscordBotService {
     return await this.getQueueMixPosition(guildId, memberId);
   }
 
+  // Método helper para obter IDs dos canais do guild com cache (5 minutos)
+  public async getGuildChannelIds(guildId: string): Promise<{
+    queue_mix_channel_id?: string;
+    afk_channel_id?: string;
+    category_channel_id?: string;
+    notification_channel_id?: string;
+  }> {
+    const cached = this.guildChannelIdsCache.get(guildId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
+    const { discord_guilds_by_pk } = await this.hasura.query({
+      discord_guilds_by_pk: {
+        __args: { id: guildId },
+        queue_mix_channel_id: true,
+        afk_channel_id: true,
+        category_channel_id: true,
+        notification_channel_id: true,
+      },
+    });
+
+    const data = {
+      queue_mix_channel_id: discord_guilds_by_pk?.queue_mix_channel_id,
+      afk_channel_id: discord_guilds_by_pk?.afk_channel_id,
+      category_channel_id: discord_guilds_by_pk?.category_channel_id,
+      notification_channel_id: discord_guilds_by_pk?.notification_channel_id,
+    };
+
+    // Cache por 5 minutos
+    this.guildChannelIdsCache.set(guildId, {
+      data,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    });
+
+    return data;
+  }
+
+  // Limpar cache de um guild (usar após /init)
+  public clearGuildChannelIdsCache(guildId: string): void {
+    this.guildChannelIdsCache.delete(guildId);
+  }
+
   public async removeFromQueueMixOrder(guildId: string, memberId: string): Promise<void> {
     await this.removeFromQueueMix(guildId, memberId);
   }
@@ -727,13 +785,11 @@ export class DiscordBotService {
       const guild = await this.client.guilds.fetch(guildId);
       const member = await guild.members.fetch(memberId);
 
-      // Buscar canal AFK
-      const afkChannel = guild.channels.cache.find(
-        (ch: any) => ch.type === 2 && ch.name === '💤 AFK' // ChannelType.GuildVoice = 2
-      );
+      // Buscar canal AFK do banco de dados
+      const channelIds = await this.getGuildChannelIds(guildId);
 
-      if (afkChannel && 'id' in afkChannel && member.voice.channel) {
-        await member.voice.setChannel(afkChannel.id);
+      if (channelIds.afk_channel_id && member.voice.channel) {
+        await member.voice.setChannel(channelIds.afk_channel_id);
         this.logger.log(`Moved ${memberId} to AFK channel in guild ${guildId}`);
       }
 
@@ -1095,11 +1151,12 @@ export class DiscordBotService {
         return kdB - kdA; // Decrescente
       });
 
-      // Buscar guild e canal Queue Mix
+      // Buscar guild e canal Queue Mix do banco de dados
       const guild = await this.client.guilds.fetch(guildId);
-      const queueMixChannel = guild.channels.cache.find(
-        (ch: any) => ch.type === ChannelType.GuildVoice && ch.name === '🍌 Queue Mix'
-      );
+      const channelIds = await this.getGuildChannelIds(guildId);
+      const queueMixChannel = channelIds.queue_mix_channel_id
+        ? await guild.channels.fetch(channelIds.queue_mix_channel_id).catch((): null => null)
+        : null;
 
       // PASSO 1: Mover fisicamente os jogadores de volta para Queue Mix ou AFK
       // Isso vai acionar o evento VoiceStateUpdate que adiciona/remove do Redis

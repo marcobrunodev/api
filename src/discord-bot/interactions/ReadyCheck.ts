@@ -151,11 +151,12 @@ async function handleTimeout(messageId: string, bot: any, channel: any) {
     try {
       const guild = await bot.client.guilds.fetch(session.guildId);
 
-      // Buscar canal AFK e Queue Mix
+      // Buscar canal AFK do banco de dados
+      const guildChannelIds = await bot.getGuildChannelIds(session.guildId);
+      const dbAfkChannelId = guildChannelIds?.afk_channel_id;
+
       await guild.channels.fetch();
-      const afkChannel = guild.channels.cache.find(
-        (ch: any) => ch.type === ChannelType.GuildVoice && ch.name === '💤 AFK'
-      );
+      const afkChannel = dbAfkChannelId ? guild.channels.cache.get(dbAfkChannelId) : null;
       const queueMixChannel = guild.channels.cache.get(session.queueMixChannelId);
       const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
 

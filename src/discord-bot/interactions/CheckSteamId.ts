@@ -17,11 +17,21 @@ export default class CheckSteamId extends DiscordInteraction {
         return;
       }
 
-      // Buscar o canal Queue Mix
-      await guild.channels.fetch();
-      const queueMixChannel = guild.channels.cache.find(
-        (ch: any) => ch.type === ChannelType.GuildVoice && ch.name === '🍌 Queue Mix'
-      );
+      // Buscar queue_mix_channel_id do banco de dados
+      const { discord_guilds_by_pk } = await this.hasura.query({
+        discord_guilds_by_pk: {
+          __args: { id: guild.id },
+          queue_mix_channel_id: true,
+        },
+      });
+
+      if (!discord_guilds_by_pk?.queue_mix_channel_id) {
+        await interaction.editReply("❌ Queue Mix channel not configured. Please run `/init` first.");
+        return;
+      }
+
+      // Buscar o canal Queue Mix pelo ID
+      const queueMixChannel = await guild.channels.fetch(discord_guilds_by_pk.queue_mix_channel_id).catch((): null => null);
 
       if (!queueMixChannel || !('members' in queueMixChannel)) {
         await interaction.editReply("❌ Queue Mix channel not found. Please run `/init` first.");

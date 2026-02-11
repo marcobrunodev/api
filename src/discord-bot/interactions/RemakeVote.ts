@@ -280,6 +280,15 @@ export default class RequestRemake extends DiscordInteraction {
     let categoryChannelId: string | undefined;
     let queueMixChannelId: string | undefined;
 
+    // Buscar queue_mix_channel_id do banco de dados
+    const { discord_guilds_by_pk } = await this.hasura.query({
+      discord_guilds_by_pk: {
+        __args: { id: guildId },
+        queue_mix_channel_id: true,
+      },
+    });
+    const dbQueueMixChannelId = discord_guilds_by_pk?.queue_mix_channel_id;
+
     // Tentar encontrar sessão ativa através das mensagens no canal
     try {
       const messages = await channel.messages.fetch({ limit: 10 });
@@ -305,12 +314,9 @@ export default class RequestRemake extends DiscordInteraction {
             if (currentChannel && 'parent' in currentChannel) {
               categoryChannelId = currentChannel.parentId || undefined;
             }
-            // Procurar Queue Mix channel
-            const queueMix = guild.channels.cache.find(
-              (ch: any) => ch.type === 2 && ch.name === '🍌 Queue Mix'
-            );
-            if (queueMix) {
-              queueMixChannelId = queueMix.id;
+            // Usar queue_mix_channel_id do banco de dados
+            if (dbQueueMixChannelId) {
+              queueMixChannelId = dbQueueMixChannelId;
             }
           }
           break;
@@ -330,11 +336,9 @@ export default class RequestRemake extends DiscordInteraction {
             if (currentChannel && 'parent' in currentChannel) {
               categoryChannelId = currentChannel.parentId || undefined;
             }
-            const queueMix = guild.channels.cache.find(
-              (ch: any) => ch.type === 2 && ch.name === '🍌 Queue Mix'
-            );
-            if (queueMix) {
-              queueMixChannelId = queueMix.id;
+            // Usar queue_mix_channel_id do banco de dados
+            if (dbQueueMixChannelId) {
+              queueMixChannelId = dbQueueMixChannelId;
             }
           }
           break;
@@ -350,11 +354,9 @@ export default class RequestRemake extends DiscordInteraction {
             if (currentChannel && 'parent' in currentChannel) {
               categoryChannelId = currentChannel.parentId || undefined;
             }
-            const queueMix = guild.channels.cache.find(
-              (ch: any) => ch.type === 2 && ch.name === '🍌 Queue Mix'
-            );
-            if (queueMix) {
-              queueMixChannelId = queueMix.id;
+            // Usar queue_mix_channel_id do banco de dados
+            if (dbQueueMixChannelId) {
+              queueMixChannelId = dbQueueMixChannelId;
             }
           }
           break;

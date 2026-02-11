@@ -123,7 +123,15 @@ export default class ScheduleMix extends DiscordInteraction {
 
       await guild.channels.fetch();
 
-      const queueMixChannel = voiceChannel.name === '🍌 Queue Mix' ? voiceChannel : null;
+      // Buscar queue_mix_channel_id do banco de dados
+      const { discord_guilds_by_pk } = await this.hasura.query({
+        discord_guilds_by_pk: {
+          __args: { id: guild.id },
+          queue_mix_channel_id: true,
+        },
+      });
+
+      const queueMixChannel = voiceChannel.id === discord_guilds_by_pk?.queue_mix_channel_id ? voiceChannel : null;
 
       console.log('Fetching bot member...');
       const botMember = await guild.members.fetch(interaction.client.user.id);

@@ -19,6 +19,19 @@ export default class Queue extends DiscordInteraction {
         return;
       }
 
+      // Buscar queue_mix_channel_id do banco de dados
+      const { discord_guilds_by_pk } = await this.hasura.query({
+        discord_guilds_by_pk: {
+          __args: { id: guild.id },
+          queue_mix_channel_id: true,
+        },
+      });
+
+      if (!discord_guilds_by_pk?.queue_mix_channel_id) {
+        await interaction.editReply("❌ Queue Mix channel not configured. Please run `/init` first.");
+        return;
+      }
+
       const member = guild.members.cache.get(interaction.user.id);
       const voiceChannel = member?.voice.channel;
 
@@ -27,7 +40,7 @@ export default class Queue extends DiscordInteraction {
         return;
       }
 
-      if (voiceChannel.name !== '🍌 Queue Mix') {
+      if (voiceChannel.id !== discord_guilds_by_pk.queue_mix_channel_id) {
         await interaction.editReply("❌ This command can only be used in the **🍌 Queue Mix** channel.");
         return;
       }
