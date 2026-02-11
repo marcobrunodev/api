@@ -156,7 +156,7 @@ export default class PickPlayer extends DiscordInteraction {
     if (isLastPick) {
       // Pequeno delay para garantir que a movimentação foi processada pelo Discord
       await new Promise(resolve => setTimeout(resolve, 500));
-      await finalizePicks(interaction, session);
+      await finalizePicks(interaction, session, this.hasura);
       deletePickSession(messageId);
     }
   }
@@ -268,7 +268,7 @@ ${availablePlayersList || '_None_'}
   });
 }
 
-async function finalizePicks(interaction: ButtonInteraction, session: ReturnType<typeof getPickSession>) {
+async function finalizePicks(interaction: ButtonInteraction, session: ReturnType<typeof getPickSession>, hasura: any) {
   const channel = interaction.channel;
   if (!channel || !('send' in channel)) return;
 
@@ -295,10 +295,124 @@ async function finalizePicks(interaction: ButtonInteraction, session: ReturnType
     })
     .join('\n');
 
-  await interaction.message.edit({
-    embeds: [{
-      title: '✅ Teams Selected!',
-      description: `
+  // Buscar regiões disponíveis (não-LAN e com servidores)
+  const { server_regions } = await hasura.query({
+    server_regions: {
+      __args: {
+        where: {
+          is_lan: { _eq: false },
+          servers: {
+            enabled: { _eq: true }
+          }
+        }
+      },
+      value: true,
+      description: true,
+    }
+  });
+
+  const availableRegions = server_regions?.map((r: any) => r.value) || [];
+
+  // Se há 2+ regiões, fazer region veto; senão, pular direto para map veto
+  if (availableRegions.length >= 2) {
+    await interaction.message.edit({
+      embeds: [{
+        title: '✅ Teams Selected!',
+        description: `
+**Team ${session.captain1Fruit}:**
+${team1List}
+
+**Team ${session.captain2Fruit}:**
+${team2List}
+
+**Next step:** Region veto will begin shortly...
+        `,
+        color: 0x00FF00,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: 'From BananaServer.xyz with 🍌',
+        }
+      }]
+    });
+
+    await channel.send({
+      content: `✅ Teams are ready! Region veto starting now...`
+    });
+
+    // Iniciar veto de regiões
+    const { initializeRegionVetoSession } = await import('./RegionVeto');
+
+    // Criar botões com as regiões
+    const regionButtons = availableRegions.map((region: string) => {
+      return new ButtonBuilder()
+        .setCustomId(`${ButtonActions.VetoRegion}:${region}`)
+        .setLabel(region)
+        .setStyle(ButtonStyle.Danger);
+    });
+
+    const regionRows: ActionRowBuilder<ButtonBuilder>[] = [];
+    for (let i = 0; i < regionButtons.length; i += 5) {
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(regionButtons.slice(i, i + 5));
+      regionRows.push(row);
+    }
+
+    const bansNeeded = availableRegions.length - 1;
+
+    const regionVetoMessage = await channel.send({
+      embeds: [{
+        title: '🌍 Region Veto',
+        description: `
+**Current Turn:** 👑 <@${session.captain1Id}> (\`${session.captain1Fruit}\`) - **BAN**
+**Bans remaining:** ${bansNeeded}
+
+**Team ${session.captain1Fruit}:**
+${session.team1.map(id => `<@${id}>`).join(', ')}
+
+**Team ${session.captain2Fruit}:**
+${session.team2.map(id => `<@${id}>`).join(', ')}
+
+**Available Regions:**
+${availableRegions.map((r: string) => `\`${r}\``).join(', ')}
+
+**Banned Regions:**
+_None yet_
+
+**Click a region button to ban it!**
+        `,
+        color: 0xFF0000,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: 'From BananaServer.xyz with 🍌',
+        }
+      }],
+      components: regionRows
+    });
+
+    initializeRegionVetoSession(
+      regionVetoMessage.id,
+      session.captain1Id,
+      session.captain2Id,
+      session.captain1Fruit,
+      session.captain2Fruit,
+      session.team1,
+      session.team2,
+      availableRegions,
+      session.guildId,
+      channel.id,
+      session.categoryId,
+      session.team1ChannelId,
+      session.team2ChannelId,
+      session.fruitToPlayer
+    );
+  } else {
+    // Apenas 1 região (ou nenhuma), pular direto para map veto
+    const selectedRegion = availableRegions.length === 1 ? availableRegions[0] : undefined;
+
+    await interaction.message.edit({
+      embeds: [{
+        title: '✅ Teams Selected!',
+        description: `
 **Team ${session.captain1Fruit}:**
 ${team1List}
 
@@ -306,61 +420,51 @@ ${team1List}
 ${team2List}
 
 **Next step:** Map veto will begin shortly...
-      `,
-      color: 0x00FF00,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'From BananaServer.xyz with 🍌',
-      }
-    }]
-  });
+        `,
+        color: 0x00FF00,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: 'From BananaServer.xyz with 🍌',
+        }
+      }]
+    });
 
-  await channel.send({
-    content: `✅ Teams are ready! Map veto starting now...`
-  });
+    await channel.send({
+      content: `✅ Teams are ready! Map veto starting now...`
+    });
 
-  // Iniciar veto de mapas
-  const { initializeVetoSession } = await import('./MapVeto');
+    // Iniciar veto de mapas
+    const { initializeVetoSession } = await import('./MapVeto');
 
-  const COMPETITIVE_MAPS = [
-    "Ancient",
-    "Anubis",
-    "Dust 2",
-    "Inferno",
-    "Mirage",
-    "Nuke",
-    "Overpass"
-  ];
+    const COMPETITIVE_MAPS = [
+      "Ancient",
+      "Anubis",
+      "Dust 2",
+      "Inferno",
+      "Mirage",
+      "Nuke",
+      "Overpass"
+    ];
 
-  // Criar botões com os mapas
-  const mapButtons = COMPETITIVE_MAPS.map(map => {
-    return new ButtonBuilder()
-      .setCustomId(`${ButtonActions.VetoMap}:${map}`)
-      .setLabel(map)
-      .setStyle(ButtonStyle.Danger);
-  });
+    // Criar botões com os mapas
+    const mapButtons = COMPETITIVE_MAPS.map(map => {
+      return new ButtonBuilder()
+        .setCustomId(`${ButtonActions.VetoMap}:${map}`)
+        .setLabel(map)
+        .setStyle(ButtonStyle.Danger);
+    });
 
-  const mapRows: ActionRowBuilder<ButtonBuilder>[] = [];
-  for (let i = 0; i < mapButtons.length; i += 5) {
-    const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(mapButtons.slice(i, i + 5));
-    mapRows.push(row);
-  }
+    const mapRows: ActionRowBuilder<ButtonBuilder>[] = [];
+    for (let i = 0; i < mapButtons.length; i += 5) {
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(mapButtons.slice(i, i + 5));
+      mapRows.push(row);
+    }
 
-  // Adicionar botão de remake em uma linha separada
-  // const remakeButton = new ButtonBuilder()
-  //   .setCustomId(ButtonActions.RequestRemake)
-  //   .setLabel('🔄 Request Remake')
-  //   .setStyle(ButtonStyle.Secondary);
-
-  // const remakeRow = new ActionRowBuilder<ButtonBuilder>()
-  //   .addComponents(remakeButton);
-  // mapRows.push(remakeRow);
-
-  const vetoMessage = await channel.send({
-    embeds: [{
-      title: '🗺️ Map Veto',
-      description: `
+    const vetoMessage = await channel.send({
+      embeds: [{
+        title: '🗺️ Map Veto',
+        description: `
 **Current Turn:** 👑 <@${session.captain1Id}> (\`${session.captain1Fruit}\`) - **BAN**
 **Bans remaining:** 6
 
@@ -377,28 +481,30 @@ ${COMPETITIVE_MAPS.map(m => `\`${m}\``).join(', ')}
 _None yet_
 
 **Click a map button to ban it!**
-      `,
-      color: 0xFF0000,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'From BananaServer.xyz with 🍌',
-      }
-    }],
-    components: mapRows
-  });
+        `,
+        color: 0xFF0000,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: 'From BananaServer.xyz with 🍌',
+        }
+      }],
+      components: mapRows
+    });
 
-  initializeVetoSession(
-    vetoMessage.id,
-    session.captain1Id,
-    session.captain2Id,
-    session.captain1Fruit,
-    session.captain2Fruit,
-    session.team1,
-    session.team2,
-    session.guildId,
-    channel.id,
-    session.categoryId
-  );
+    initializeVetoSession(
+      vetoMessage.id,
+      session.captain1Id,
+      session.captain2Id,
+      session.captain1Fruit,
+      session.captain2Fruit,
+      session.team1,
+      session.team2,
+      session.guildId,
+      channel.id,
+      session.categoryId,
+      selectedRegion
+    );
+  }
 }
 
 export async function updatePickMessageById(message: any) {

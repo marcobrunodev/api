@@ -160,8 +160,8 @@ async function handleTimeout(messageId: string, bot: any, channel: any) {
       const mixVoiceChannel = guild.channels.cache.get(session.originalChannelId);
 
       if (afkChannel && 'id' in afkChannel) {
-        // Mover cada player não-ready para o AFK e adicionar penalidade
-        for (const playerId of notReadyPlayers) {
+        // Mover todos os players não-ready para o AFK em paralelo
+        const moveAfkPromises = notReadyPlayers.map(async (playerId) => {
           try {
             const member = await guild.members.fetch(playerId);
             if (member.voice.channel) {
@@ -181,7 +181,9 @@ async function handleTimeout(messageId: string, bot: any, channel: any) {
           } catch (error) {
             console.error(`Failed to move player ${playerId} to AFK:`, error);
           }
-        }
+        });
+
+        await Promise.all(moveAfkPromises);
 
         await channel.send({
           content: `✅ Moved ${notReadyPlayers.length} AFK player(s) to 💤 AFK channel.\n⚠️ Penalty applied - moved to end of queue.`
@@ -328,8 +330,8 @@ async function moveReadyPlayersBackToQueue(session: any, guild: any, queueMixCha
 
   if (readyPlayers.length === 0) return;
 
-  // Mover cada player que deu ready de volta para Queue Mix e colocar no topo da fila
-  for (const playerId of readyPlayers) {
+  // Mover todos os players em paralelo para ser mais rápido
+  const movePromises = readyPlayers.map(async (playerId) => {
     try {
       const member = await guild.members.fetch(playerId);
       if (member.voice.channelId === mixVoiceChannel.id) {
@@ -343,7 +345,9 @@ async function moveReadyPlayersBackToQueue(session: any, guild: any, queueMixCha
     } catch (error) {
       console.error(`Failed to move player ${playerId} back to Queue Mix:`, error);
     }
-  }
+  });
+
+  await Promise.all(movePromises);
 }
 
 @BotButtonInteraction(ButtonActions.ReadyCheck)

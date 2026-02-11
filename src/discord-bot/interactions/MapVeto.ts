@@ -43,6 +43,7 @@ const vetoSessions = new Map<string, {
   guildId: string;
   channelId: string;
   categoryId?: string;
+  selectedRegion?: string;
 }>();
 
 export function initializeVetoSession(
@@ -55,7 +56,8 @@ export function initializeVetoSession(
   team2: string[],
   guildId: string,
   channelId: string,
-  categoryId?: string
+  categoryId?: string,
+  selectedRegion?: string
 ) {
   // Ordem de vetos: 1,2,1,2,1,2 (6 bans) = 1 mapa restante
   const vetoOrder = [1, 2, 1, 2, 1, 2];
@@ -74,6 +76,7 @@ export function initializeVetoSession(
     guildId,
     channelId,
     categoryId,
+    selectedRegion,
   });
 
   return vetoSessions.get(messageId);
@@ -289,6 +292,7 @@ ${bannedMapsList}
         overtime: true,
         maps: [],
         discord_guild_id: session.guildId,
+        region: session.selectedRegion,
       }
     );
 

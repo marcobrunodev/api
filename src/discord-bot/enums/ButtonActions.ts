@@ -9,6 +9,7 @@ export enum ButtonActions {
   OpenRegisterSteamIdModal = "open_register_steamid",
   PickPlayer = "pp",
   VetoMap = "vm",
+  VetoRegion = "vr_reg",
   RequestRemake = "rr",
   VoteRemake = "vr",
   AcceptMixDuel = "amd",

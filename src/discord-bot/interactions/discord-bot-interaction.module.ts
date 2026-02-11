@@ -44,6 +44,7 @@ import DeclineTeamMember from "./DeclineTeamMember";
 import LeaveTeam from "./LeaveTeam";
 import Migrate from "./Migrate";
 import LfgMix from "./LfgMix";
+import RegionVeto from "./RegionVeto";
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import LfgMix from "./LfgMix";
     LeaveTeam,
     Migrate,
     LfgMix,
+    RegionVeto,
   ],
   providers: [
     LinkDiscord,
@@ -135,6 +137,7 @@ import LfgMix from "./LfgMix";
     LeaveTeam,
     Migrate,
     LfgMix,
+    RegionVeto,
     loggerFactory(),
   ],
 })
