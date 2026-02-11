@@ -17,31 +17,19 @@ export default class CheckSteamId extends DiscordInteraction {
         return;
       }
 
-      // Buscar queue_mix_channel_id do banco de dados
-      const { discord_guilds_by_pk } = await this.hasura.query({
-        discord_guilds_by_pk: {
-          __args: { id: guild.id },
-          queue_mix_channel_id: true,
-        },
-      });
+      // Verificar se o usuário está em um canal de voz
+      const member = guild.members.cache.get(interaction.user.id);
+      const voiceChannel = member?.voice.channel;
 
-      if (!discord_guilds_by_pk?.queue_mix_channel_id) {
-        await interaction.editReply("❌ Queue Mix channel not configured. Please run `/init` first.");
+      if (!voiceChannel) {
+        await interaction.editReply("❌ You need to be in a voice channel to use this command.");
         return;
       }
 
-      // Buscar o canal Queue Mix pelo ID
-      const queueMixChannel = await guild.channels.fetch(discord_guilds_by_pk.queue_mix_channel_id).catch((): null => null);
-
-      if (!queueMixChannel || !('members' in queueMixChannel)) {
-        await interaction.editReply("❌ Queue Mix channel not found. Please run `/init` first.");
-        return;
-      }
-
-      const members = Array.from((queueMixChannel as any).members.values());
+      const members = Array.from(voiceChannel.members.values());
 
       if (members.length === 0) {
-        await interaction.editReply("❌ No players in Queue Mix channel.");
+        await interaction.editReply("❌ No players in the voice channel.");
         return;
       }
 
@@ -95,7 +83,7 @@ export default class CheckSteamId extends DiscordInteraction {
         await interaction.editReply({
           embeds: [{
             title: '✅ All Players Ready!',
-            description: `All **${members.length}** player(s) in Queue Mix have their SteamID configured!\n\n${playersWithSteamId.map(id => `✅ <@${id}>`).join('\n')}`,
+            description: `All **${members.length}** player(s) in the voice channel have their SteamID configured!\n\n${playersWithSteamId.map(id => `✅ <@${id}>`).join('\n')}`,
             color: 0x00FF00,
             footer: {
               text: 'From BananaServer.xyz with 🍌',
