@@ -288,13 +288,13 @@ export class WarmupServerService {
     password?: string;
   } | null> {
     try {
-      // Query for available dedicated servers that are not in a match
+      // Query for available servers
       const { servers } = await this.hasura.query({
         servers: {
           __args: {
             where: {
               enabled: { _eq: true },
-              current_match_id: { _is_null: true },
+              is_available: { _eq: true },
             },
             limit: 1,
           },
@@ -304,8 +304,11 @@ export class WarmupServerService {
         },
       });
 
+      this.logger.log(`[Warmup] Found ${servers?.length || 0} available servers`);
+
       if (servers && servers.length > 0) {
         const server = servers[0];
+        this.logger.log(`[Warmup] Using server: ${server.host}:${server.port}`);
         return {
           id: server.id,
           ip: server.host,
