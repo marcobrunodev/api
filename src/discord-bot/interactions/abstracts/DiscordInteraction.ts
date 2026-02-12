@@ -7,6 +7,7 @@ import { DiscordPickPlayerService } from "../../discord-pick-player/discord-pick
 import { DiscordBotOverviewService } from "../../discord-bot-overview/discord-bot-overview.service";
 import { DiscordBotVetoService } from "../../discord-bot-veto/discord-bot-veto.service";
 import { HasuraService } from "../../../hasura/hasura.service";
+import { WarmupServerService } from "../../warmup-server/warmup-server.service";
 import { forwardRef, Inject, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
@@ -24,6 +25,7 @@ export default abstract class DiscordInteraction {
     protected readonly discordBotMessaging: DiscordBotMessagingService,
     protected readonly discordMatchOverview: DiscordBotOverviewService,
     protected readonly discordBotVoiceChannels: DiscordBotVoiceChannelsService,
+    protected readonly warmupServer: WarmupServerService,
   ) {}
 
   public abstract handler(

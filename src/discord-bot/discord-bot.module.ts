@@ -21,6 +21,8 @@ import { getQueuesProcessors } from "../utilities/QueueProcessors";
 import { DiscordBotInteractionModule } from "./interactions/discord-bot-interaction.module";
 import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
 import { TeamsController } from "./teams/teams.controller";
+import { WarmupServerModule } from "./warmup-server/warmup-server.module";
+import { WarmupServerService } from "./warmup-server/warmup-server.service";
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { TeamsController } from "./teams/teams.controller";
     HasuraModule,
     forwardRef(() => MatchesModule),
     DiscordBotInteractionModule,
+    WarmupServerModule,
     BullModule.registerQueue({
       name: DiscordBotQueues.DiscordBot,
     }),
@@ -47,6 +50,7 @@ import { TeamsController } from "./teams/teams.controller";
     DiscordBotScoreboardService,
     UpdateDiscordMatchVetoJob,
     RemoveArchivedThreads,
+    WarmupServerService,
     ...getQueuesProcessors("DiscordBot"),
     loggerFactory(),
   ],
@@ -58,6 +62,7 @@ import { TeamsController } from "./teams/teams.controller";
     DiscordBotVoiceChannelsService,
     DiscordPickPlayerService,
     DiscordBotScoreboardService,
+    WarmupServerService,
   ],
   controllers: [DiscordBotController, TeamsController],
 })

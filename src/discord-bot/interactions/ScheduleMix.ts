@@ -123,15 +123,24 @@ export default class ScheduleMix extends DiscordInteraction {
 
       await guild.channels.fetch();
 
-      // Buscar queue_mix_channel_id do banco de dados
+      // Buscar queue_mix_channel_id e notification_channel_id do banco de dados
       const { discord_guilds_by_pk } = await this.hasura.query({
         discord_guilds_by_pk: {
           __args: { id: guild.id },
           queue_mix_channel_id: true,
+          notification_channel_id: true,
         },
       });
 
       const queueMixChannel = voiceChannel.id === discord_guilds_by_pk?.queue_mix_channel_id ? voiceChannel : null;
+
+      // Stop warmup server since mix is starting
+      await this.warmupServer.stopWarmupServer(
+        guild.id,
+        'mix_starting',
+        guild,
+        discord_guilds_by_pk?.notification_channel_id
+      );
 
       console.log('Fetching bot member...');
       const botMember = await guild.members.fetch(interaction.client.user.id);
