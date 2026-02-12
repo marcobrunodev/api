@@ -342,13 +342,13 @@ export class WarmupServerService {
         embeds: [{
           title: '🎮 Warmup Server Ready!',
           description: `
-**Modo:** ${state.currentGameMode}
-**Mapa:** ${state.currentMap}
-**Players na fila:** ${queueSize}/10
+**Mode:** ${state.currentGameMode}
+**Map:** ${state.currentMap}
+**Players in queue:** ${queueSize}/10
 
-${state.connectInfo ? `🔗 **Conectar:** \`${state.connectInfo}\`` : '⏳ Procurando servidor...'}
+${state.connectInfo ? `🔗 **Connect:** \`${state.connectInfo}\`` : '⏳ Searching for server...'}
 
-Jogue enquanto espera o mix!
+Play while waiting for the mix!
           `.trim(),
           color: 0x00FF00,
           footer: {
@@ -393,9 +393,9 @@ Jogue enquanto espera o mix!
         embeds: [{
           title: '⏳ Warmup Server',
           description: `
-Não há servidor de warmup disponível no momento.
+No warmup server available at the moment.
 
-Assim que um servidor estiver livre, vocês serão notificados!
+You'll be notified as soon as a server becomes available!
           `.trim(),
           color: 0xFF9900,
           footer: {
@@ -424,7 +424,7 @@ Assim que um servidor estiver livre, vocês serão notificados!
 
       await channel.send({
         embeds: [{
-          title: '🏁 Warmup Encerrado!',
+          title: '🏁 Warmup Ended!',
           description: reason,
           color: 0x00FFFF,
           footer: {
