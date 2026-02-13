@@ -15,7 +15,8 @@ import { ButtonActions } from "../enums/ButtonActions";
 import { customAlphabet } from 'nanoid';
 import { HasuraService } from "../../hasura/hasura.service";
 import { DiscordBotService } from "../discord-bot.service";
-import { getDuelMaps, createVetoSession, getVetoStatusText, formatMapName } from "./duel-veto.helper";
+import { formatMapName } from "./duel-veto.helper";
+import { getAvailableRegions, createRegionVetoSession } from "./duel-region-veto.helper";
 
 const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 
@@ -173,11 +174,11 @@ export async function createDuelRooms(options: CreateDuelRoomsOptions) {
   await picksBans.send({
     embeds: [{
       title: '⚔️ Welcome to the Banana Duel!',
-      description: 
+      description:
         `### <@${challengerId}>  ⚔️ VS ⚔️  <@${opponentId}>\n\n` +
-        'Ban maps by clicking the buttons below.\n' +
-        'Each player bans **3 maps** alternately.\n' +
-        'The last remaining map will be played!\n\n' +
+        '**Step 1:** Ban regions (servers) by clicking the buttons below.\n' +
+        '**Step 2:** Ban maps alternately.\n' +
+        'The last remaining region and map will be played!\n\n' +
         '**Good luck and have fun!** 🍌',
       color: 0xFFD700,
       timestamp: new Date().toISOString(),
@@ -187,68 +188,70 @@ export async function createDuelRooms(options: CreateDuelRoomsOptions) {
     }]
   });
 
-  // Buscar mapas de duel e iniciar o veto
-  const maps = await getDuelMaps(hasura);
-  
-  // Criar sessão de veto
-  const vetoEmbed = new EmbedBuilder()
-    .setColor(0xFFD700)
-    .setTitle("🗺️ Map Veto")
+  // Buscar regiões disponíveis e iniciar o veto de região
+  const regions = await getAvailableRegions(hasura);
+
+  // Calcular bans necessários (n-1 regiões)
+  const bansNeeded = regions.length - 1;
+
+  // Criar embed de veto de região
+  const regionVetoEmbed = new EmbedBuilder()
+    .setColor(0xFF9900)
+    .setTitle("🌍 Region Veto")
     .setDescription(
       `### <@${challengerId}>  ⚔️ VS ⚔️  <@${opponentId}>\n\n` +
       `**Current Turn:** <@${challengerId}>\n` +
-      `**Bans Remaining:** 3\n\n` +
-      '**Available Maps:**\n' +
-      maps.map(m => `🗺️ ${formatMapName(m.name)}`).join('\n') +
-      `\n\n<@${challengerId}>, click a map button to ban it!`
+      `**Bans Remaining:** ${bansNeeded}\n\n` +
+      '**Available Regions:**\n' +
+      regions.map(r => `🌍 ${r.name}`).join('\n') +
+      `\n\n<@${challengerId}>, click a region button to ban it!`
     )
     .setFooter({
       text: "From BananaServer.xyz with 🍌",
     })
     .setTimestamp();
 
-  // Criar botões para os mapas
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-  let currentRow = new ActionRowBuilder<ButtonBuilder>();
-  
-  // Enviar mensagem de veto primeiro para pegar o ID
-  const vetoMessage = await picksBans.send({
-    embeds: [vetoEmbed],
-    components: [] // Componentes serão adicionados depois
+  // Enviar mensagem de veto de região primeiro para pegar o ID
+  const regionVetoMessage = await picksBans.send({
+    embeds: [regionVetoEmbed],
+    components: []
   });
 
-  // Criar sessão de veto com o ID da mensagem
-  createVetoSession(
-    vetoMessage.id,
+  // Criar sessão de veto de região
+  createRegionVetoSession(
+    regionVetoMessage.id,
     picksBans.id,
     category.id,
     guild.id,
     challengerId,
     opponentId,
-    maps
+    regions
   );
 
-  // Agora criar os botões com o ID da mensagem
-  for (let i = 0; i < maps.length; i++) {
-    const map = maps[i];
+  // Criar botões para as regiões
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  let currentRow = new ActionRowBuilder<ButtonBuilder>();
+
+  for (let i = 0; i < regions.length; i++) {
+    const region = regions[i];
     const button = new ButtonBuilder()
-      .setCustomId(`${ButtonActions.DuelVetoBan}:${vetoMessage.id}:${map.id}`)
-      .setLabel(formatMapName(map.name))
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('🗺️');
+      .setCustomId(`${ButtonActions.DuelVetoRegion}:${regionVetoMessage.id}:${region.id}`)
+      .setLabel(region.name)
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji('🌍');
 
     currentRow.addComponents(button);
 
     // Discord permite no máximo 5 botões por row
-    if ((i + 1) % 5 === 0 || i === maps.length - 1) {
+    if ((i + 1) % 5 === 0 || i === regions.length - 1) {
       rows.push(currentRow);
       currentRow = new ActionRowBuilder<ButtonBuilder>();
     }
   }
 
   // Atualizar mensagem com os botões
-  await vetoMessage.edit({
-    embeds: [vetoEmbed],
+  await regionVetoMessage.edit({
+    embeds: [regionVetoEmbed],
     components: rows
   });
 

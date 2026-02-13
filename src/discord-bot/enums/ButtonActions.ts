@@ -16,6 +16,7 @@ export enum ButtonActions {
   DeclineMixDuel = "dmd",
   JoinDuelVoice = "jdv",
   DuelVetoBan = "dvb",
+  DuelVetoRegion = "dvr",
   OpenCreateTeamModal = "open_create_team",
   JoinTeam = "join_team",
   AcceptTeamMember = "accept_team_member",
