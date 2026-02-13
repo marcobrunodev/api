@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Inject, forwardRef } from "@nestjs/common";
 import { RedisManagerService } from "../../redis/redis-manager/redis-manager.service";
 import { HasuraService } from "../../hasura/hasura.service";
 import { RconService } from "../../rcon/rcon.service";
@@ -34,6 +34,7 @@ export class WarmupServerService {
     private readonly logger: Logger,
     private readonly hasura: HasuraService,
     private readonly redisManager: RedisManagerService,
+    @Inject(forwardRef(() => RconService))
     private readonly rcon: RconService,
   ) {}
 

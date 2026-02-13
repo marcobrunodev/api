@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { WarmupServerService } from "./warmup-server.service";
 import { HasuraModule } from "../../hasura/hasura.module";
 import { RedisModule } from "../../redis/redis.module";
@@ -9,7 +9,7 @@ import { loggerFactory } from "../../utilities/LoggerFactory";
   imports: [
     HasuraModule,
     RedisModule,
-    RconModule,
+    forwardRef(() => RconModule),
   ],
   providers: [
     WarmupServerService,
