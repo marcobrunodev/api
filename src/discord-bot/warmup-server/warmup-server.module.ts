@@ -2,12 +2,14 @@ import { Module } from "@nestjs/common";
 import { WarmupServerService } from "./warmup-server.service";
 import { HasuraModule } from "../../hasura/hasura.module";
 import { RedisModule } from "../../redis/redis.module";
+import { RconModule } from "../../rcon/rcon.module";
 import { loggerFactory } from "../../utilities/LoggerFactory";
 
 @Module({
   imports: [
     HasuraModule,
     RedisModule,
+    RconModule,
   ],
   providers: [
     WarmupServerService,

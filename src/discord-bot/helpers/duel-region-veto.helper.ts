@@ -30,43 +30,51 @@ const regionVetoSessions = new Map<string, DuelRegionVetoSession>();
 
 /**
  * Busca as regiões disponíveis do banco de dados
+ * Usa a mesma lógica do mix: busca servidores habilitados e filtra por regiões não-LAN
  */
 export async function getAvailableRegions(hasura: HasuraService): Promise<DuelRegion[]> {
-  try {
-    const { servers } = await hasura.query({
-      servers: {
-        __args: {
-          where: {
-            enabled: { _eq: true },
-            is_available: { _eq: true },
-          },
-          distinct_on: ["region"],
+  // Buscar servidores habilitados com região definida
+  const { servers } = await hasura.query({
+    servers: {
+      __args: {
+        where: {
+          enabled: { _eq: true },
+          region: { _is_null: false },
         },
-        region: true,
+        distinct_on: ["region"],
       },
-    });
+      region: true,
+    },
+  });
 
-    // Extrair regiões únicas
-    const uniqueRegions = new Set<string>();
-    servers.forEach((s: { region?: string }) => {
-      if (s.region) {
-        uniqueRegions.add(s.region);
-      }
-    });
+  // Buscar regiões não-LAN da tabela server_regions
+  const { server_regions } = await hasura.query({
+    server_regions: {
+      __args: {
+        where: {
+          is_lan: { _eq: false },
+        },
+      },
+      value: true,
+    },
+  });
 
-    return Array.from(uniqueRegions).map(region => ({
-      id: region,
-      name: region,
-      banned: false,
-    }));
-  } catch (error) {
-    console.error('Error fetching available regions:', error);
-    // Fallback para regiões padrão
-    return [
-      { id: 'São Paulo', name: 'São Paulo' },
-      { id: 'Miami', name: 'Miami' },
-    ];
-  }
+  // Criar set de regiões não-LAN
+  const nonLanRegions = new Set(server_regions?.map((r: { value: string }) => r.value) || []);
+
+  // Filtrar regiões dos servidores para incluir apenas não-LAN
+  const availableRegions = servers
+    ?.map((s: { region?: string }) => s.region)
+    .filter((r: string | undefined): r is string => !!r && nonLanRegions.has(r)) || [];
+
+  // Remover duplicatas e criar objetos DuelRegion
+  const uniqueRegions = [...new Set(availableRegions)];
+
+  return uniqueRegions.map(region => ({
+    id: region,
+    name: region,
+    banned: false,
+  }));
 }
 
 /**

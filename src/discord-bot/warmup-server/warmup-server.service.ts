@@ -1,6 +1,7 @@
-import { Injectable, Logger, forwardRef, Inject } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { RedisManagerService } from "../../redis/redis-manager/redis-manager.service";
 import { HasuraService } from "../../hasura/hasura.service";
+import { RconService } from "../../rcon/rcon.service";
 import {
   WARMUP_CONFIG,
   WARMUP_GAME_MODES,
@@ -33,6 +34,7 @@ export class WarmupServerService {
     private readonly logger: Logger,
     private readonly hasura: HasuraService,
     private readonly redisManager: RedisManagerService,
+    private readonly rcon: RconService,
   ) {}
 
   /**
@@ -134,6 +136,17 @@ export class WarmupServerService {
         state.isProvisioning = false;
 
         await this.saveState(guildId, state);
+
+        // Configure server via RCON
+        const configured = await this.configureServerViaRcon(
+          serverInfo.id,
+          gameMode,
+          map
+        );
+
+        if (!configured) {
+          this.logger.warn(`[Warmup] Failed to configure server via RCON, but server is still available`);
+        }
 
         // Broadcast connect info
         await this.broadcastConnectInfo(guildId, guild, notificationChannelId, state);
@@ -466,6 +479,43 @@ You'll be notified as soon as a server becomes available!
   }
 
   /**
+   * Configure server via RCON (set game mode and map)
+   */
+  private async configureServerViaRcon(
+    serverId: string,
+    gameMode: WarmupGameMode,
+    map: string
+  ): Promise<boolean> {
+    try {
+      const rconConnection = await this.rcon.connect(serverId);
+      if (!rconConnection) {
+        this.logger.error(`[Warmup] Failed to connect to RCON for server ${serverId}`);
+        return false;
+      }
+
+      // Set game type and mode
+      await rconConnection.send(`game_type ${gameMode.game_type}`);
+      await rconConnection.send(`game_mode ${gameMode.game_mode}`);
+
+      // Small delay to ensure cvars are applied
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Change map
+      await rconConnection.send(`changelevel ${map}`);
+
+      this.logger.log(`[Warmup] Configured server ${serverId}: ${gameMode.type} on ${map}`);
+
+      // Disconnect RCON after configuration
+      await this.rcon.disconnect(serverId);
+
+      return true;
+    } catch (error) {
+      this.logger.error(`[Warmup] Error configuring server via RCON:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Rotate to next game mode
    */
   async rotateGameMode(guildId: string): Promise<void> {
@@ -485,10 +535,18 @@ You'll be notified as soon as a server becomes available!
 
       await this.saveState(guildId, state);
 
-      // TODO: Send RCON command to change game mode
-      // await this.rcon.command(state.serverId, `game_type ${newMode.game_type}; game_mode ${newMode.game_mode}; changelevel ${newMap}`);
+      // Send RCON command to change game mode
+      const configured = await this.configureServerViaRcon(
+        state.serverId,
+        newMode,
+        newMap
+      );
 
-      this.logger.log(`[Warmup] Rotated game mode for guild ${guildId}: ${newMode.type} on ${newMap}`);
+      if (configured) {
+        this.logger.log(`[Warmup] Rotated game mode for guild ${guildId}: ${newMode.type} on ${newMap}`);
+      } else {
+        this.logger.warn(`[Warmup] Failed to rotate game mode via RCON for guild ${guildId}`);
+      }
     } catch (error) {
       this.logger.error(`[Warmup] Error rotating game mode:`, error);
     }
