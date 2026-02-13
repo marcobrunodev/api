@@ -122,8 +122,8 @@ export class DiscordBotScoreboardService {
             match_map_id: { _eq: currentMap.id },
           },
         },
-        killer_steam_id: true,
-        victim_steam_id: true,
+        attacker_steam_id: true,
+        attacked_steam_id: true,
         headshot: true,
       },
       player_assists: {
@@ -141,8 +141,8 @@ export class DiscordBotScoreboardService {
 
     // Contar kills e headshots
     player_kills?.forEach((kill) => {
-      if (kill.killer_steam_id) {
-        const killerId = String(kill.killer_steam_id);
+      if (kill.attacker_steam_id) {
+        const killerId = String(kill.attacker_steam_id);
         const stats = statsMap.get(killerId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
         stats.kills++;
         if (kill.headshot) stats.headshots++;
@@ -150,8 +150,8 @@ export class DiscordBotScoreboardService {
       }
 
       // Contar deaths
-      if (kill.victim_steam_id) {
-        const victimId = String(kill.victim_steam_id);
+      if (kill.attacked_steam_id) {
+        const victimId = String(kill.attacked_steam_id);
         const stats = statsMap.get(victimId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
         stats.deaths++;
         statsMap.set(victimId, stats);
