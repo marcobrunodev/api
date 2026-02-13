@@ -22,7 +22,6 @@ import { DiscordBotInteractionModule } from "./interactions/discord-bot-interact
 import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
 import { TeamsController } from "./teams/teams.controller";
 import { WarmupServerModule } from "./warmup-server/warmup-server.module";
-import { WarmupServerService } from "./warmup-server/warmup-server.service";
 
 @Module({
   imports: [
@@ -50,7 +49,6 @@ import { WarmupServerService } from "./warmup-server/warmup-server.service";
     DiscordBotScoreboardService,
     UpdateDiscordMatchVetoJob,
     RemoveArchivedThreads,
-    WarmupServerService,
     ...getQueuesProcessors("DiscordBot"),
     loggerFactory(),
   ],
@@ -62,7 +60,7 @@ import { WarmupServerService } from "./warmup-server/warmup-server.service";
     DiscordBotVoiceChannelsService,
     DiscordPickPlayerService,
     DiscordBotScoreboardService,
-    WarmupServerService,
+    WarmupServerModule,
   ],
   controllers: [DiscordBotController, TeamsController],
 })
