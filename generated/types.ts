@@ -37213,6 +37213,9 @@ export default {
             "reserved_by_match_id": [
                 2465
             ],
+            "reserved_for_warmup_guild_id": [
+                21
+            ],
             "server_region": [
                 1943
             ],
@@ -37511,6 +37514,9 @@ export default {
             "reserved_by_match_id": [
                 2466
             ],
+            "reserved_for_warmup_guild_id": [
+                23
+            ],
             "server_region": [
                 1947
             ],
@@ -37606,6 +37612,9 @@ export default {
             "reserved_by_match_id": [
                 2465
             ],
+            "reserved_for_warmup_guild_id": [
+                21
+            ],
             "server_region": [
                 1953
             ],
@@ -37668,6 +37677,9 @@ export default {
             "reserved_by_match_id": [
                 2465
             ],
+            "reserved_for_warmup_guild_id": [
+                21
+            ],
             "steam_relay": [
                 21
             ],
@@ -37716,6 +37728,9 @@ export default {
                 1451
             ],
             "reserved_by_match_id": [
+                1451
+            ],
+            "reserved_for_warmup_guild_id": [
                 1451
             ],
             "steam_relay": [
@@ -37774,6 +37789,9 @@ export default {
             "reserved_by_match_id": [
                 2465
             ],
+            "reserved_for_warmup_guild_id": [
+                21
+            ],
             "steam_relay": [
                 21
             ],
@@ -37822,6 +37840,9 @@ export default {
                 1451
             ],
             "reserved_by_match_id": [
+                1451
+            ],
+            "reserved_for_warmup_guild_id": [
                 1451
             ],
             "steam_relay": [
@@ -37940,6 +37961,9 @@ export default {
             "reserved_by_match_id": [
                 1451
             ],
+            "reserved_for_warmup_guild_id": [
+                1451
+            ],
             "server_region": [
                 1955
             ],
@@ -38021,6 +38045,9 @@ export default {
             ],
             "reserved_by_match_id": [
                 2465
+            ],
+            "reserved_for_warmup_guild_id": [
+                21
             ],
             "steam_relay": [
                 21
@@ -38184,6 +38211,9 @@ export default {
             ],
             "reserved_by_match_id": [
                 2465
+            ],
+            "reserved_for_warmup_guild_id": [
+                21
             ],
             "steam_relay": [
                 21

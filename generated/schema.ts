@@ -10117,6 +10117,7 @@ export interface servers {
     rcon_status: (Scalars['Boolean'] | null)
     region: Scalars['String']
     reserved_by_match_id: (Scalars['uuid'] | null)
+    reserved_for_warmup_guild_id: (Scalars['String'] | null)
     /** An object relationship */
     server_region: (server_regions | null)
     steam_relay: (Scalars['String'] | null)
@@ -10183,6 +10184,7 @@ export interface servers_max_fields {
     port: (Scalars['Int'] | null)
     region: (Scalars['String'] | null)
     reserved_by_match_id: (Scalars['uuid'] | null)
+    reserved_for_warmup_guild_id: (Scalars['String'] | null)
     steam_relay: (Scalars['String'] | null)
     tv_port: (Scalars['Int'] | null)
     updated_at: (Scalars['timestamptz'] | null)
@@ -10208,6 +10210,7 @@ export interface servers_min_fields {
     port: (Scalars['Int'] | null)
     region: (Scalars['String'] | null)
     reserved_by_match_id: (Scalars['uuid'] | null)
+    reserved_for_warmup_guild_id: (Scalars['String'] | null)
     steam_relay: (Scalars['String'] | null)
     tv_port: (Scalars['Int'] | null)
     updated_at: (Scalars['timestamptz'] | null)
@@ -10226,7 +10229,7 @@ export interface servers_mutation_response {
 
 
 /** select columns of table "servers" */
-export type servers_select_column = 'api_password' | 'connect_password' | 'connected' | 'enabled' | 'game_server_node_id' | 'host' | 'id' | 'is_dedicated' | 'label' | 'max_players' | 'offline_at' | 'plugin_version' | 'port' | 'rcon_password' | 'rcon_status' | 'region' | 'reserved_by_match_id' | 'steam_relay' | 'tv_port' | 'type' | 'updated_at'
+export type servers_select_column = 'api_password' | 'connect_password' | 'connected' | 'enabled' | 'game_server_node_id' | 'host' | 'id' | 'is_dedicated' | 'label' | 'max_players' | 'offline_at' | 'plugin_version' | 'port' | 'rcon_password' | 'rcon_status' | 'region' | 'reserved_by_match_id' | 'reserved_for_warmup_guild_id' | 'steam_relay' | 'tv_port' | 'type' | 'updated_at'
 
 
 /** select "servers_aggregate_bool_exp_bool_and_arguments_columns" columns of table "servers" */
@@ -10274,7 +10277,7 @@ export interface servers_sum_fields {
 
 
 /** update columns of table "servers" */
-export type servers_update_column = 'api_password' | 'connect_password' | 'connected' | 'enabled' | 'game_server_node_id' | 'host' | 'id' | 'is_dedicated' | 'label' | 'max_players' | 'offline_at' | 'plugin_version' | 'port' | 'rcon_password' | 'rcon_status' | 'region' | 'reserved_by_match_id' | 'steam_relay' | 'tv_port' | 'type' | 'updated_at'
+export type servers_update_column = 'api_password' | 'connect_password' | 'connected' | 'enabled' | 'game_server_node_id' | 'host' | 'id' | 'is_dedicated' | 'label' | 'max_players' | 'offline_at' | 'plugin_version' | 'port' | 'rcon_password' | 'rcon_status' | 'region' | 'reserved_by_match_id' | 'reserved_for_warmup_guild_id' | 'steam_relay' | 'tv_port' | 'type' | 'updated_at'
 
 
 /** aggregate var_pop on columns */
@@ -34214,6 +34217,7 @@ export interface serversGenqlSelection{
     rcon_status?: boolean | number
     region?: boolean | number
     reserved_by_match_id?: boolean | number
+    reserved_for_warmup_guild_id?: boolean | number
     /** An object relationship */
     server_region?: server_regionsGenqlSelection
     steam_relay?: boolean | number
@@ -34285,7 +34289,7 @@ export interface servers_avg_order_by {max_players?: (order_by | null),port?: (o
 
 
 /** Boolean expression to filter rows from the table "servers". All fields are combined with a logical 'AND'. */
-export interface servers_bool_exp {_and?: (servers_bool_exp[] | null),_not?: (servers_bool_exp | null),_or?: (servers_bool_exp[] | null),api_password?: (uuid_comparison_exp | null),connect_password?: (String_comparison_exp | null),connected?: (Boolean_comparison_exp | null),connection_link?: (String_comparison_exp | null),connection_string?: (String_comparison_exp | null),current_match?: (matches_bool_exp | null),enabled?: (Boolean_comparison_exp | null),game_server_node?: (game_server_nodes_bool_exp | null),game_server_node_id?: (String_comparison_exp | null),host?: (String_comparison_exp | null),id?: (uuid_comparison_exp | null),is_dedicated?: (Boolean_comparison_exp | null),label?: (String_comparison_exp | null),matches?: (matches_bool_exp | null),matches_aggregate?: (matches_aggregate_bool_exp | null),max_players?: (Int_comparison_exp | null),offline_at?: (timestamptz_comparison_exp | null),plugin_version?: (String_comparison_exp | null),port?: (Int_comparison_exp | null),rcon_password?: (bytea_comparison_exp | null),rcon_status?: (Boolean_comparison_exp | null),region?: (String_comparison_exp | null),reserved_by_match_id?: (uuid_comparison_exp | null),server_region?: (server_regions_bool_exp | null),steam_relay?: (String_comparison_exp | null),tv_port?: (Int_comparison_exp | null),type?: (e_server_types_enum_comparison_exp | null),updated_at?: (timestamptz_comparison_exp | null)}
+export interface servers_bool_exp {_and?: (servers_bool_exp[] | null),_not?: (servers_bool_exp | null),_or?: (servers_bool_exp[] | null),api_password?: (uuid_comparison_exp | null),connect_password?: (String_comparison_exp | null),connected?: (Boolean_comparison_exp | null),connection_link?: (String_comparison_exp | null),connection_string?: (String_comparison_exp | null),current_match?: (matches_bool_exp | null),enabled?: (Boolean_comparison_exp | null),game_server_node?: (game_server_nodes_bool_exp | null),game_server_node_id?: (String_comparison_exp | null),host?: (String_comparison_exp | null),id?: (uuid_comparison_exp | null),is_dedicated?: (Boolean_comparison_exp | null),label?: (String_comparison_exp | null),matches?: (matches_bool_exp | null),matches_aggregate?: (matches_aggregate_bool_exp | null),max_players?: (Int_comparison_exp | null),offline_at?: (timestamptz_comparison_exp | null),plugin_version?: (String_comparison_exp | null),port?: (Int_comparison_exp | null),rcon_password?: (bytea_comparison_exp | null),rcon_status?: (Boolean_comparison_exp | null),region?: (String_comparison_exp | null),reserved_by_match_id?: (uuid_comparison_exp | null),reserved_for_warmup_guild_id?: (String_comparison_exp | null),server_region?: (server_regions_bool_exp | null),steam_relay?: (String_comparison_exp | null),tv_port?: (Int_comparison_exp | null),type?: (e_server_types_enum_comparison_exp | null),updated_at?: (timestamptz_comparison_exp | null)}
 
 
 /** input type for incrementing numeric columns in table "servers" */
@@ -34293,7 +34297,7 @@ export interface servers_inc_input {max_players?: (Scalars['Int'] | null),port?:
 
 
 /** input type for inserting data into table "servers" */
-export interface servers_insert_input {api_password?: (Scalars['uuid'] | null),connect_password?: (Scalars['String'] | null),connected?: (Scalars['Boolean'] | null),current_match?: (matches_obj_rel_insert_input | null),enabled?: (Scalars['Boolean'] | null),game_server_node?: (game_server_nodes_obj_rel_insert_input | null),game_server_node_id?: (Scalars['String'] | null),host?: (Scalars['String'] | null),id?: (Scalars['uuid'] | null),is_dedicated?: (Scalars['Boolean'] | null),label?: (Scalars['String'] | null),matches?: (matches_arr_rel_insert_input | null),max_players?: (Scalars['Int'] | null),offline_at?: (Scalars['timestamptz'] | null),plugin_version?: (Scalars['String'] | null),port?: (Scalars['Int'] | null),rcon_password?: (Scalars['bytea'] | null),rcon_status?: (Scalars['Boolean'] | null),region?: (Scalars['String'] | null),reserved_by_match_id?: (Scalars['uuid'] | null),server_region?: (server_regions_obj_rel_insert_input | null),steam_relay?: (Scalars['String'] | null),tv_port?: (Scalars['Int'] | null),type?: (e_server_types_enum | null),updated_at?: (Scalars['timestamptz'] | null)}
+export interface servers_insert_input {api_password?: (Scalars['uuid'] | null),connect_password?: (Scalars['String'] | null),connected?: (Scalars['Boolean'] | null),current_match?: (matches_obj_rel_insert_input | null),enabled?: (Scalars['Boolean'] | null),game_server_node?: (game_server_nodes_obj_rel_insert_input | null),game_server_node_id?: (Scalars['String'] | null),host?: (Scalars['String'] | null),id?: (Scalars['uuid'] | null),is_dedicated?: (Scalars['Boolean'] | null),label?: (Scalars['String'] | null),matches?: (matches_arr_rel_insert_input | null),max_players?: (Scalars['Int'] | null),offline_at?: (Scalars['timestamptz'] | null),plugin_version?: (Scalars['String'] | null),port?: (Scalars['Int'] | null),rcon_password?: (Scalars['bytea'] | null),rcon_status?: (Scalars['Boolean'] | null),region?: (Scalars['String'] | null),reserved_by_match_id?: (Scalars['uuid'] | null),reserved_for_warmup_guild_id?: (Scalars['String'] | null),server_region?: (server_regions_obj_rel_insert_input | null),steam_relay?: (Scalars['String'] | null),tv_port?: (Scalars['Int'] | null),type?: (e_server_types_enum | null),updated_at?: (Scalars['timestamptz'] | null)}
 
 
 /** aggregate max on columns */
@@ -34314,6 +34318,7 @@ export interface servers_max_fieldsGenqlSelection{
     port?: boolean | number
     region?: boolean | number
     reserved_by_match_id?: boolean | number
+    reserved_for_warmup_guild_id?: boolean | number
     steam_relay?: boolean | number
     tv_port?: boolean | number
     updated_at?: boolean | number
@@ -34323,7 +34328,7 @@ export interface servers_max_fieldsGenqlSelection{
 
 
 /** order by max() on columns of table "servers" */
-export interface servers_max_order_by {api_password?: (order_by | null),connect_password?: (order_by | null),game_server_node_id?: (order_by | null),host?: (order_by | null),id?: (order_by | null),label?: (order_by | null),max_players?: (order_by | null),offline_at?: (order_by | null),plugin_version?: (order_by | null),port?: (order_by | null),region?: (order_by | null),reserved_by_match_id?: (order_by | null),steam_relay?: (order_by | null),tv_port?: (order_by | null),updated_at?: (order_by | null)}
+export interface servers_max_order_by {api_password?: (order_by | null),connect_password?: (order_by | null),game_server_node_id?: (order_by | null),host?: (order_by | null),id?: (order_by | null),label?: (order_by | null),max_players?: (order_by | null),offline_at?: (order_by | null),plugin_version?: (order_by | null),port?: (order_by | null),region?: (order_by | null),reserved_by_match_id?: (order_by | null),reserved_for_warmup_guild_id?: (order_by | null),steam_relay?: (order_by | null),tv_port?: (order_by | null),updated_at?: (order_by | null)}
 
 
 /** aggregate min on columns */
@@ -34344,6 +34349,7 @@ export interface servers_min_fieldsGenqlSelection{
     port?: boolean | number
     region?: boolean | number
     reserved_by_match_id?: boolean | number
+    reserved_for_warmup_guild_id?: boolean | number
     steam_relay?: boolean | number
     tv_port?: boolean | number
     updated_at?: boolean | number
@@ -34353,7 +34359,7 @@ export interface servers_min_fieldsGenqlSelection{
 
 
 /** order by min() on columns of table "servers" */
-export interface servers_min_order_by {api_password?: (order_by | null),connect_password?: (order_by | null),game_server_node_id?: (order_by | null),host?: (order_by | null),id?: (order_by | null),label?: (order_by | null),max_players?: (order_by | null),offline_at?: (order_by | null),plugin_version?: (order_by | null),port?: (order_by | null),region?: (order_by | null),reserved_by_match_id?: (order_by | null),steam_relay?: (order_by | null),tv_port?: (order_by | null),updated_at?: (order_by | null)}
+export interface servers_min_order_by {api_password?: (order_by | null),connect_password?: (order_by | null),game_server_node_id?: (order_by | null),host?: (order_by | null),id?: (order_by | null),label?: (order_by | null),max_players?: (order_by | null),offline_at?: (order_by | null),plugin_version?: (order_by | null),port?: (order_by | null),region?: (order_by | null),reserved_by_match_id?: (order_by | null),reserved_for_warmup_guild_id?: (order_by | null),steam_relay?: (order_by | null),tv_port?: (order_by | null),updated_at?: (order_by | null)}
 
 
 /** response of any mutation on the table "servers" */
@@ -34378,7 +34384,7 @@ export interface servers_on_conflict {constraint: servers_constraint,update_colu
 
 
 /** Ordering options when selecting data from "servers". */
-export interface servers_order_by {api_password?: (order_by | null),connect_password?: (order_by | null),connected?: (order_by | null),connection_link?: (order_by | null),connection_string?: (order_by | null),current_match?: (matches_order_by | null),enabled?: (order_by | null),game_server_node?: (game_server_nodes_order_by | null),game_server_node_id?: (order_by | null),host?: (order_by | null),id?: (order_by | null),is_dedicated?: (order_by | null),label?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),max_players?: (order_by | null),offline_at?: (order_by | null),plugin_version?: (order_by | null),port?: (order_by | null),rcon_password?: (order_by | null),rcon_status?: (order_by | null),region?: (order_by | null),reserved_by_match_id?: (order_by | null),server_region?: (server_regions_order_by | null),steam_relay?: (order_by | null),tv_port?: (order_by | null),type?: (order_by | null),updated_at?: (order_by | null)}
+export interface servers_order_by {api_password?: (order_by | null),connect_password?: (order_by | null),connected?: (order_by | null),connection_link?: (order_by | null),connection_string?: (order_by | null),current_match?: (matches_order_by | null),enabled?: (order_by | null),game_server_node?: (game_server_nodes_order_by | null),game_server_node_id?: (order_by | null),host?: (order_by | null),id?: (order_by | null),is_dedicated?: (order_by | null),label?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),max_players?: (order_by | null),offline_at?: (order_by | null),plugin_version?: (order_by | null),port?: (order_by | null),rcon_password?: (order_by | null),rcon_status?: (order_by | null),region?: (order_by | null),reserved_by_match_id?: (order_by | null),reserved_for_warmup_guild_id?: (order_by | null),server_region?: (server_regions_order_by | null),steam_relay?: (order_by | null),tv_port?: (order_by | null),type?: (order_by | null),updated_at?: (order_by | null)}
 
 
 /** primary key columns input for table: servers */
@@ -34386,7 +34392,7 @@ export interface servers_pk_columns_input {id: Scalars['uuid']}
 
 
 /** input type for updating data in table "servers" */
-export interface servers_set_input {api_password?: (Scalars['uuid'] | null),connect_password?: (Scalars['String'] | null),connected?: (Scalars['Boolean'] | null),enabled?: (Scalars['Boolean'] | null),game_server_node_id?: (Scalars['String'] | null),host?: (Scalars['String'] | null),id?: (Scalars['uuid'] | null),is_dedicated?: (Scalars['Boolean'] | null),label?: (Scalars['String'] | null),max_players?: (Scalars['Int'] | null),offline_at?: (Scalars['timestamptz'] | null),plugin_version?: (Scalars['String'] | null),port?: (Scalars['Int'] | null),rcon_password?: (Scalars['bytea'] | null),rcon_status?: (Scalars['Boolean'] | null),region?: (Scalars['String'] | null),reserved_by_match_id?: (Scalars['uuid'] | null),steam_relay?: (Scalars['String'] | null),tv_port?: (Scalars['Int'] | null),type?: (e_server_types_enum | null),updated_at?: (Scalars['timestamptz'] | null)}
+export interface servers_set_input {api_password?: (Scalars['uuid'] | null),connect_password?: (Scalars['String'] | null),connected?: (Scalars['Boolean'] | null),enabled?: (Scalars['Boolean'] | null),game_server_node_id?: (Scalars['String'] | null),host?: (Scalars['String'] | null),id?: (Scalars['uuid'] | null),is_dedicated?: (Scalars['Boolean'] | null),label?: (Scalars['String'] | null),max_players?: (Scalars['Int'] | null),offline_at?: (Scalars['timestamptz'] | null),plugin_version?: (Scalars['String'] | null),port?: (Scalars['Int'] | null),rcon_password?: (Scalars['bytea'] | null),rcon_status?: (Scalars['Boolean'] | null),region?: (Scalars['String'] | null),reserved_by_match_id?: (Scalars['uuid'] | null),reserved_for_warmup_guild_id?: (Scalars['String'] | null),steam_relay?: (Scalars['String'] | null),tv_port?: (Scalars['Int'] | null),type?: (e_server_types_enum | null),updated_at?: (Scalars['timestamptz'] | null)}
 
 
 /** aggregate stddev on columns */
@@ -34440,7 +34446,7 @@ ordering?: (cursor_ordering | null)}
 
 
 /** Initial value of the column from where the streaming should start */
-export interface servers_stream_cursor_value_input {api_password?: (Scalars['uuid'] | null),connect_password?: (Scalars['String'] | null),connected?: (Scalars['Boolean'] | null),enabled?: (Scalars['Boolean'] | null),game_server_node_id?: (Scalars['String'] | null),host?: (Scalars['String'] | null),id?: (Scalars['uuid'] | null),is_dedicated?: (Scalars['Boolean'] | null),label?: (Scalars['String'] | null),max_players?: (Scalars['Int'] | null),offline_at?: (Scalars['timestamptz'] | null),plugin_version?: (Scalars['String'] | null),port?: (Scalars['Int'] | null),rcon_password?: (Scalars['bytea'] | null),rcon_status?: (Scalars['Boolean'] | null),region?: (Scalars['String'] | null),reserved_by_match_id?: (Scalars['uuid'] | null),steam_relay?: (Scalars['String'] | null),tv_port?: (Scalars['Int'] | null),type?: (e_server_types_enum | null),updated_at?: (Scalars['timestamptz'] | null)}
+export interface servers_stream_cursor_value_input {api_password?: (Scalars['uuid'] | null),connect_password?: (Scalars['String'] | null),connected?: (Scalars['Boolean'] | null),enabled?: (Scalars['Boolean'] | null),game_server_node_id?: (Scalars['String'] | null),host?: (Scalars['String'] | null),id?: (Scalars['uuid'] | null),is_dedicated?: (Scalars['Boolean'] | null),label?: (Scalars['String'] | null),max_players?: (Scalars['Int'] | null),offline_at?: (Scalars['timestamptz'] | null),plugin_version?: (Scalars['String'] | null),port?: (Scalars['Int'] | null),rcon_password?: (Scalars['bytea'] | null),rcon_status?: (Scalars['Boolean'] | null),region?: (Scalars['String'] | null),reserved_by_match_id?: (Scalars['uuid'] | null),reserved_for_warmup_guild_id?: (Scalars['String'] | null),steam_relay?: (Scalars['String'] | null),tv_port?: (Scalars['Int'] | null),type?: (e_server_types_enum | null),updated_at?: (Scalars['timestamptz'] | null)}
 
 
 /** aggregate sum on columns */
@@ -52647,6 +52653,7 @@ export const enumServersSelectColumn = {
    rcon_status: 'rcon_status' as const,
    region: 'region' as const,
    reserved_by_match_id: 'reserved_by_match_id' as const,
+   reserved_for_warmup_guild_id: 'reserved_for_warmup_guild_id' as const,
    steam_relay: 'steam_relay' as const,
    tv_port: 'tv_port' as const,
    type: 'type' as const,
@@ -52685,6 +52692,7 @@ export const enumServersUpdateColumn = {
    rcon_status: 'rcon_status' as const,
    region: 'region' as const,
    reserved_by_match_id: 'reserved_by_match_id' as const,
+   reserved_for_warmup_guild_id: 'reserved_for_warmup_guild_id' as const,
    steam_relay: 'steam_relay' as const,
    tv_port: 'tv_port' as const,
    type: 'type' as const,
