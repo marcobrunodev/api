@@ -10,6 +10,7 @@ import { GameServersConfig } from "../../configs/types/GameServersConfig";
 import { AppConfig } from "../../configs/types/AppConfig";
 import {
   WARMUP_CONFIG,
+  WARMUP_BOT_CONFIG,
   WARMUP_GAME_MODES,
   WARMUP_MAPS,
   WARMUP_REDIS_KEYS,
@@ -455,6 +456,9 @@ export class WarmupServerService {
 
           const serverIp = server.game_server_node?.public_ip || server.host;
 
+          // Configure bots for warmup
+          await this.configureBots(server.id);
+
           return {
             id: server.id,
             ip: serverIp,
@@ -527,6 +531,56 @@ export class WarmupServerService {
     }
 
     return false;
+  }
+
+  /**
+   * Configure bots for warmup server via RCON
+   */
+  private async configureBots(serverId: string): Promise<void> {
+    try {
+      const rconConnection = await this.rcon.connect(serverId);
+      if (!rconConnection) {
+        this.logger.warn(`[Warmup] Could not connect RCON to configure bots for ${serverId}`);
+        return;
+      }
+
+      // Bot configuration commands
+      const botCommands = [
+        // Set bot difficulty (0=easy, 1=normal, 2=hard, 3=expert)
+        `bot_difficulty ${WARMUP_BOT_CONFIG.DIFFICULTY}`,
+
+        // Bot quota settings
+        `bot_quota ${WARMUP_BOT_CONFIG.QUOTA}`,
+        `bot_quota_mode ${WARMUP_BOT_CONFIG.QUOTA_MODE}`,
+
+        // Bot behavior
+        `bot_chatter ${WARMUP_BOT_CONFIG.CHATTER}`,
+        `bot_join_after_player ${WARMUP_BOT_CONFIG.JOIN_AFTER_PLAYER}`,
+        `bot_auto_vacate ${WARMUP_BOT_CONFIG.AUTO_VACATE}`,
+
+        // Make bots smarter
+        'bot_defer_to_human_goals 0',
+        'bot_defer_to_human_items 0',
+
+        // Balanced teams
+        'mp_autoteambalance 1',
+        'mp_limitteams 0',
+      ];
+
+      for (const cmd of botCommands) {
+        try {
+          await rconConnection.send(cmd);
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          this.logger.warn(`[Warmup] Error sending bot command "${cmd}":`, error);
+        }
+      }
+
+      await this.rcon.disconnect(serverId);
+      this.logger.log(`[Warmup] Configured bots for server ${serverId} (difficulty: ${WARMUP_BOT_CONFIG.DIFFICULTY}, quota: ${WARMUP_BOT_CONFIG.QUOTA})`);
+    } catch (error) {
+      this.logger.error(`[Warmup] Error configuring bots:`, error);
+    }
   }
 
   /**
@@ -908,6 +962,10 @@ You'll be notified as soon as a server becomes available!
           await rconConnection.send(`changelevel ${newMap}`);
           await this.rcon.disconnect(state.serverId);
           this.logger.log(`[Warmup] Rotated game mode for guild ${guildId}: ${newMode.type} on ${newMap}`);
+
+          // Reconfigure bots after map change (wait for map to load)
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          await this.configureBots(state.serverId);
         } else {
           this.logger.warn(`[Warmup] Failed to connect RCON for rotation in guild ${guildId}`);
         }

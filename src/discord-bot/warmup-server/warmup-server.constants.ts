@@ -37,6 +37,27 @@ export const WARMUP_CONFIG = {
   MAX_PLAYERS: 16,
 } as const;
 
+// Bot configuration for warmup servers
+export const WARMUP_BOT_CONFIG = {
+  // Bot difficulty: 0=easy, 1=normal, 2=hard, 3=expert
+  DIFFICULTY: 2,
+
+  // Number of bots to fill the server (per team)
+  QUOTA: 8,
+
+  // Bot quota mode: "fill" keeps server filled as players join/leave
+  QUOTA_MODE: 'fill',
+
+  // Bot chatter: "off", "radio", "minimal", "normal"
+  CHATTER: 'minimal',
+
+  // Allow bots to join any team
+  JOIN_AFTER_PLAYER: 0,
+
+  // Bot auto balance
+  AUTO_VACATE: 1,
+} as const;
+
 // Redis key prefixes
 export const WARMUP_REDIS_KEYS = {
   SERVER_STATE: 'discord:warmup-server',
