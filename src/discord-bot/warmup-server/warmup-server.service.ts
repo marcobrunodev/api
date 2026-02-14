@@ -176,8 +176,8 @@ export class WarmupServerService {
         // Broadcast connect info
         await this.broadcastConnectInfo(guildId, guild, notificationChannelId, state);
 
-        // Start rotation timer
-        this.startRotationTimer(guildId, state);
+        // Rotation disabled - players can change mode manually via .mode command
+        // this.startRotationTimer(guildId, state);
 
         this.logger.log(`[Warmup] Server started for guild ${guildId}: ${state.serverIp}:${state.serverPort}`);
       } else {

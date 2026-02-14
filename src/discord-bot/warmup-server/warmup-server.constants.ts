@@ -6,7 +6,7 @@
 export const WARMUP_GAME_MODES = [
   { type: 'ArmsRace', game_type: 1, game_mode: 0 },
   { type: 'Deathmatch', game_type: 1, game_mode: 2 },
-  { type: 'Casual', game_type: 0, game_mode: 0 },
+  { type: 'Retake', game_type: 3, game_mode: 0 },
 ] as const;
 
 // Small maps for warmup (Arms Race classics)
