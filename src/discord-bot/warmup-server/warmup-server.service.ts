@@ -91,12 +91,15 @@ export class WarmupServerService {
           // Start warmup server
           this.logger.log(`[Warmup] No active server found, starting new warmup server for guild ${guildId}`);
           await this.startWarmupServer(guildId, guild, notificationChannelId);
+        } else if (state?.isProvisioning) {
+          // Server is being provisioned, don't do anything
+          this.logger.log(`[Warmup] Server is being provisioned for guild ${guildId}, waiting...`);
         } else if (state?.serverId && state?.jobName) {
           // Server already running with a valid server ID and job
           this.logger.log(`[Warmup] Server already active for guild ${guildId} (serverId: ${state.serverId})`);
           await this.notifyPlayer(guildId, memberId, notificationChannelId, guild);
         } else {
-          // Stale state without server ID - clean it up and start fresh
+          // Stale state without server ID and not provisioning - clean it up and start fresh
           this.logger.warn(`[Warmup] Found stale state without server ID for guild ${guildId}, cleaning up...`);
           await this.cleanupState(guildId);
           await this.startWarmupServer(guildId, guild, notificationChannelId);
