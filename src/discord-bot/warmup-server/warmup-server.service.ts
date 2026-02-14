@@ -39,6 +39,7 @@ export interface WarmupServerState {
 export class WarmupServerService {
   private rotationIntervals = new Map<string, NodeJS.Timeout>();
   private shutdownTimeouts = new Map<string, NodeJS.Timeout>();
+  private guildReferences = new Map<string, any>(); // Store guild references for cleanup
   private appConfig: AppConfig;
   private gameServerConfig: GameServersConfig;
   private readonly namespace: string;
@@ -144,6 +145,11 @@ export class WarmupServerService {
       }
 
       this.logger.log(`[Warmup] Starting warmup server for guild ${guildId}`);
+
+      // Store guild reference for later cleanup
+      if (guild) {
+        this.guildReferences.set(guildId, guild);
+      }
 
       // Select random game mode and map
       const gameMode = this.getRandomGameMode();
@@ -622,6 +628,9 @@ export class WarmupServerService {
       // Clear Redis state
       await this.clearState(guildId);
 
+      // Clear guild reference
+      this.guildReferences.delete(guildId);
+
       // Notify players if reason is mix_starting
       if (reason === 'mix_starting' && guild && notificationChannelId) {
         await this.notifyWarmupEnding(guildId, guild, notificationChannelId, 'Mix is starting! Join the competitive match.');
@@ -1027,7 +1036,9 @@ You'll be notified as soon as a server becomes available!
     const timeout = setTimeout(async () => {
       const queueSize = await this.getQueueSize(guildId);
       if (queueSize === 0) {
-        await this.stopWarmupServer(guildId, 'empty');
+        // Get stored guild reference for cleanup
+        const guild = this.guildReferences.get(guildId);
+        await this.stopWarmupServer(guildId, 'empty', guild);
       }
     }, WARMUP_CONFIG.EMPTY_QUEUE_SHUTDOWN_DELAY_MS);
 
