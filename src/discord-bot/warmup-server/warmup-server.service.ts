@@ -381,6 +381,15 @@ export class WarmupServerService {
 
       const queueSize = await this.getQueueSize(guildId);
 
+      // Build connect command in same format as /mix and /mix-duel
+      let connectSection = '⏳ Searching for server...';
+      if (state.serverIp && state.serverPort) {
+        const connectCommand = state.serverPassword
+          ? `connect ${state.serverIp}:${state.serverPort}; password ${state.serverPassword}`
+          : `connect ${state.serverIp}:${state.serverPort}`;
+        connectSection = `**Connect to Server:**\n\`\`\`\n${connectCommand}\n\`\`\``;
+      }
+
       await channel.send({
         embeds: [{
           title: '🎮 Warmup Server Ready!',
@@ -389,9 +398,9 @@ export class WarmupServerService {
 **Map:** ${state.currentMap}
 **Players in queue:** ${queueSize}/10
 
-${state.connectInfo ? `🔗 **Connect:** \`${state.connectInfo}\`` : '⏳ Searching for server...'}
+${connectSection}
 
-Play while waiting for the mix!
+Play while waiting for the mix! 🍌
           `.trim(),
           color: 0x00FF00,
           footer: {
