@@ -31,6 +31,8 @@ export interface WarmupServerState {
   lastActivityAt: number;
   isProvisioning: boolean;
   jobName?: string;
+  notificationMessageId?: string;
+  notificationChannelId?: string;
 }
 
 @Injectable()
@@ -609,6 +611,11 @@ export class WarmupServerService {
         await this.stopWarmupPod(guildId, state.serverId);
       }
 
+      // Delete the warmup notification message
+      if (state?.notificationMessageId && state?.notificationChannelId && guild) {
+        await this.deleteNotificationMessage(guild, state.notificationChannelId, state.notificationMessageId);
+      }
+
       // Clear Redis state
       await this.clearState(guildId);
 
@@ -720,6 +727,8 @@ export class WarmupServerService {
       lastActivityAt: parseInt(data.lastActivityAt) || Date.now(),
       isProvisioning: data.isProvisioning === 'true',
       jobName: data.jobName || undefined,
+      notificationMessageId: data.notificationMessageId || undefined,
+      notificationChannelId: data.notificationChannelId || undefined,
     };
   }
 
@@ -746,6 +755,8 @@ export class WarmupServerService {
     if (state.serverPassword) data.serverPassword = state.serverPassword;
     if (state.connectInfo) data.connectInfo = state.connectInfo;
     if (state.jobName) data.jobName = state.jobName;
+    if (state.notificationMessageId) data.notificationMessageId = state.notificationMessageId;
+    if (state.notificationChannelId) data.notificationChannelId = state.notificationChannelId;
 
     await redis.hset(key, data);
     await redis.expire(key, WARMUP_CONFIG.REDIS_TTL_SECONDS);
@@ -808,7 +819,7 @@ export class WarmupServerService {
         connectSection = `**Connect to Server:**\n\`\`\`\n${connectCommand}\n\`\`\``;
       }
 
-      await channel.send({
+      const message = await channel.send({
         embeds: [{
           title: '🎮 Warmup Server Ready!',
           description: `
@@ -827,8 +838,35 @@ Play while waiting for the mix! 🍌
           timestamp: new Date().toISOString(),
         }],
       });
+
+      // Store message ID and channel ID for later deletion
+      state.notificationMessageId = message.id;
+      state.notificationChannelId = notificationChannelId;
+      await this.saveState(guildId, state);
     } catch (error) {
       this.logger.error(`[Warmup] Error broadcasting connect info:`, error);
+    }
+  }
+
+  /**
+   * Delete the warmup notification message
+   */
+  private async deleteNotificationMessage(
+    guild: any,
+    channelId: string,
+    messageId: string
+  ): Promise<void> {
+    try {
+      const channel = await guild.channels.fetch(channelId).catch((): null => null);
+      if (!channel || !('messages' in channel)) return;
+
+      const message = await channel.messages.fetch(messageId).catch((): null => null);
+      if (message) {
+        await message.delete();
+        this.logger.log(`[Warmup] Deleted notification message ${messageId}`);
+      }
+    } catch (error) {
+      this.logger.warn(`[Warmup] Could not delete notification message:`, error);
     }
   }
 
