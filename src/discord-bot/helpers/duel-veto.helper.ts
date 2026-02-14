@@ -22,6 +22,7 @@ export interface DuelVetoSession {
   maps: DuelMap[];
   currentTurn: string; // ID do jogador que deve banir
   bansRemaining: { [playerId: string]: number };
+  selectedRegion?: string; // Região selecionada no veto de regiões
   createdAt: Date;
 }
 
@@ -106,7 +107,8 @@ export function createVetoSession(
   guildId: string,
   challengerId: string,
   opponentId: string,
-  maps: DuelMap[]
+  maps: DuelMap[],
+  selectedRegion?: string
 ): DuelVetoSession {
   const session: DuelVetoSession = {
     messageId,
@@ -121,11 +123,12 @@ export function createVetoSession(
       [challengerId]: 3,
       [opponentId]: 3
     },
+    selectedRegion,
     createdAt: new Date()
   };
 
   vetoSessions.set(messageId, session);
-  console.log(`Veto session created for message ${messageId}`);
+  console.log(`Veto session created for message ${messageId} with region: ${selectedRegion}`);
   return session;
 }
 

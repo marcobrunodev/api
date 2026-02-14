@@ -184,7 +184,7 @@ export default class DuelRegionVeto extends DiscordInteraction {
       components: [],
     });
 
-    // Criar sessão de veto de mapas
+    // Criar sessão de veto de mapas com a região selecionada
     createVetoSession(
       vetoMessage.id,
       session.channelId,
@@ -192,7 +192,8 @@ export default class DuelRegionVeto extends DiscordInteraction {
       session.guildId,
       session.challengerId,
       session.opponentId,
-      maps
+      maps,
+      selectedRegion
     );
 
     // Criar botões para os mapas

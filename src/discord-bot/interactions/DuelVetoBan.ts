@@ -73,6 +73,7 @@ export default class DuelVetoBan extends DiscordInteraction {
 
     if (result.finished && result.selectedMap) {
       // Veto finalizado - mostrar o mapa selecionado
+      const regionText = session.selectedRegion ? `**Region:** 🌍 ${session.selectedRegion}\n` : '';
       const finalEmbed = new EmbedBuilder()
         .setColor(0x2ecc71)
         .setTitle("🗺️ Map Selected!")
@@ -80,6 +81,7 @@ export default class DuelVetoBan extends DiscordInteraction {
           `### <@${session.challengerId}>  ⚔️ VS ⚔️  <@${session.opponentId}>\n\n` +
           `The map for this duel is:\n\n` +
           `# 🎮 ${formatMapName(result.selectedMap.name)}\n\n` +
+          regionText +
           getVetoStatusText(result.session!) +
           `\n⏳ **Creating duel server...**`
         )
@@ -224,8 +226,11 @@ export default class DuelVetoBan extends DiscordInteraction {
         overtime: true,
         maps: [],
         ...(discordGuildId && { discord_guild_id: discordGuildId }),
+        ...(session.selectedRegion && { region: session.selectedRegion }),
       }
     );
+
+    console.log(`🎮 [DUEL] Creating match with region: ${session.selectedRegion || 'not specified'}`);
 
     const matchId = match.id;
     console.log(`🎮 [DUEL] [${matchId}] Match created for map ${selectedMap.name}`);
@@ -308,6 +313,7 @@ export default class DuelVetoBan extends DiscordInteraction {
         ? `${this.config.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(matches_by_pk.connection_link)}`
         : `${this.config.get<AppConfig>("app").webDomain}/quick-connect?link=${encodeURIComponent(steamConnectUrl)}`;
 
+      const regionLine = session.selectedRegion ? `**Region:** 🌍 ${session.selectedRegion}\n` : '';
       const matchReadyEmbed = new EmbedBuilder()
         .setColor(0x00FF00)
         .setTitle('🎮 Duel Ready!')
@@ -315,6 +321,7 @@ export default class DuelVetoBan extends DiscordInteraction {
           `### <@${session.challengerId}>  ⚔️ VS ⚔️  <@${session.opponentId}>\n\n` +
           `**Match ID:** \`${matchId}\`\n` +
           `**Map:** ${formatMapName(selectedMap.name)}\n` +
+          regionLine +
           `**Status:** ${matches_by_pk.status}\n\n` +
           `**Connect to Server:**\n\`\`\`\n${connectCommand}\n\`\`\`\n` +
           tvSection +
@@ -339,6 +346,7 @@ export default class DuelVetoBan extends DiscordInteraction {
       });
     } else {
       // Servidor ainda não atribuído
+      const waitingRegionLine = session.selectedRegion ? `**Region:** 🌍 ${session.selectedRegion}\n` : '';
       const waitingEmbed = new EmbedBuilder()
         .setColor(0xFFA500)
         .setTitle('⏳ Duel Created')
@@ -346,6 +354,7 @@ export default class DuelVetoBan extends DiscordInteraction {
           `### <@${session.challengerId}>  ⚔️ VS ⚔️  <@${session.opponentId}>\n\n` +
           `**Match ID:** \`${matchId}\`\n` +
           `**Map:** ${formatMapName(selectedMap.name)}\n` +
+          waitingRegionLine +
           `**Status:** Waiting for server...\n\n` +
           `The server is being prepared. You'll receive connection details shortly!`
         )
