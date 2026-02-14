@@ -311,6 +311,7 @@ export class WarmupServerService {
 
   /**
    * Find an available server for warmup
+   * A server is available if it's enabled and has no active matches (Live or Veto)
    */
   private async findAvailableServer(guildId: string): Promise<{
     id: string;
@@ -319,19 +320,26 @@ export class WarmupServerService {
     password?: string;
   } | null> {
     try {
-      // Query for available servers
+      // Query for servers that are enabled and have no active matches
       const { servers } = await this.hasura.query({
         servers: {
           __args: {
             where: {
               enabled: { _eq: true },
-              is_available: { _eq: true },
+              _not: {
+                matches: {
+                  status: { _in: ["Live", "Veto", "Scheduled"] },
+                },
+              },
             },
             limit: 1,
           },
           id: true,
           host: true,
           port: true,
+          game_server_node: {
+            public_ip: true,
+          },
         },
       });
 
@@ -339,10 +347,11 @@ export class WarmupServerService {
 
       if (servers && servers.length > 0) {
         const server = servers[0];
-        this.logger.log(`[Warmup] Using server: ${server.host}:${server.port}`);
+        const serverIp = server.game_server_node?.public_ip || server.host;
+        this.logger.log(`[Warmup] Using server: ${serverIp}:${server.port}`);
         return {
           id: server.id,
-          ip: server.host,
+          ip: serverIp,
           port: server.port,
           password: undefined, // Warmup servers can be passwordless
         };
