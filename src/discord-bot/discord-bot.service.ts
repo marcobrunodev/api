@@ -101,7 +101,6 @@ export class DiscordBotService {
     this.client
       .on(Events.ClientReady, async () => {
         this.logger.log(`logged in as ${this.client.user.tag}!`);
-        await this.ensureBananaServerCategory();
         await this.syncQueueMixOnStartup();
       })
       .on(Events.VoiceStateUpdate, async (oldState, newState) => {
@@ -201,66 +200,6 @@ export class DiscordBotService {
       });
 
     await this.client.login(this.discordConfig.token);
-  }
-
-  private async ensureBananaServerCategory() {
-    try {
-      const guilds = this.client.guilds.cache;
-
-      for (const [_, guild] of guilds) {
-        const existingCategory = guild.channels.cache.find(
-          (channel) =>
-            channel.type === ChannelType.GuildCategory &&
-            channel.name === '🍌 BananaServer.xyz Mix'
-        );
-
-        if (!existingCategory) {
-          this.logger.log(`Creating BananaServer.xyz Mix category in guild: ${guild.name}`);
-
-          const category = await guild.channels.create({
-            name: '🍌 BananaServer.xyz Mix',
-            type: ChannelType.GuildCategory,
-          });
-
-          await category.setPosition(0);
-
-          await guild.channels.create({
-            name: '🍌 Queue Mix',
-            type: ChannelType.GuildVoice,
-            parent: category.id,
-          });
-
-          await guild.channels.create({
-            name: '💤 AFK',
-            type: ChannelType.GuildVoice,
-            parent: category.id,
-          });
-
-          this.logger.log(`Successfully created category, queue and AFK rooms in guild: ${guild.name}`);
-        } else {
-          this.logger.log(`BananaServer.xyz Mix category already exists in guild: ${guild.name}`);
-
-          // Verificar se a sala AFK existe
-          const afkChannel = guild.channels.cache.find(
-            (channel) =>
-              channel.type === ChannelType.GuildVoice &&
-              channel.name === '💤 AFK' &&
-              channel.parentId === existingCategory.id
-          );
-
-          if (!afkChannel) {
-            this.logger.log(`Creating AFK channel in guild: ${guild.name}`);
-            await guild.channels.create({
-              name: '💤 AFK',
-              type: ChannelType.GuildVoice,
-              parent: existingCategory.id,
-            });
-          }
-        }
-      }
-    } catch (error) {
-      this.logger.error('Error ensuring BananaServer.xyz Mix category:', error);
-    }
   }
 
   /**
