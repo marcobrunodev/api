@@ -19,7 +19,7 @@ export const WARMUP_MAPS = [
 // Timing configuration
 export const WARMUP_CONFIG = {
   // Minimum players to start warmup server
-  MIN_PLAYERS_TO_START: 2,
+  MIN_PLAYERS_TO_START: 1,
 
   // Time in milliseconds between game mode rotations (5 minutes)
   ROTATION_INTERVAL_MS: 5 * 60 * 1000,

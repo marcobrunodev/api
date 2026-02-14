@@ -57,14 +57,22 @@ export class WarmupServerService {
 
       // Check if we should start a warmup server
       if (queueSize >= WARMUP_CONFIG.MIN_PLAYERS_TO_START) {
-        const isActive = await this.isWarmupServerActive(guildId);
+        const state = await this.getState(guildId);
+        const isActive = state !== null;
 
         if (!isActive) {
           // Start warmup server
+          this.logger.log(`[Warmup] No active server found, starting new warmup server for guild ${guildId}`);
           await this.startWarmupServer(guildId, guild, notificationChannelId);
-        } else {
-          // Server already running, notify the new player
+        } else if (state?.serverId) {
+          // Server already running with a valid server ID
+          this.logger.log(`[Warmup] Server already active for guild ${guildId} (serverId: ${state.serverId})`);
           await this.notifyPlayer(guildId, memberId, notificationChannelId, guild);
+        } else {
+          // Stale state without server ID - clean it up and start fresh
+          this.logger.warn(`[Warmup] Found stale state without server ID for guild ${guildId}, cleaning up...`);
+          await this.cleanupState(guildId);
+          await this.startWarmupServer(guildId, guild, notificationChannelId);
         }
       }
     } catch (error) {
@@ -281,6 +289,15 @@ export class WarmupServerService {
     const redis = this.redisManager.getConnection();
     const key = `${WARMUP_REDIS_KEYS.SERVER_STATE}:${guildId}`;
     await redis.del(key);
+  }
+
+  /**
+   * Cleanup stale state and locks
+   */
+  private async cleanupState(guildId: string): Promise<void> {
+    await this.clearState(guildId);
+    await this.releaseProvisioningLock(guildId);
+    this.logger.log(`[Warmup] Cleaned up stale state for guild ${guildId}`);
   }
 
   /**
