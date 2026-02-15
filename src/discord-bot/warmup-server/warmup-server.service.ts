@@ -12,7 +12,8 @@ import {
   WARMUP_CONFIG,
   WARMUP_BOT_CONFIG,
   WARMUP_GAME_MODES,
-  WARMUP_MAPS,
+  WARMUP_MAPS_AR,
+  WARMUP_MAPS_DE,
   WARMUP_REDIS_KEYS,
   WarmupGameMode,
 } from "./warmup-server.constants";
@@ -151,9 +152,9 @@ export class WarmupServerService {
         this.guildReferences.set(guildId, guild);
       }
 
-      // Select random game mode and map
+      // Select random game mode and appropriate map for that mode
       const gameMode = this.getRandomGameMode();
-      const map = this.getRandomMap();
+      const map = this.getRandomMap(gameMode);
 
       // Create initial state
       const state: WarmupServerState = {
@@ -990,9 +991,9 @@ You'll be notified as soon as a server becomes available!
       const state = await this.getState(guildId);
       if (!state || !state.serverId) return;
 
-      // Get next mode and map
+      // Get next mode and appropriate map for that mode
       const newMode = this.getRandomGameMode();
-      const newMap = this.getRandomMap();
+      const newMap = this.getRandomMap(newMode);
 
       // Update state
       state.currentGameMode = newMode.type;
@@ -1084,10 +1085,12 @@ You'll be notified as soon as a server becomes available!
   }
 
   /**
-   * Get random map from warmup maps
+   * Get random map appropriate for the game mode
+   * Retake requires de_ maps (with bomb sites), ArmsRace/Deathmatch use ar_ maps
    */
-  private getRandomMap(): string {
-    const index = Math.floor(Math.random() * WARMUP_MAPS.length);
-    return WARMUP_MAPS[index];
+  private getRandomMap(gameMode: WarmupGameMode): string {
+    const maps = gameMode.type === 'Retake' ? WARMUP_MAPS_DE : WARMUP_MAPS_AR;
+    const index = Math.floor(Math.random() * maps.length);
+    return maps[index];
   }
 }

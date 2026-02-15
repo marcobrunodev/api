@@ -9,12 +9,24 @@ export const WARMUP_GAME_MODES = [
   { type: 'Retake', game_type: 3, game_mode: 0 },
 ] as const;
 
-// Small maps for warmup (Arms Race classics)
-export const WARMUP_MAPS = [
+// Small maps for warmup (Arms Race classics) - used for ArmsRace and Deathmatch
+export const WARMUP_MAPS_AR = [
   'ar_pool_day',
   'ar_shoots',
   'ar_baggage',
 ] as const;
+
+// Defuse maps for Retake mode (require bomb sites)
+export const WARMUP_MAPS_DE = [
+  'de_dust2',
+  'de_mirage',
+  'de_inferno',
+  'de_nuke',
+  'de_ancient',
+] as const;
+
+// Legacy alias for backwards compatibility
+export const WARMUP_MAPS = WARMUP_MAPS_AR;
 
 // Timing configuration
 export const WARMUP_CONFIG = {
@@ -66,4 +78,6 @@ export const WARMUP_REDIS_KEYS = {
 } as const;
 
 export type WarmupGameMode = typeof WARMUP_GAME_MODES[number];
-export type WarmupMap = typeof WARMUP_MAPS[number];
+export type WarmupMapAR = typeof WARMUP_MAPS_AR[number];
+export type WarmupMapDE = typeof WARMUP_MAPS_DE[number];
+export type WarmupMap = WarmupMapAR | WarmupMapDE;
