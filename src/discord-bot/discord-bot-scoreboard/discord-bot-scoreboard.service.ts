@@ -60,9 +60,10 @@ export class DiscordBotScoreboardService {
   }
 
   /**
-   * Busca stats da partida do banco de dados
+   * Busca stats da partida do banco de dados usando aggregates (igual ao site)
    */
   private async getMatchStats(matchId: string) {
+    // Query usando aggregates do Hasura (igual ao site web)
     const { matches_by_pk } = await this.hasura.query({
       matches_by_pk: {
         __args: { id: matchId },
@@ -82,19 +83,115 @@ export class DiscordBotScoreboardService {
         },
         lineup_1: {
           id: true,
+          name: true,
           lineup_players: {
+            steam_id: true,
             player: {
               steam_id: true,
               name: true,
+              // Kills aggregate (excluindo team kills)
+              kills_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                    team_kill: { _eq: false },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
+              // Assists aggregate (excluindo team assists)
+              assists_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                    is_team_assist: { _eq: false },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
+              // Deaths aggregate
+              deaths_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
+              // Headshot kills aggregate
+              hs_kills_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                    headshot: { _eq: true },
+                    team_kill: { _eq: false },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
             },
           },
         },
         lineup_2: {
           id: true,
+          name: true,
           lineup_players: {
+            steam_id: true,
             player: {
               steam_id: true,
               name: true,
+              kills_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                    team_kill: { _eq: false },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
+              assists_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                    is_team_assist: { _eq: false },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
+              deaths_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
+              hs_kills_aggregate: {
+                __args: {
+                  where: {
+                    match_id: { _eq: matchId },
+                    headshot: { _eq: true },
+                    team_kill: { _eq: false },
+                  },
+                },
+                aggregate: {
+                  count: true,
+                },
+              },
             },
           },
         },
@@ -105,91 +202,29 @@ export class DiscordBotScoreboardService {
       return null;
     }
 
-    // Buscar stats individuais dos players no mapa atual
-    const currentMap = matches_by_pk.match_maps?.[0];
-    if (!currentMap) {
-      return {
-        match: matches_by_pk,
-        playerStats: [],
-      };
-    }
-
-    // Buscar kills, deaths e assists dos players
-    const { player_kills, player_assists } = await this.hasura.query({
-      player_kills: {
-        __args: {
-          where: {
-            match_map_id: { _eq: currentMap.id },
-          },
-        },
-        attacker_steam_id: true,
-        attacked_steam_id: true,
-        headshot: true,
-      },
-      player_assists: {
-        __args: {
-          where: {
-            match_map_id: { _eq: currentMap.id },
-          },
-        },
-        assister_steam_id: true,
-      },
-    });
-
-    // Agregar stats por player
-    const statsMap = new Map<string, { kills: number; deaths: number; assists: number; headshots: number }>();
-
-    // Contar kills e headshots
-    player_kills?.forEach((kill) => {
-      if (kill.attacker_steam_id) {
-        const killerId = String(kill.attacker_steam_id);
-        const stats = statsMap.get(killerId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
-        stats.kills++;
-        if (kill.headshot) stats.headshots++;
-        statsMap.set(killerId, stats);
-      }
-
-      // Contar deaths
-      if (kill.attacked_steam_id) {
-        const victimId = String(kill.attacked_steam_id);
-        const stats = statsMap.get(victimId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
-        stats.deaths++;
-        statsMap.set(victimId, stats);
-      }
-    });
-
-    // Contar assists
-    player_assists?.forEach((assist) => {
-      if (assist.assister_steam_id) {
-        const assisterId = String(assist.assister_steam_id);
-        const stats = statsMap.get(assisterId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
-        stats.assists++;
-        statsMap.set(assisterId, stats);
-      }
-    });
-
-    // Buscar nomes dos players dos lineups
-    const allPlayers = [
-      ...(matches_by_pk.lineup_1?.lineup_players || []),
-      ...(matches_by_pk.lineup_2?.lineup_players || []),
-    ];
-
-    const playerStats = allPlayers.map((lp) => {
-      const steamId = lp.player.steam_id;
-      const stats = statsMap.get(steamId) || { kills: 0, deaths: 0, assists: 0, headshots: 0 };
-      return {
-        steam_id: steamId,
+    // Processar stats de ambos os lineups
+    const processLineupStats = (lineup: any) => {
+      return (lineup?.lineup_players || []).map((lp: any) => ({
+        steam_id: lp.player.steam_id,
         name: lp.player.name,
-        ...stats,
-      };
-    });
+        kills: lp.player.kills_aggregate?.aggregate?.count || 0,
+        assists: lp.player.assists_aggregate?.aggregate?.count || 0,
+        deaths: lp.player.deaths_aggregate?.aggregate?.count || 0,
+        headshots: lp.player.hs_kills_aggregate?.aggregate?.count || 0,
+      }));
+    };
 
-    // Ordenar por kills
-    playerStats.sort((a, b) => b.kills - a.kills);
+    const team1Stats = processLineupStats(matches_by_pk.lineup_1);
+    const team2Stats = processLineupStats(matches_by_pk.lineup_2);
+
+    // Ordenar cada time por kills
+    team1Stats.sort((a: any, b: any) => b.kills - a.kills);
+    team2Stats.sort((a: any, b: any) => b.kills - a.kills);
 
     return {
       match: matches_by_pk,
-      playerStats,
+      team1Stats,
+      team2Stats,
     };
   }
 
@@ -197,20 +232,12 @@ export class DiscordBotScoreboardService {
    * Formata o scoreboard em um embed do Discord
    */
   private formatScoreboard(data: any) {
-    const { match, playerStats } = data;
+    const { match, team1Stats, team2Stats } = data;
     const currentMap = match.match_maps?.[0];
 
     const score1 = currentMap?.lineup_1_score || 0;
     const score2 = currentMap?.lineup_2_score || 0;
     const mapName = currentMap?.map?.name || 'Unknown';
-
-    // Separar players por lineup
-    const lineup1SteamIds = new Set(
-      match.lineup_1?.lineup_players?.map((lp: any) => lp.player.steam_id) || []
-    );
-
-    const team1Stats = playerStats.filter((p: any) => lineup1SteamIds.has(p.steam_id));
-    const team2Stats = playerStats.filter((p: any) => !lineup1SteamIds.has(p.steam_id));
 
     // Formatar stats dos players (similar ao TAB do CS2)
     const formatPlayerLine = (p: any) => {
@@ -221,16 +248,19 @@ export class DiscordBotScoreboardService {
     const team1Lines = team1Stats.map(formatPlayerLine).join('\n') || '_No players_';
     const team2Lines = team2Stats.map(formatPlayerLine).join('\n') || '_No players_';
 
+    const team1Name = match.lineup_1?.name || 'Team 1';
+    const team2Name = match.lineup_2?.name || 'Team 2';
+
     const description = `
 **Map:** ${mapName}
 **Score:** ${score1} - ${score2}
 **Status:** ${match.status}
 
-**Team 1** (${score1})
+**${team1Name}** (${score1})
 \`${'Name'.padEnd(16)} ${'K'.padStart(3)} ${'D'.padStart(3)} ${'A'.padStart(3)} ${'K/D'.padStart(4)}\`
 ${team1Lines}
 
-**Team 2** (${score2})
+**${team2Name}** (${score2})
 \`${'Name'.padEnd(16)} ${'K'.padStart(3)} ${'D'.padStart(3)} ${'A'.padStart(3)} ${'K/D'.padStart(4)}\`
 ${team2Lines}
     `;
