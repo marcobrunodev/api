@@ -663,8 +663,8 @@ export class DiscordBotService {
           await this.removeFromQueueMix(guild.id, member.id);
           this.logger.log(`${member.user.tag} left Queue Mix - removed from queue order`);
 
-          // Notify warmup server about player leaving
-          await this.warmupServer.handlePlayerLeaveQueue(guild.id, member.id);
+          // Notify warmup server about player leaving (pass guild for cleanup reference)
+          await this.warmupServer.handlePlayerLeaveQueue(guild.id, member.id, guild);
         } else {
           this.logger.log(`${member.user.tag} moved from Queue Mix to Mix Voice - keeping queue position`);
         }

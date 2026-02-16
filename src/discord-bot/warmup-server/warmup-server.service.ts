@@ -99,6 +99,10 @@ export class WarmupServerService {
         } else if (state?.serverId && state?.jobName) {
           // Server already running with a valid server ID and job
           this.logger.log(`[Warmup] Server already active for guild ${guildId} (serverId: ${state.serverId})`);
+          // Ensure guild reference is stored (may be missing after bot restart)
+          if (guild) {
+            this.guildReferences.set(guildId, guild);
+          }
           await this.notifyPlayer(guildId, memberId, notificationChannelId, guild);
         } else {
           // Stale state without server ID and not provisioning - clean it up and start fresh
@@ -115,13 +119,21 @@ export class WarmupServerService {
   /**
    * Handle when a player leaves the Queue Mix channel
    */
-  async handlePlayerLeaveQueue(guildId: string, memberId: string): Promise<void> {
+  async handlePlayerLeaveQueue(guildId: string, memberId: string, guild?: any): Promise<void> {
     try {
-      const queueSize = await this.getQueueSize(guildId);
-      this.logger.log(`[Warmup] Player left Queue Mix in guild ${guildId}. Queue size: ${queueSize}`);
+      // Ensure guild reference is stored (may be missing after bot restart)
+      if (guild) {
+        this.guildReferences.set(guildId, guild);
+      }
+
+      // Use actual Discord verification to get accurate count and clean up ghost entries
+      const actualQueueSize = await this.getActualQueueSizeAndSync(guildId);
+
+      this.logger.log(`[Warmup] Player ${memberId} left Queue Mix in guild ${guildId}. Actual queue size: ${actualQueueSize}`);
 
       // If queue is empty, schedule shutdown
-      if (queueSize === 0) {
+      if (actualQueueSize === 0) {
+        this.logger.log(`[Warmup] Queue is empty, scheduling shutdown for guild ${guildId}`);
         this.scheduleShutdown(guildId);
       }
     } catch (error) {
@@ -805,6 +817,60 @@ export class WarmupServerService {
   }
 
   /**
+   * Get actual queue size from Discord voice channel and sync with Redis
+   * Returns the actual number of members in the Queue Mix voice channel
+   */
+  async getActualQueueSizeAndSync(guildId: string): Promise<number> {
+    const guild = this.guildReferences.get(guildId);
+    if (!guild) {
+      this.logger.warn(`[Warmup] No guild reference for ${guildId}, falling back to Redis queue size`);
+      return this.getQueueSize(guildId);
+    }
+
+    try {
+      // Find the Queue Mix voice channel
+      const queueMixChannel = guild.channels.cache.find(
+        (channel: any) =>
+          channel.type === 2 && // ChannelType.GuildVoice
+          channel.name === '🍌 Queue Mix'
+      );
+
+      if (!queueMixChannel) {
+        this.logger.warn(`[Warmup] Queue Mix channel not found for guild ${guildId}`);
+        return this.getQueueSize(guildId);
+      }
+
+      // Get actual members in the voice channel
+      const actualMembers = Array.from(queueMixChannel.members.keys());
+      const actualCount = actualMembers.length;
+
+      // Get Redis members
+      const redis = this.redisManager.getConnection();
+      const key = `discord:queue-mix:${guildId}`;
+      const redisMembers = await redis.zrange(key, 0, -1);
+
+      // Find ghost entries (in Redis but not in Discord)
+      const ghostMembers = redisMembers.filter((id: string) => !actualMembers.includes(id));
+
+      if (ghostMembers.length > 0) {
+        this.logger.warn(`[Warmup] Found ${ghostMembers.length} ghost members in Redis queue for guild ${guildId}: [${ghostMembers.join(', ')}]`);
+
+        // Remove ghost entries from Redis
+        for (const ghostId of ghostMembers) {
+          await redis.zrem(key, ghostId);
+          this.logger.log(`[Warmup] Removed ghost member ${ghostId} from Redis queue`);
+        }
+      }
+
+      this.logger.log(`[Warmup] Actual queue size for guild ${guildId}: ${actualCount} (Redis had ${redisMembers.length})`);
+      return actualCount;
+    } catch (error) {
+      this.logger.error(`[Warmup] Error getting actual queue size:`, error);
+      return this.getQueueSize(guildId);
+    }
+  }
+
+  /**
    * Broadcast connect info to notification channel
    */
   private async broadcastConnectInfo(
@@ -997,13 +1063,20 @@ Play while waiting for the mix! 🍌
    */
   private scheduleShutdown(guildId: string): void {
     this.cancelShutdownTimeout(guildId);
+    this.logger.log(`[Warmup] Scheduling shutdown for guild ${guildId} in ${WARMUP_CONFIG.EMPTY_QUEUE_SHUTDOWN_DELAY_MS}ms`);
 
     const timeout = setTimeout(async () => {
-      const queueSize = await this.getQueueSize(guildId);
-      if (queueSize === 0) {
+      // Use actual Discord verification instead of just Redis
+      const actualQueueSize = await this.getActualQueueSizeAndSync(guildId);
+      this.logger.log(`[Warmup] Shutdown timeout fired for guild ${guildId}. Actual queue size: ${actualQueueSize}`);
+
+      if (actualQueueSize === 0) {
         // Get stored guild reference for cleanup
         const guild = this.guildReferences.get(guildId);
+        this.logger.log(`[Warmup] Queue is empty after timeout, stopping warmup server for guild ${guildId}`);
         await this.stopWarmupServer(guildId, 'empty', guild);
+      } else {
+        this.logger.log(`[Warmup] Queue not empty (${actualQueueSize} players), keeping warmup server for guild ${guildId}`);
       }
     }, WARMUP_CONFIG.EMPTY_QUEUE_SHUTDOWN_DELAY_MS);
 
