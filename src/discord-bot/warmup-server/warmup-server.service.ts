@@ -191,11 +191,9 @@ export class WarmupServerService {
 
         this.logger.log(`[Warmup] Server started for guild ${guildId}: ${state.serverIp}:${state.serverPort}`);
       } else {
-        // No server available - notify players
-        state.isProvisioning = false;
-        await this.saveState(guildId, state);
-
-        await this.notifyNoServerAvailable(guildId, guild, notificationChannelId);
+        // No server available - just log and clean up state silently
+        // Don't notify players since it's not useful information
+        await this.clearState(guildId);
         this.logger.warn(`[Warmup] No server available for guild ${guildId}`);
       }
 
@@ -894,40 +892,6 @@ Play while waiting for the mix! 🍌
   ): Promise<void> {
     // For now, we don't send individual DMs to avoid rate limiting
     // The player can see the info in the notification channel
-  }
-
-  /**
-   * Notify that no server is available
-   */
-  private async notifyNoServerAvailable(
-    guildId: string,
-    guild: any,
-    notificationChannelId: string | undefined
-  ): Promise<void> {
-    if (!notificationChannelId || !guild) return;
-
-    try {
-      const channel = await guild.channels.fetch(notificationChannelId).catch((): null => null);
-      if (!channel || !('send' in channel)) return;
-
-      await channel.send({
-        embeds: [{
-          title: '⏳ Warmup Server',
-          description: `
-No warmup server available at the moment.
-
-You'll be notified as soon as a server becomes available!
-          `.trim(),
-          color: 0xFF9900,
-          footer: {
-            text: 'From BananaServer.xyz with 🍌',
-          },
-          timestamp: new Date().toISOString(),
-        }],
-      });
-    } catch (error) {
-      this.logger.error(`[Warmup] Error notifying no server available:`, error);
-    }
   }
 
   /**

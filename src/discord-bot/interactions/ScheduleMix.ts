@@ -134,13 +134,9 @@ export default class ScheduleMix extends DiscordInteraction {
 
       const queueMixChannel = voiceChannel.id === discord_guilds_by_pk?.queue_mix_channel_id ? voiceChannel : null;
 
-      // Stop warmup server since mix is starting
-      await this.warmupServer.stopWarmupServer(
-        guild.id,
-        'mix_starting',
-        guild,
-        discord_guilds_by_pk?.notification_channel_id
-      );
+      // Note: Warmup server will automatically stop when the queue becomes empty
+      // (when handlePlayerLeaveQueue is called for each player that leaves)
+      // This allows remaining players to keep playing warmup
 
       console.log('Fetching bot member...');
       const botMember = await guild.members.fetch(interaction.client.user.id);
