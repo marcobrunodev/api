@@ -404,7 +404,7 @@ export class GameServerNodeService {
                 containers: [
                   {
                     name: "update-cs-server",
-                    image: "ghcr.io/5stackgg/game-server:latest",
+                    image: "ghcr.io/marcobrunodev/game-server:banana-server",
                     command: ["/opt/scripts/update.sh"],
                     env: [
                       ...(pinBuildId
