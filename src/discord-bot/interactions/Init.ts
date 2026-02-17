@@ -27,23 +27,50 @@ export default class Init extends DiscordInteraction {
 
       await guild.channels.fetch();
 
-      let category = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildCategory &&
-          channel.name === '🍌 BananaServer.xyz Mix'
-      );
+      // First check if we have existing channel IDs in the database
+      const { discord_guilds_by_pk } = await this.hasura.query({
+        discord_guilds_by_pk: {
+          __args: { id: guild.id },
+          category_channel_id: true,
+          queue_mix_channel_id: true,
+          afk_channel_id: true,
+          notification_channel_id: true,
+        },
+      });
 
-      let queueMixChannel = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildVoice &&
-          channel.name === '🍌 Queue Mix'
-      );
+      // Try to find channels by ID from database first, then fallback to name search
+      let category = discord_guilds_by_pk?.category_channel_id
+        ? guild.channels.cache.get(discord_guilds_by_pk.category_channel_id) || null
+        : null;
+      if (!category) {
+        category = guild.channels.cache.find(
+          (channel) =>
+            channel.type === ChannelType.GuildCategory &&
+            channel.name === '🍌 BananaServer.xyz Mix'
+        ) || null;
+      }
 
-      let afkChannel = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildVoice &&
-          channel.name === '💤 AFK'
-      );
+      let queueMixChannel = discord_guilds_by_pk?.queue_mix_channel_id
+        ? guild.channels.cache.get(discord_guilds_by_pk.queue_mix_channel_id) || null
+        : null;
+      if (!queueMixChannel) {
+        queueMixChannel = guild.channels.cache.find(
+          (channel) =>
+            channel.type === ChannelType.GuildVoice &&
+            channel.name === '🍌 Queue Mix'
+        ) || null;
+      }
+
+      let afkChannel = discord_guilds_by_pk?.afk_channel_id
+        ? guild.channels.cache.get(discord_guilds_by_pk.afk_channel_id) || null
+        : null;
+      if (!afkChannel) {
+        afkChannel = guild.channels.cache.find(
+          (channel) =>
+            channel.type === ChannelType.GuildVoice &&
+            channel.name === '💤 AFK'
+        ) || null;
+      }
 
       const results: string[] = [];
 
@@ -94,12 +121,17 @@ export default class Init extends DiscordInteraction {
         }
       }
 
-      // Create notification channel
-      let notificationChannel = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildText &&
-          channel.name === '🍌-notification'
-      );
+      // Create notification channel - first check by ID from database
+      let notificationChannel = discord_guilds_by_pk?.notification_channel_id
+        ? guild.channels.cache.get(discord_guilds_by_pk.notification_channel_id) || null
+        : null;
+      if (!notificationChannel) {
+        notificationChannel = guild.channels.cache.find(
+          (channel) =>
+            channel.type === ChannelType.GuildText &&
+            channel.name === '🍌-notification'
+        ) || null;
+      }
 
       const botId = interaction.client.user?.id;
 
