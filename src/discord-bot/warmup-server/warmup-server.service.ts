@@ -13,7 +13,6 @@ import {
   WARMUP_BOT_CONFIG,
   WARMUP_GAME_MODES,
   WARMUP_MAPS_AR,
-  WARMUP_MAPS_DE,
   WARMUP_REDIS_KEYS,
   WarmupGameMode,
 } from "./warmup-server.constants";
@@ -1132,11 +1131,10 @@ Play while waiting for the mix! 🍌
 
   /**
    * Get random map appropriate for the game mode
-   * Retake requires de_ maps (with bomb sites), ArmsRace/Deathmatch use ar_ maps
+   * ArmsRace and Deathmatch use ar_ maps (Retake is handled in-game via .retake command)
    */
-  private getRandomMap(gameMode: WarmupGameMode): string {
-    const maps = gameMode.type === 'Retake' ? WARMUP_MAPS_DE : WARMUP_MAPS_AR;
-    const index = Math.floor(Math.random() * maps.length);
-    return maps[index];
+  private getRandomMap(_gameMode: WarmupGameMode): string {
+    const index = Math.floor(Math.random() * WARMUP_MAPS_AR.length);
+    return WARMUP_MAPS_AR[index];
   }
 }
