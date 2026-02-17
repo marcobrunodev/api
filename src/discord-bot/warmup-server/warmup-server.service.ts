@@ -336,7 +336,7 @@ export class WarmupServerService {
           this.logger.log(`[Warmup] Creating K8s job ${jobName} for server ${server.label}`);
 
           // Game params for warmup (casual modes, no password)
-          const extraGameParams = `+game_type ${gameMode.game_type} +game_mode ${gameMode.game_mode} +map ${map} -maxplayers ${WARMUP_CONFIG.MAX_PLAYERS} ${server.server_region?.is_lan ? "+sv_lan 1" : ""}`;
+          const extraGameParams = `-tickrate 128 +game_type ${gameMode.game_type} +game_mode ${gameMode.game_mode} +map ${map} -maxplayers ${WARMUP_CONFIG.MAX_PLAYERS} ${server.server_region?.is_lan ? "+sv_lan 1" : ""}`;
 
           await batch.createNamespacedJob({
             namespace: this.namespace,
