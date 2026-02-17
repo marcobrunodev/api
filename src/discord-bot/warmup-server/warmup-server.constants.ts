@@ -2,11 +2,12 @@
  * Warmup Server Configuration Constants
  */
 
-// Game modes for rotation (every 5 minutes)
+// Game modes for random selection at startup
+// Note: Retake is NOT included here because it requires the RetakesPlugin
+// which is loaded dynamically via .retake command in-game
 export const WARMUP_GAME_MODES = [
   { type: 'ArmsRace', game_type: 1, game_mode: 0 },
   { type: 'Deathmatch', game_type: 1, game_mode: 2 },
-  { type: 'Retake', game_type: 3, game_mode: 0 },
 ] as const;
 
 // Small maps for warmup (Arms Race classics) - used for ArmsRace and Deathmatch
