@@ -828,12 +828,21 @@ export class WarmupServerService {
     }
 
     try {
-      // Find the Queue Mix voice channel
-      const queueMixChannel = guild.channels.cache.find(
-        (channel: any) =>
-          channel.type === 2 && // ChannelType.GuildVoice
-          channel.name === '🍌 Queue Mix'
-      );
+      // Get queue_mix_channel_id from database
+      const { discord_guilds_by_pk } = await this.hasura.query({
+        discord_guilds_by_pk: {
+          __args: { id: guildId },
+          queue_mix_channel_id: true,
+        },
+      });
+
+      if (!discord_guilds_by_pk?.queue_mix_channel_id) {
+        this.logger.warn(`[Warmup] Queue Mix channel ID not found in database for guild ${guildId}`);
+        return this.getQueueSize(guildId);
+      }
+
+      // Fetch the Queue Mix voice channel by ID
+      const queueMixChannel = await guild.channels.fetch(discord_guilds_by_pk.queue_mix_channel_id).catch((): null => null);
 
       if (!queueMixChannel) {
         this.logger.warn(`[Warmup] Queue Mix channel not found for guild ${guildId}`);

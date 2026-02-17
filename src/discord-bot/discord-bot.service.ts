@@ -216,11 +216,20 @@ export class DiscordBotService {
       this.logger.log('Starting Queue Mix synchronization...');
 
       for (const [guildId, guild] of this.client.guilds.cache) {
-        const queueChannel = guild.channels.cache.find(
-          (channel) =>
-            channel.type === ChannelType.GuildVoice &&
-            channel.name === '🍌 Queue Mix'
-        );
+        // Get queue_mix_channel_id from database
+        const { discord_guilds_by_pk } = await this.hasura.query({
+          discord_guilds_by_pk: {
+            __args: { id: guildId },
+            queue_mix_channel_id: true,
+          },
+        });
+
+        if (!discord_guilds_by_pk?.queue_mix_channel_id) {
+          continue;
+        }
+
+        // Fetch the Queue Mix voice channel by ID
+        const queueChannel = await guild.channels.fetch(discord_guilds_by_pk.queue_mix_channel_id).catch((): null => null);
 
         if (!queueChannel || queueChannel.type !== ChannelType.GuildVoice) {
           continue;
