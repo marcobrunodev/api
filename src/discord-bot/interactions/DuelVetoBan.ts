@@ -288,6 +288,7 @@ export default class DuelVetoBan extends DiscordInteraction {
         },
         id: true,
         status: true,
+        password: true,
         connection_link: true,
         server: {
           host: true,
@@ -304,7 +305,11 @@ export default class DuelVetoBan extends DiscordInteraction {
       const server = matches_by_pk.server;
       const serverIp = server.game_server_node?.public_ip || server.host;
       const connectCommand = `connect ${serverIp}:${server.port}`;
-      const tvCommand = server.tv_port ? `connect ${serverIp}:${server.tv_port}` : null;
+      const tvCommand = server.tv_port
+        ? matches_by_pk.password
+          ? `connect ${serverIp}:${server.tv_port}; password ${matches_by_pk.password}`
+          : `connect ${serverIp}:${server.tv_port}`
+        : null;
       const tvSection = tvCommand ? `\n**GOTV (Spectate):**\n\`\`\`\n${tvCommand}\n\`\`\`\n` : '';
 
       // Criar URL para abrir Steam diretamente
