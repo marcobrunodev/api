@@ -2,6 +2,7 @@ import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder } from 
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotButtonInteraction } from "./interactions";
+import { MatchType } from "./ReadyCheck";
 
 // Sessões de veto de regiões
 const regionVetoSessions = new Map<string, {
@@ -21,6 +22,7 @@ const regionVetoSessions = new Map<string, {
   team1ChannelId: string;
   team2ChannelId: string;
   fruitToPlayer: Map<string, string>;
+  matchType: MatchType;
 }>();
 
 export function initializeRegionVetoSession(
@@ -37,7 +39,8 @@ export function initializeRegionVetoSession(
   categoryId?: string,
   team1ChannelId?: string,
   team2ChannelId?: string,
-  fruitToPlayer?: Map<string, string>
+  fruitToPlayer?: Map<string, string>,
+  matchType: MatchType = 'Competitive'
 ) {
   // Com 2 regiões: 1 ban = 1 região restante
   // Com 3 regiões: 1,2 = 1 região restante
@@ -65,6 +68,7 @@ export function initializeRegionVetoSession(
     team1ChannelId: team1ChannelId || '',
     team2ChannelId: team2ChannelId || '',
     fruitToPlayer: fruitToPlayer || new Map(),
+    matchType,
   });
 
   return regionVetoSessions.get(messageId);
@@ -201,8 +205,21 @@ ${bannedRegionsList}
       "Overpass"
     ];
 
+    const WINGMAN_MAPS = [
+      "Inferno",
+      "Nuke",
+      "Overpass",
+      "Vertigo",
+      "Poseidon",
+      "Sanctum"
+    ];
+
+    // Selecionar mapas baseado no tipo de partida
+    const maps = session.matchType === 'Wingman' ? WINGMAN_MAPS : COMPETITIVE_MAPS;
+    const bansRemaining = maps.length - 1;
+
     // Criar botões com os mapas
-    const mapButtons = COMPETITIVE_MAPS.map(map => {
+    const mapButtons = maps.map(map => {
       return new ButtonBuilder()
         .setCustomId(`${ButtonActions.VetoMap}:${map}`)
         .setLabel(map)
@@ -222,7 +239,7 @@ ${bannedRegionsList}
         description: `
 **Selected Region:** 🌍 ${selectedRegion}
 **Current Turn:** 👑 <@${session.captain1Id}> (\`${session.captain1Fruit}\`) - **BAN**
-**Bans remaining:** 6
+**Bans remaining:** ${bansRemaining}
 
 **Team ${session.captain1Fruit}:**
 ${session.team1.map(id => `<@${id}>`).join(', ')}
@@ -231,7 +248,7 @@ ${session.team1.map(id => `<@${id}>`).join(', ')}
 ${session.team2.map(id => `<@${id}>`).join(', ')}
 
 **Available Maps:**
-${COMPETITIVE_MAPS.map(m => `\`${m}\``).join(', ')}
+${maps.map(m => `\`${m}\``).join(', ')}
 
 **Banned Maps:**
 _None yet_
@@ -258,7 +275,8 @@ _None yet_
       session.guildId,
       channel.id,
       session.categoryId,
-      selectedRegion // Passar a região selecionada
+      selectedRegion,
+      session.matchType
     );
   }
 }

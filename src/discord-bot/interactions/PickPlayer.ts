@@ -422,7 +422,8 @@ _None yet_
       session.categoryId,
       session.team1ChannelId,
       session.team2ChannelId,
-      session.fruitToPlayer
+      session.fruitToPlayer,
+      session.matchType
     );
   } else {
     // Apenas 1 região (ou nenhuma), pular direto para map veto
