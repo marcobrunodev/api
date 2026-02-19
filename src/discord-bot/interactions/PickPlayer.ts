@@ -2,6 +2,7 @@ import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder } from 
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 import { BotButtonInteraction } from "./interactions";
+import { MatchType } from "./ReadyCheck";
 
 // Sessões de pick de players
 const pickSessions = new Map<string, {
@@ -19,6 +20,7 @@ const pickSessions = new Map<string, {
   currentPickIndex: number;
   guildId: string;
   categoryId?: string;
+  matchType: MatchType;
 }>();
 
 export function initializePickSession(
@@ -31,10 +33,13 @@ export function initializePickSession(
   team2ChannelId: string,
   fruitToPlayer: Map<string, string>,
   guildId: string,
-  categoryId?: string
+  categoryId?: string,
+  matchType: MatchType = 'Competitive'
 ) {
-  // Ordem de picks: 1,2,2,1,1,2,2,1 (total 8 picks para 10 players - 2 são capitães)
-  const pickOrder = [1, 2, 2, 1, 1, 2, 2, 1];
+  // Ordem de picks depende do tipo de partida
+  // Wingman (2v2): 1,2 (2 picks para 4 players - 2 são capitães)
+  // Competitive (5v5): 1,2,2,1,1,2,2,1 (8 picks para 10 players - 2 são capitães)
+  const pickOrder = matchType === 'Wingman' ? [1, 2] : [1, 2, 2, 1, 1, 2, 2, 1];
 
   const allPlayerIds = Array.from(fruitToPlayer.values());
   const availablePlayers = allPlayerIds.filter(id => id !== captain1Id && id !== captain2Id);
@@ -54,6 +59,7 @@ export function initializePickSession(
     currentPickIndex: 0,
     guildId,
     categoryId,
+    matchType,
   });
 
   return pickSessions.get(messageId);
@@ -459,8 +465,23 @@ ${team2List}
       "Overpass"
     ];
 
+    const WINGMAN_MAPS = [
+      "Inferno",
+      "Nuke",
+      "Overpass",
+      "Vertigo",
+      "Poseidon",
+      "Sanctum"
+    ];
+
+    // Selecionar mapas baseado no tipo de partida
+    const maps = session.matchType === 'Wingman' ? WINGMAN_MAPS : COMPETITIVE_MAPS;
+    // Wingman: 5 bans para 6 mapas = 1 mapa restante
+    // Competitive: 6 bans para 7 mapas = 1 mapa restante
+    const bansRemaining = maps.length - 1;
+
     // Criar botões com os mapas
-    const mapButtons = COMPETITIVE_MAPS.map(map => {
+    const mapButtons = maps.map(map => {
       return new ButtonBuilder()
         .setCustomId(`${ButtonActions.VetoMap}:${map}`)
         .setLabel(map)
@@ -479,7 +500,7 @@ ${team2List}
         title: '🗺️ Map Veto',
         description: `
 **Current Turn:** 👑 <@${session.captain1Id}> (\`${session.captain1Fruit}\`) - **BAN**
-**Bans remaining:** 6
+**Bans remaining:** ${bansRemaining}
 
 **Team ${session.captain1Fruit}:**
 ${session.team1.map(id => `<@${id}>`).join(', ')}
@@ -488,7 +509,7 @@ ${session.team1.map(id => `<@${id}>`).join(', ')}
 ${session.team2.map(id => `<@${id}>`).join(', ')}
 
 **Available Maps:**
-${COMPETITIVE_MAPS.map(m => `\`${m}\``).join(', ')}
+${maps.map(m => `\`${m}\``).join(', ')}
 
 **Banned Maps:**
 _None yet_
@@ -515,7 +536,8 @@ _None yet_
       session.guildId,
       channel.id,
       session.categoryId,
-      selectedRegion
+      selectedRegion,
+      session.matchType
     );
   }
 }

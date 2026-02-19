@@ -298,7 +298,8 @@ Click the button below when you're ready!
         category.id,
         mixVoiceChannel.id,
         queueMixChannel?.id,
-        picksBans.id
+        picksBans.id,
+        'Wingman' // Match type para ELO correto
       );
 
       // Iniciar countdown de 21 segundos

@@ -3,6 +3,8 @@ import { BotButtonInteraction } from "./interactions";
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
 
+export type MatchType = 'Competitive' | 'Wingman';
+
 const readySessions = new Map<string, {
   readyPlayers: Set<string>;
   totalPlayers: number;
@@ -16,6 +18,7 @@ const readySessions = new Map<string, {
   timeRemaining: number;
   intervalId?: NodeJS.Timeout;
   channelId?: string;
+  matchType: MatchType;
 }>();
 
 export function initializeReadySession(
@@ -27,7 +30,8 @@ export function initializeReadySession(
   categoryChannelId?: string,
   originalChannelId?: string,
   queueMixChannelId?: string,
-  channelId?: string
+  channelId?: string,
+  matchType: MatchType = 'Competitive'
 ) {
   readySessions.set(messageId, {
     readyPlayers: new Set(),
@@ -41,6 +45,7 @@ export function initializeReadySession(
     queueMixChannelId,
     timeRemaining: 90,
     channelId,
+    matchType,
   });
 }
 
@@ -816,7 +821,8 @@ ${availablePlayers.map(p => {
             team2Channel.id,
             session.fruitToPlayer,
             session.guildId,
-            session.categoryChannelId
+            session.categoryChannelId,
+            session.matchType
           );
 
         } catch (error) {

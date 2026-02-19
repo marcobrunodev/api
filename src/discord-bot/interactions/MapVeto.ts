@@ -5,6 +5,7 @@ import { BotButtonInteraction } from "./interactions";
 import { AppConfig } from "src/configs/types/AppConfig";
 import { sendChannelOnboarding, OnboardingChannelType } from "../helpers/channel-onboarding.helper";
 import { checkServerAvailability } from "../helpers/server-availability.helper";
+import { MatchType } from "./ReadyCheck";
 
 // Pool de mapas do competitive CS2
 const COMPETITIVE_MAPS = [
@@ -17,6 +18,16 @@ const COMPETITIVE_MAPS = [
   "Overpass"
 ];
 
+// Pool de mapas do Wingman CS2
+const WINGMAN_MAPS = [
+  "Inferno",
+  "Nuke",
+  "Overpass",
+  "Vertigo",
+  "Poseidon",
+  "Sanctum"
+];
+
 // Mapeamento de nomes amigáveis para nomes técnicos do banco de dados
 const MAP_DISPLAY_TO_DB: Record<string, string> = {
   "Ancient": "de_ancient",
@@ -25,7 +36,10 @@ const MAP_DISPLAY_TO_DB: Record<string, string> = {
   "Inferno": "de_inferno",
   "Mirage": "de_mirage",
   "Nuke": "de_nuke",
-  "Overpass": "de_overpass"
+  "Overpass": "de_overpass",
+  "Vertigo": "de_vertigo",
+  "Poseidon": "de_poseidon",
+  "Sanctum": "de_sanctum"
 };
 
 // Sessões de veto de mapas
@@ -44,6 +58,7 @@ const vetoSessions = new Map<string, {
   channelId: string;
   categoryId?: string;
   selectedRegion?: string;
+  matchType: MatchType;
 }>();
 
 export function initializeVetoSession(
@@ -57,10 +72,17 @@ export function initializeVetoSession(
   guildId: string,
   channelId: string,
   categoryId?: string,
-  selectedRegion?: string
+  selectedRegion?: string,
+  matchType: MatchType = 'Competitive'
 ) {
-  // Ordem de vetos: 1,2,1,2,1,2 (6 bans) = 1 mapa restante
-  const vetoOrder = [1, 2, 1, 2, 1, 2];
+  // Selecionar mapas baseado no tipo de partida
+  const maps = matchType === 'Wingman' ? WINGMAN_MAPS : COMPETITIVE_MAPS;
+  // Ordem de vetos dinâmica baseada no número de mapas
+  // Wingman: 5 bans para 6 mapas (1,2,1,2,1)
+  // Competitive: 6 bans para 7 mapas (1,2,1,2,1,2)
+  const vetoOrder = matchType === 'Wingman'
+    ? [1, 2, 1, 2, 1]
+    : [1, 2, 1, 2, 1, 2];
 
   vetoSessions.set(messageId, {
     captain1Id,
@@ -69,7 +91,7 @@ export function initializeVetoSession(
     captain2Fruit,
     team1,
     team2,
-    availableMaps: [...COMPETITIVE_MAPS],
+    availableMaps: [...maps],
     bannedMaps: [],
     vetoOrder,
     currentVetoIndex: 0,
@@ -77,6 +99,7 @@ export function initializeVetoSession(
     channelId,
     categoryId,
     selectedRegion,
+    matchType,
   });
 
   return vetoSessions.get(messageId);
@@ -255,7 +278,9 @@ ${bannedMapsList}
       throw new Error(`Map ${selectedMap} not found in map display mapping`);
     }
 
-    console.log(`🎮 [MAP VETO] Searching for map: "${selectedMap}" (DB name: "${dbMapName}")`);
+    // Determinar o tipo de partida para buscar o mapa correto
+    const mapType = session.matchType === 'Wingman' ? 'Wingman' : 'Competitive';
+    console.log(`🎮 [MAP VETO] Searching for map: "${selectedMap}" (DB name: "${dbMapName}", type: "${mapType}")`);
 
     const { maps } = await this.hasura.query({
       maps: {
@@ -265,7 +290,7 @@ ${bannedMapsList}
               _eq: dbMapName
             },
             type: {
-              _eq: "Competitive"
+              _eq: mapType
             }
           }
         },
@@ -275,17 +300,22 @@ ${bannedMapsList}
     });
 
     if (!maps || maps.length === 0) {
-      throw new Error(`Map ${selectedMap} (${dbMapName}) not found in database`);
+      throw new Error(`Map ${selectedMap} (${dbMapName}) not found in database for type ${mapType}`);
     }
 
     const mapId = maps[0].id;
 
+    // Configuração baseada no tipo de partida
+    // Wingman: MR8 (8 rounds por lado)
+    // Competitive: MR12 (12 rounds por lado)
+    const mr = session.matchType === 'Wingman' ? 8 : 12;
+
     // Criar match no banco
     const match = await this.matchAssistant.createMatchBasedOnType(
-      "Competitive",
-      "Competitive",
+      mapType,
+      mapType,
       {
-        mr: 12,
+        mr,
         best_of: 1,
         knife: true,
         map: mapId,
