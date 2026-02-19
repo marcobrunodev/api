@@ -333,11 +333,12 @@ export class DiscordBotService {
       const category = channelLeft.parent;
       if (!category) return;
 
-      // Check for both Banana Mix and Banana Duel categories
+      // Check for Banana Mix, Banana Wingman, and Banana Duel categories
       const isBananaMix = category.name.startsWith('Banana Mix');
+      const isBananaWingman = category.name.startsWith('Banana Wingman');
       const isBananaDuel = category.name.startsWith('Banana Duel');
-      
-      if (!isBananaMix && !isBananaDuel) return;
+
+      if (!isBananaMix && !isBananaWingman && !isBananaDuel) return;
 
       const voiceChannels = category.children.cache.filter(
         (channel: any) => channel.type === ChannelType.GuildVoice
@@ -348,7 +349,7 @@ export class DiscordBotService {
       );
 
       if (!hasMembers) {
-        const categoryType = isBananaDuel ? 'Banana Duel' : 'Banana Mix';
+        const categoryType = isBananaDuel ? 'Banana Duel' : (isBananaWingman ? 'Banana Wingman' : 'Banana Mix');
         this.logger.log(`Cleaning up empty ${categoryType} category: ${category.name}`);
 
         for (const [_, channel] of category.children.cache) {
@@ -399,6 +400,9 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.ScheduleMix)
           .setDescription("Creates a Mix Match"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.ScheduleMixWingman)
+          .setDescription("Creates a Wingman Mix Match (2v2)"),
         new SlashCommandBuilder()
           .setName(ChatCommands.MixDuel)
           .setDescription("Creates a Mix Duel Match")

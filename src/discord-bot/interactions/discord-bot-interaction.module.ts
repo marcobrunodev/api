@@ -1,6 +1,7 @@
 import { Module, forwardRef } from "@nestjs/common";
 import ScheduleMatch from "./ScheduleMatch";
 import ScheduleMix from "./ScheduleMix";
+import ScheduleMixWingman from "./ScheduleMixWingman";
 import { DiscordBotModule } from "../discord-bot.module";
 import { HasuraModule } from "../../hasura/hasura.module";
 import { MatchesModule } from "../../matches/matches.module";
@@ -61,6 +62,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
     KickPlayer,
     ScheduleMatch,
     ScheduleMix,
+    ScheduleMixWingman,
     UpdateMapStatus,
     UpdateMatchStatus,
     VetoPick,
@@ -105,6 +107,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
     KickPlayer,
     ScheduleMatch,
     ScheduleMix,
+    ScheduleMixWingman,
     UpdateMapStatus,
     UpdateMatchStatus,
     VetoPick,
