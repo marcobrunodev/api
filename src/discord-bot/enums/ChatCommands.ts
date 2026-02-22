@@ -9,6 +9,7 @@ export enum ChatCommands {
   Init = "init",
   Queue = "queue",
   Ranking = "ranking",
+  RankingKnife = "ranking-knife",
   TestVote = "test-vote",
   TestAutoVoteCaptains = "test-auto-vote-captains",
   TestAutoReady = "test-auto-ready",
