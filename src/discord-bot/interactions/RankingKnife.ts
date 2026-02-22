@@ -15,29 +15,29 @@ interface PlayerKnifeStats {
   knife_kills: number;
 }
 
-// Weapon names for knife in CS2
+// Weapon names for knife in CS2 (without weapon_ prefix as stored in DB)
 const KNIFE_WEAPONS = [
-  "weapon_knife",
-  "weapon_knife_t",
-  "weapon_bayonet",
-  "weapon_knife_flip",
-  "weapon_knife_gut",
-  "weapon_knife_karambit",
-  "weapon_knife_m9_bayonet",
-  "weapon_knife_tactical",
-  "weapon_knife_falchion",
-  "weapon_knife_survival_bowie",
-  "weapon_knife_butterfly",
-  "weapon_knife_push",
-  "weapon_knife_cord",
-  "weapon_knife_canis",
-  "weapon_knife_ursus",
-  "weapon_knife_gypsy_jackknife",
-  "weapon_knife_outdoor",
-  "weapon_knife_stiletto",
-  "weapon_knife_widowmaker",
-  "weapon_knife_skeleton",
-  "weapon_knife_kukri",
+  "knife",
+  "knife_t",
+  "bayonet",
+  "knife_flip",
+  "knife_gut",
+  "knife_karambit",
+  "knife_m9_bayonet",
+  "knife_tactical",
+  "knife_falchion",
+  "knife_survival_bowie",
+  "knife_butterfly",
+  "knife_push",
+  "knife_cord",
+  "knife_canis",
+  "knife_ursus",
+  "knife_gypsy_jackknife",
+  "knife_outdoor",
+  "knife_stiletto",
+  "knife_widowmaker",
+  "knife_skeleton",
+  "knife_kukri",
 ];
 
 @BotChatCommand(ChatCommands.RankingKnife)

@@ -148,7 +148,7 @@ export default class Init extends DiscordInteraction {
         if (botId) {
           permissionOverwrites.push({
             id: botId,
-            allow: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks],
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks],
           });
         }
 
@@ -182,6 +182,7 @@ export default class Init extends DiscordInteraction {
           // Ensure bot can send messages
           if (botId) {
             await (notificationChannel as any).permissionOverwrites.edit(botId, {
+              ViewChannel: true,
               SendMessages: true,
               EmbedLinks: true,
             });
