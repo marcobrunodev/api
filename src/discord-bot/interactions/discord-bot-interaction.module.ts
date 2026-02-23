@@ -37,6 +37,7 @@ import JoinDuelVoice from "./JoinDuelVoice";
 import DuelVetoBan from "./DuelVetoBan";
 import Ranking from "./Ranking";
 import RankingKnife from "./RankingKnife";
+import RankingTaser from "./RankingTaser";
 import CreateTeam from "./CreateTeam";
 import CreateTeamModal from "./CreateTeamModal";
 import OpenCreateTeamModal from "./OpenCreateTeamModal";
@@ -90,6 +91,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
     DuelVetoBan,
     Ranking,
     RankingKnife,
+    RankingTaser,
     CreateTeam,
     CreateTeamModal,
     OpenCreateTeamModal,
@@ -136,6 +138,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
     DuelVetoBan,
     Ranking,
     RankingKnife,
+    RankingTaser,
     CreateTeam,
     CreateTeamModal,
     OpenCreateTeamModal,

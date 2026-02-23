@@ -436,6 +436,9 @@ export class DiscordBotService {
           .setName(ChatCommands.RankingKnife)
           .setDescription("Show the knife kills ranking"),
         new SlashCommandBuilder()
+          .setName(ChatCommands.RankingTaser)
+          .setDescription("Show the taser/zeus kills ranking"),
+        new SlashCommandBuilder()
           .setName(ChatCommands.KickPlayer)
           .setDescription("Kick a player from the queue")
           .addUserOption((option) =>
