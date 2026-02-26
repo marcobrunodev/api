@@ -124,19 +124,6 @@ export class DiscordBotScoreboardService {
                   count: true,
                 },
               },
-              // Headshot kills aggregate
-              hs_kills_aggregate: {
-                __args: {
-                  where: {
-                    match_id: { _eq: matchId },
-                    headshot: { _eq: true },
-                    team_kill: { _eq: false },
-                  },
-                },
-                aggregate: {
-                  count: true,
-                },
-              },
             },
           },
         },
@@ -180,18 +167,6 @@ export class DiscordBotScoreboardService {
                   count: true,
                 },
               },
-              hs_kills_aggregate: {
-                __args: {
-                  where: {
-                    match_id: { _eq: matchId },
-                    headshot: { _eq: true },
-                    team_kill: { _eq: false },
-                  },
-                },
-                aggregate: {
-                  count: true,
-                },
-              },
             },
           },
         },
@@ -210,7 +185,6 @@ export class DiscordBotScoreboardService {
         kills: lp.player.kills_aggregate?.aggregate?.count || 0,
         assists: lp.player.assists_aggregate?.aggregate?.count || 0,
         deaths: lp.player.deaths_aggregate?.aggregate?.count || 0,
-        headshots: lp.player.hs_kills_aggregate?.aggregate?.count || 0,
       }));
     };
 
