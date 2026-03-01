@@ -1,0 +1,64 @@
+table:
+  name: match_clips
+  schema: public
+object_relationships:
+  - name: match
+    using:
+      foreign_key_constraint_on: match_id
+  - name: match_map
+    using:
+      foreign_key_constraint_on: match_map_id
+select_permissions:
+  - role: guest
+    permission:
+      columns:
+        - id
+        - match_id
+        - match_map_id
+        - allstar_clip_id
+        - clip_url
+        - thumbnail_url
+        - snapshot_url
+        - clip_type
+        - status
+        - steam_id
+        - player_name
+        - clip_title
+        - clip_length
+        - round_number
+        - kill_count
+        - headshots
+        - weapons
+        - map_name
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - id
+        - match_id
+        - match_map_id
+        - allstar_clip_id
+        - clip_url
+        - thumbnail_url
+        - snapshot_url
+        - clip_type
+        - status
+        - steam_id
+        - player_name
+        - clip_title
+        - clip_length
+        - round_number
+        - kill_count
+        - headshots
+        - weapons
+        - map_name
+        - metadata
+        - created_at
+        - updated_at
+      filter: {}
+      allow_aggregations: true
+    comment: ""

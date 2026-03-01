@@ -17,7 +17,8 @@ type Modules =
   | "TypeSense"
   | "Matchmaking"
   | "Telemetry"
-  | "DedicatedServers";
+  | "DedicatedServers"
+  | "Clips";
 
 export const UseQueue = (module: Modules, queue: string): ClassDecorator => {
   return (target) => {

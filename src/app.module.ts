@@ -35,6 +35,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { SignalServerModule } from "./signal-server/signal-server.module";
 import { InvitesModule } from "./invites/invites.module";
 import { DemosModule } from "./demos/demos.module";
+import { ClipsModule } from "./clips/clips.module";
 import { SystemService } from "./system/system.service";
 import { ClientsModule } from "@nestjs/microservices";
 import { Transport } from "@nestjs/microservices";
@@ -120,6 +121,7 @@ import { FileManagerModule } from "./file-manager/file-manager.module";
     SignalServerModule,
     InvitesModule,
     DemosModule,
+    ClipsModule,
     DedicatedServersModule,
     K8sModule,
     FileManagerModule,
