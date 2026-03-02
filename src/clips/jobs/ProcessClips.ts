@@ -37,7 +37,7 @@ export class ProcessClips extends WorkerHost {
       // Get demo URL
       const demoUrl = await this.clipsService.getDemoUrl(matchMapId);
       if (!demoUrl) {
-        this.logger.warn(`No demo found for match map ${matchMapId}`);
+        this.logger.warn(`No demo URL found for match map ${matchMapId}`);
         return 0;
       }
 

@@ -206,15 +206,4 @@ delete_permissions:
           is_organizer:
             _eq: true
     comment: ""
-event_triggers:
-  - name: match_map_clips_trigger
-    definition:
-      enable_manual: false
-      update:
-        columns:
-          - status
-    retry_conf:
-      interval_sec: 10
-      num_retries: 3
-      timeout_sec: 60
-    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'
+event_triggers: []

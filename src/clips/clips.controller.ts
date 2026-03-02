@@ -8,10 +8,12 @@ import { HasuraEvent } from "../hasura/hasura.controller";
 import { HasuraEventData } from "../hasura/types/HasuraEventData";
 import { ProcessClips } from "./jobs/ProcessClips";
 
-interface MatchMapData {
+interface MatchMapDemoData {
   id: string;
   match_id: string;
-  status: string;
+  match_map_id: string;
+  file: string;
+  size: number;
 }
 
 @Controller("clips")
@@ -23,33 +25,23 @@ export class ClipsController {
   ) {}
 
   /**
-   * Hasura event handler for match_map status changes
-   * Triggers clip processing when a match map finishes
+   * Hasura event handler for match_map_demos inserts
+   * Triggers clip processing when a demo is uploaded and saved to the database
    */
   @HasuraEvent()
-  public async match_map_clips_trigger(data: HasuraEventData<MatchMapData>) {
-    // Only process when status changes to Finished
-    if (data.op !== "UPDATE") {
-      return;
-    }
-
-    const oldStatus = data.old.status;
-    const newStatus = data.new.status;
-
-    // Only trigger when transitioning to Finished status
-    if (newStatus !== "Finished" || oldStatus === "Finished") {
+  public async match_map_demo_clips_trigger(data: HasuraEventData<MatchMapDemoData>) {
+    if (data.op !== "INSERT") {
       return;
     }
 
     const matchId = data.new.match_id;
-    const matchMapId = data.new.id;
+    const matchMapId = data.new.match_map_id;
 
-    this.logger.log(`Match map finished, queuing clip processing`, {
+    this.logger.log(`Demo uploaded, queuing clip processing`, {
       matchId,
       matchMapId,
     });
 
-    // Add job to queue with a delay to allow demo upload to complete
     await this.processClipsQueue.add(
       ProcessClips.name,
       {
@@ -57,7 +49,6 @@ export class ClipsController {
         matchMapId,
       },
       {
-        delay: 60000, // 1 minute delay to allow demo upload
         attempts: 3,
         backoff: {
           type: "exponential",
