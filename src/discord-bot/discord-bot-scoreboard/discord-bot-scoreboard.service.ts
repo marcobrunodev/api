@@ -213,30 +213,43 @@ export class DiscordBotScoreboardService {
     const score2 = currentMap?.lineup_2_score || 0;
     const mapName = currentMap?.map?.name || 'Unknown';
 
-    // Formatar stats dos players (similar ao TAB do CS2)
-    const formatPlayerLine = (p: any) => {
-      const kd = p.deaths > 0 ? (p.kills / p.deaths).toFixed(2) : p.kills.toFixed(2);
-      return `\`${p.name.padEnd(16).slice(0, 16)}\` ${String(p.kills).padStart(3)} ${String(p.deaths).padStart(3)} ${String(p.assists).padStart(3)} ${String(kd).padStart(4)}`;
-    };
-
-    const team1Lines = team1Stats.map(formatPlayerLine).join('\n') || '_No players_';
-    const team2Lines = team2Stats.map(formatPlayerLine).join('\n') || '_No players_';
-
     const team1Name = match.lineup_1?.name || 'Team 1';
     const team2Name = match.lineup_2?.name || 'Team 2';
+
+    // Formatar stats dos players em formato tabela (similar ao scoreboard in-game)
+    const formatPlayerLine = (p: any) => {
+      const kd = p.deaths > 0 ? (p.kills / p.deaths).toFixed(2) : p.kills.toFixed(2);
+      const name = p.name.length > 15 ? p.name.slice(0, 15) : p.name;
+      return `${name.padEnd(15)} ${String(p.kills).padStart(2)} ${String(p.deaths).padStart(2)} ${String(p.assists).padStart(2)} ${String(kd).padStart(4)}`;
+    };
+
+    // Header da tabela
+    const header = 'PLAYER           K  D  A  K/D';
+
+    // Construir tabela do time 1
+    const team1Table = team1Stats.length > 0
+      ? [header, ...team1Stats.map(formatPlayerLine)].join('\n')
+      : 'No players';
+
+    // Construir tabela do time 2
+    const team2Table = team2Stats.length > 0
+      ? [header, ...team2Stats.map(formatPlayerLine)].join('\n')
+      : 'No players';
 
     const description = `
 **Map:** ${mapName}
 **Score:** ${score1} - ${score2}
 **Status:** ${match.status}
 
-**${team1Name}** (${score1})
-\`${'Name'.padEnd(16)} ${'K'.padStart(3)} ${'D'.padStart(3)} ${'A'.padStart(3)} ${'K/D'.padStart(4)}\`
-${team1Lines}
+🟢 **${team1Name}** (${score1})
+\`\`\`
+${team1Table}
+\`\`\`
 
-**${team2Name}** (${score2})
-\`${'Name'.padEnd(16)} ${'K'.padStart(3)} ${'D'.padStart(3)} ${'A'.padStart(3)} ${'K/D'.padStart(4)}\`
-${team2Lines}
+🔴 **${team2Name}** (${score2})
+\`\`\`
+${team2Table}
+\`\`\`
     `;
 
     return {

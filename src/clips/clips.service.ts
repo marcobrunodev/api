@@ -378,6 +378,8 @@ export class ClipsService {
 
   /**
    * Get demo URL for a match map
+   * First tries the computed download_url (requires cloudflare_worker_url setting)
+   * Falls back to constructing URL from demos_domain setting
    */
   async getDemoUrl(matchMapId: string): Promise<string | null> {
     const { match_map_demos } = await this.hasura.query({
@@ -389,10 +391,40 @@ export class ClipsService {
           limit: 1,
         },
         download_url: true,
+        match_id: true,
+        file: true,
       },
     });
 
-    return match_map_demos[0]?.download_url || null;
+    const demo = match_map_demos[0];
+    if (!demo) {
+      return null;
+    }
+
+    // If download_url is available (cloudflare_worker_url is configured), use it
+    if (demo.download_url) {
+      return demo.download_url;
+    }
+
+    // Fall back to demos_domain setting (same logic as match_map_demo_download_url SQL function)
+    const { settings } = await this.hasura.query({
+      settings: {
+        __args: {
+          where: { name: { _eq: "demos_domain" } },
+        },
+        value: true,
+      },
+    });
+
+    const demosDomain = settings[0]?.value;
+    if (demosDomain) {
+      return `${demosDomain}/demos/${demo.match_id}/map/${matchMapId}`;
+    }
+
+    this.logger.warn(
+      `No demo URL available for match map ${matchMapId}: neither cloudflare_worker_url nor demos_domain is configured`,
+    );
+    return null;
   }
 
   private getMetadataValue(
