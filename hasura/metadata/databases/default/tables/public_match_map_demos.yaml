@@ -14,17 +14,6 @@ computed_fields:
       function:
         name: demo_download_url
         schema: public
-event_triggers:
-  - name: match_map_demo_clips_trigger
-    definition:
-      enable_manual: false
-      insert:
-        columns: '*'
-    retry_conf:
-      interval_sec: 10
-      num_retries: 3
-      timeout_sec: 60
-    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'
 select_permissions:
   - role: guest
     permission:
@@ -38,3 +27,14 @@ select_permissions:
       filter: {}
       allow_aggregations: true
     comment: ""
+event_triggers:
+  - name: match_map_demo_clips_trigger
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 3
+      timeout_sec: 60
+    webhook: '{{HASURA_GRAPHQL_EVENT_HOOK}}'

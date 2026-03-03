@@ -206,4 +206,3 @@ delete_permissions:
           is_organizer:
             _eq: true
     comment: ""
-event_triggers: []
