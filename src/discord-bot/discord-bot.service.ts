@@ -1,5 +1,6 @@
 import { ModuleRef } from "@nestjs/core";
-import { Logger, Injectable } from "@nestjs/common";
+import { Logger, Injectable, Inject, forwardRef } from "@nestjs/common";
+import { DiscordBotScoreboardService } from "./discord-bot-scoreboard/discord-bot-scoreboard.service";
 import {
   AutocompleteInteraction,
   ChannelType,
@@ -76,6 +77,7 @@ export class DiscordBotService {
       afk_channel_id?: string;
       category_channel_id?: string;
       notification_channel_id?: string;
+      scoreboard_channel_id?: string;
     };
     expiresAt: number;
   }>();
@@ -88,6 +90,8 @@ export class DiscordBotService {
     @InjectQueue(DiscordBotQueues.DiscordBot) private queue: Queue,
     private readonly redisManager: RedisManagerService,
     private readonly warmupServer: WarmupServerService,
+    @Inject(forwardRef(() => DiscordBotScoreboardService))
+    private readonly scoreboardService: DiscordBotScoreboardService,
   ) {
     this.client = client;
     this.discordConfig = config.get<DiscordConfig>("discord");
@@ -703,6 +707,7 @@ export class DiscordBotService {
     afk_channel_id?: string;
     category_channel_id?: string;
     notification_channel_id?: string;
+    scoreboard_channel_id?: string;
   }> {
     const cached = this.guildChannelIdsCache.get(guildId);
     if (cached && cached.expiresAt > Date.now()) {
@@ -716,6 +721,7 @@ export class DiscordBotService {
         afk_channel_id: true,
         category_channel_id: true,
         notification_channel_id: true,
+        scoreboard_channel_id: true,
       },
     });
 
@@ -724,6 +730,7 @@ export class DiscordBotService {
       afk_channel_id: discord_guilds_by_pk?.afk_channel_id,
       category_channel_id: discord_guilds_by_pk?.category_channel_id,
       notification_channel_id: discord_guilds_by_pk?.notification_channel_id,
+      scoreboard_channel_id: discord_guilds_by_pk?.scoreboard_channel_id,
     };
 
     // Cache por 5 minutos
@@ -1188,6 +1195,11 @@ export class DiscordBotService {
       }
 
       // Nota: Categoria e canais são deletados automaticamente quando todos os players saem dos canais de voz
+
+      // Postar scoreboard final no canal de scoreboard da guild (se partida não foi cancelada)
+      if (matches_by_pk.status !== 'Canceled') {
+        await this.scoreboardService.postFinalScoreboard(matchId, guildId);
+      }
 
       this.logger.log(`[Mix Match] Successfully processed end of match ${matchId}`);
     } catch (error) {

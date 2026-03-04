@@ -1305,6 +1305,7 @@ type discord_guilds {
   notification_channel_id: String
   owner_id: String
   queue_mix_channel_id: String
+  scoreboard_channel_id: String
   updated_at: timestamptz!
 }
 
@@ -1343,6 +1344,7 @@ input discord_guilds_bool_exp {
   notification_channel_id: String_comparison_exp
   owner_id: String_comparison_exp
   queue_mix_channel_id: String_comparison_exp
+  scoreboard_channel_id: String_comparison_exp
   updated_at: timestamptz_comparison_exp
 }
 
@@ -1370,6 +1372,7 @@ input discord_guilds_insert_input {
   notification_channel_id: String
   owner_id: String
   queue_mix_channel_id: String
+  scoreboard_channel_id: String
   updated_at: timestamptz
 }
 
@@ -1384,6 +1387,7 @@ type discord_guilds_max_fields {
   notification_channel_id: String
   owner_id: String
   queue_mix_channel_id: String
+  scoreboard_channel_id: String
   updated_at: timestamptz
 }
 
@@ -1398,6 +1402,7 @@ type discord_guilds_min_fields {
   notification_channel_id: String
   owner_id: String
   queue_mix_channel_id: String
+  scoreboard_channel_id: String
   updated_at: timestamptz
 }
 
@@ -1433,6 +1438,7 @@ input discord_guilds_order_by {
   notification_channel_id: order_by
   owner_id: order_by
   queue_mix_channel_id: order_by
+  scoreboard_channel_id: order_by
   updated_at: order_by
 }
 
@@ -1473,6 +1479,9 @@ enum discord_guilds_select_column {
   queue_mix_channel_id
 
   """column name"""
+  scoreboard_channel_id
+
+  """column name"""
   updated_at
 }
 
@@ -1489,6 +1498,7 @@ input discord_guilds_set_input {
   notification_channel_id: String
   owner_id: String
   queue_mix_channel_id: String
+  scoreboard_channel_id: String
   updated_at: timestamptz
 }
 
@@ -1514,6 +1524,7 @@ input discord_guilds_stream_cursor_value_input {
   notification_channel_id: String
   owner_id: String
   queue_mix_channel_id: String
+  scoreboard_channel_id: String
   updated_at: timestamptz
 }
 
@@ -1547,6 +1558,9 @@ enum discord_guilds_update_column {
 
   """column name"""
   queue_mix_channel_id
+
+  """column name"""
+  scoreboard_channel_id
 
   """column name"""
   updated_at
@@ -13491,6 +13505,7 @@ type match_maps {
   """An object relationship"""
   match: matches!
   match_id: uuid!
+  mvp_steam_id: bigint
 
   """An array relationship"""
   objectives(
@@ -13866,6 +13881,7 @@ type match_maps_avg_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -13875,6 +13891,7 @@ order by avg() on columns of table "match_maps"
 input match_maps_avg_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -13908,6 +13925,7 @@ input match_maps_bool_exp {
   map_id: uuid_comparison_exp
   match: matches_bool_exp
   match_id: uuid_comparison_exp
+  mvp_steam_id: bigint_comparison_exp
   objectives: player_objectives_bool_exp
   objectives_aggregate: player_objectives_aggregate_bool_exp
   order: Int_comparison_exp
@@ -13951,6 +13969,7 @@ input type for incrementing numeric columns in table "match_maps"
 input match_maps_inc_input {
   lineup_1_timeouts_available: Int
   lineup_2_timeouts_available: Int
+  mvp_steam_id: bigint
   order: Int
 }
 
@@ -13973,6 +13992,7 @@ input match_maps_insert_input {
   map_id: uuid
   match: matches_obj_rel_insert_input
   match_id: uuid
+  mvp_steam_id: bigint
   objectives: player_objectives_arr_rel_insert_input
   order: Int
   player_assists: player_assists_arr_rel_insert_input
@@ -14016,6 +14036,7 @@ type match_maps_max_fields {
   lineup_2_timeouts_available: Int
   map_id: uuid
   match_id: uuid
+  mvp_steam_id: bigint
   order: Int
   started_at: timestamptz
   winning_lineup_id: uuid
@@ -14032,6 +14053,7 @@ input match_maps_max_order_by {
   lineup_2_timeouts_available: order_by
   map_id: order_by
   match_id: order_by
+  mvp_steam_id: order_by
   order: order_by
   started_at: order_by
   winning_lineup_id: order_by
@@ -14066,6 +14088,7 @@ type match_maps_min_fields {
   lineup_2_timeouts_available: Int
   map_id: uuid
   match_id: uuid
+  mvp_steam_id: bigint
   order: Int
   started_at: timestamptz
   winning_lineup_id: uuid
@@ -14082,6 +14105,7 @@ input match_maps_min_order_by {
   lineup_2_timeouts_available: order_by
   map_id: order_by
   match_id: order_by
+  mvp_steam_id: order_by
   order: order_by
   started_at: order_by
   winning_lineup_id: order_by
@@ -14139,6 +14163,7 @@ input match_maps_order_by {
   map_id: order_by
   match: matches_order_by
   match_id: order_by
+  mvp_steam_id: order_by
   objectives_aggregate: player_objectives_aggregate_order_by
   order: order_by
   player_assists_aggregate: player_assists_aggregate_order_by
@@ -14190,6 +14215,9 @@ enum match_maps_select_column {
   match_id
 
   """column name"""
+  mvp_steam_id
+
+  """column name"""
   order
 
   """column name"""
@@ -14215,6 +14243,7 @@ input match_maps_set_input {
   lineup_2_timeouts_available: Int
   map_id: uuid
   match_id: uuid
+  mvp_steam_id: bigint
   order: Int
   started_at: timestamptz
   status: e_match_map_status_enum
@@ -14239,6 +14268,7 @@ type match_maps_stddev_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -14248,6 +14278,7 @@ order by stddev() on columns of table "match_maps"
 input match_maps_stddev_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -14269,6 +14300,7 @@ type match_maps_stddev_pop_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -14278,6 +14310,7 @@ order by stddev_pop() on columns of table "match_maps"
 input match_maps_stddev_pop_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -14299,6 +14332,7 @@ type match_maps_stddev_samp_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -14308,6 +14342,7 @@ order by stddev_samp() on columns of table "match_maps"
 input match_maps_stddev_samp_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -14333,6 +14368,7 @@ input match_maps_stream_cursor_value_input {
   lineup_2_timeouts_available: Int
   map_id: uuid
   match_id: uuid
+  mvp_steam_id: bigint
   order: Int
   started_at: timestamptz
   status: e_match_map_status_enum
@@ -14357,6 +14393,7 @@ type match_maps_sum_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Int
+  mvp_steam_id: bigint
   order: Int
 }
 
@@ -14366,6 +14403,7 @@ order by sum() on columns of table "match_maps"
 input match_maps_sum_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -14399,6 +14437,9 @@ enum match_maps_update_column {
 
   """column name"""
   match_id
+
+  """column name"""
+  mvp_steam_id
 
   """column name"""
   order
@@ -14442,6 +14483,7 @@ type match_maps_var_pop_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -14451,6 +14493,7 @@ order by var_pop() on columns of table "match_maps"
 input match_maps_var_pop_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -14472,6 +14515,7 @@ type match_maps_var_samp_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -14481,6 +14525,7 @@ order by var_samp() on columns of table "match_maps"
 input match_maps_var_samp_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 
@@ -14502,6 +14547,7 @@ type match_maps_variance_fields {
   """
   lineup_2_score: Int
   lineup_2_timeouts_available: Float
+  mvp_steam_id: Float
   order: Float
 }
 
@@ -14511,6 +14557,7 @@ order by variance() on columns of table "match_maps"
 input match_maps_variance_order_by {
   lineup_1_timeouts_available: order_by
   lineup_2_timeouts_available: order_by
+  mvp_steam_id: order_by
   order: order_by
 }
 

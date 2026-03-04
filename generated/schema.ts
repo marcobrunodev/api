@@ -639,6 +639,7 @@ export interface discord_guilds {
     notification_channel_id: (Scalars['String'] | null)
     owner_id: (Scalars['String'] | null)
     queue_mix_channel_id: (Scalars['String'] | null)
+    scoreboard_channel_id: (Scalars['String'] | null)
     updated_at: Scalars['timestamptz']
     __typename: 'discord_guilds'
 }
@@ -676,6 +677,7 @@ export interface discord_guilds_max_fields {
     notification_channel_id: (Scalars['String'] | null)
     owner_id: (Scalars['String'] | null)
     queue_mix_channel_id: (Scalars['String'] | null)
+    scoreboard_channel_id: (Scalars['String'] | null)
     updated_at: (Scalars['timestamptz'] | null)
     __typename: 'discord_guilds_max_fields'
 }
@@ -692,6 +694,7 @@ export interface discord_guilds_min_fields {
     notification_channel_id: (Scalars['String'] | null)
     owner_id: (Scalars['String'] | null)
     queue_mix_channel_id: (Scalars['String'] | null)
+    scoreboard_channel_id: (Scalars['String'] | null)
     updated_at: (Scalars['timestamptz'] | null)
     __typename: 'discord_guilds_min_fields'
 }
@@ -708,11 +711,11 @@ export interface discord_guilds_mutation_response {
 
 
 /** select columns of table "discord_guilds" */
-export type discord_guilds_select_column = 'afk_channel_id' | 'category_channel_id' | 'created_at' | 'icon' | 'id' | 'name' | 'notification_channel_id' | 'owner_id' | 'queue_mix_channel_id' | 'updated_at'
+export type discord_guilds_select_column = 'afk_channel_id' | 'category_channel_id' | 'created_at' | 'icon' | 'id' | 'name' | 'notification_channel_id' | 'owner_id' | 'queue_mix_channel_id' | 'scoreboard_channel_id' | 'updated_at'
 
 
 /** update columns of table "discord_guilds" */
-export type discord_guilds_update_column = 'afk_channel_id' | 'category_channel_id' | 'created_at' | 'icon' | 'id' | 'name' | 'notification_channel_id' | 'owner_id' | 'queue_mix_channel_id' | 'updated_at'
+export type discord_guilds_update_column = 'afk_channel_id' | 'category_channel_id' | 'created_at' | 'icon' | 'id' | 'name' | 'notification_channel_id' | 'owner_id' | 'queue_mix_channel_id' | 'scoreboard_channel_id' | 'updated_at'
 
 
 /** columns and relationships of "e_check_in_settings" */
@@ -4531,6 +4534,7 @@ export interface match_maps {
     /** An object relationship */
     match: matches
     match_id: Scalars['uuid']
+    mvp_steam_id: (Scalars['bigint'] | null)
     /** An array relationship */
     objectives: player_objectives[]
     /** An aggregate relationship */
@@ -4606,6 +4610,7 @@ export interface match_maps_avg_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_avg_fields'
 }
@@ -4632,6 +4637,7 @@ export interface match_maps_max_fields {
     lineup_2_timeouts_available: (Scalars['Int'] | null)
     map_id: (Scalars['uuid'] | null)
     match_id: (Scalars['uuid'] | null)
+    mvp_steam_id: (Scalars['bigint'] | null)
     order: (Scalars['Int'] | null)
     started_at: (Scalars['timestamptz'] | null)
     winning_lineup_id: (Scalars['uuid'] | null)
@@ -4656,6 +4662,7 @@ export interface match_maps_min_fields {
     lineup_2_timeouts_available: (Scalars['Int'] | null)
     map_id: (Scalars['uuid'] | null)
     match_id: (Scalars['uuid'] | null)
+    mvp_steam_id: (Scalars['bigint'] | null)
     order: (Scalars['Int'] | null)
     started_at: (Scalars['timestamptz'] | null)
     winning_lineup_id: (Scalars['uuid'] | null)
@@ -4674,7 +4681,7 @@ export interface match_maps_mutation_response {
 
 
 /** select columns of table "match_maps" */
-export type match_maps_select_column = 'created_at' | 'ended_at' | 'id' | 'lineup_1_side' | 'lineup_1_timeouts_available' | 'lineup_2_side' | 'lineup_2_timeouts_available' | 'map_id' | 'match_id' | 'order' | 'started_at' | 'status' | 'winning_lineup_id'
+export type match_maps_select_column = 'created_at' | 'ended_at' | 'id' | 'lineup_1_side' | 'lineup_1_timeouts_available' | 'lineup_2_side' | 'lineup_2_timeouts_available' | 'map_id' | 'match_id' | 'mvp_steam_id' | 'order' | 'started_at' | 'status' | 'winning_lineup_id'
 
 
 /** aggregate stddev on columns */
@@ -4687,6 +4694,7 @@ export interface match_maps_stddev_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_stddev_fields'
 }
@@ -4702,6 +4710,7 @@ export interface match_maps_stddev_pop_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_stddev_pop_fields'
 }
@@ -4717,6 +4726,7 @@ export interface match_maps_stddev_samp_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_stddev_samp_fields'
 }
@@ -4732,13 +4742,14 @@ export interface match_maps_sum_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Int'] | null)
+    mvp_steam_id: (Scalars['bigint'] | null)
     order: (Scalars['Int'] | null)
     __typename: 'match_maps_sum_fields'
 }
 
 
 /** update columns of table "match_maps" */
-export type match_maps_update_column = 'created_at' | 'ended_at' | 'id' | 'lineup_1_side' | 'lineup_1_timeouts_available' | 'lineup_2_side' | 'lineup_2_timeouts_available' | 'map_id' | 'match_id' | 'order' | 'started_at' | 'status' | 'winning_lineup_id'
+export type match_maps_update_column = 'created_at' | 'ended_at' | 'id' | 'lineup_1_side' | 'lineup_1_timeouts_available' | 'lineup_2_side' | 'lineup_2_timeouts_available' | 'map_id' | 'match_id' | 'mvp_steam_id' | 'order' | 'started_at' | 'status' | 'winning_lineup_id'
 
 
 /** aggregate var_pop on columns */
@@ -4751,6 +4762,7 @@ export interface match_maps_var_pop_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_var_pop_fields'
 }
@@ -4766,6 +4778,7 @@ export interface match_maps_var_samp_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_var_samp_fields'
 }
@@ -4781,6 +4794,7 @@ export interface match_maps_variance_fields {
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score: (Scalars['Int'] | null)
     lineup_2_timeouts_available: (Scalars['Float'] | null)
+    mvp_steam_id: (Scalars['Float'] | null)
     order: (Scalars['Float'] | null)
     __typename: 'match_maps_variance_fields'
 }
@@ -15821,6 +15835,7 @@ export interface discord_guildsGenqlSelection{
     notification_channel_id?: boolean | number
     owner_id?: boolean | number
     queue_mix_channel_id?: boolean | number
+    scoreboard_channel_id?: boolean | number
     updated_at?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -15847,11 +15862,11 @@ export interface discord_guilds_aggregate_fieldsGenqlSelection{
 
 
 /** Boolean expression to filter rows from the table "discord_guilds". All fields are combined with a logical 'AND'. */
-export interface discord_guilds_bool_exp {_and?: (discord_guilds_bool_exp[] | null),_not?: (discord_guilds_bool_exp | null),_or?: (discord_guilds_bool_exp[] | null),afk_channel_id?: (String_comparison_exp | null),category_channel_id?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),icon?: (String_comparison_exp | null),id?: (String_comparison_exp | null),matches?: (matches_bool_exp | null),matches_aggregate?: (matches_aggregate_bool_exp | null),name?: (String_comparison_exp | null),notification_channel_id?: (String_comparison_exp | null),owner_id?: (String_comparison_exp | null),queue_mix_channel_id?: (String_comparison_exp | null),updated_at?: (timestamptz_comparison_exp | null)}
+export interface discord_guilds_bool_exp {_and?: (discord_guilds_bool_exp[] | null),_not?: (discord_guilds_bool_exp | null),_or?: (discord_guilds_bool_exp[] | null),afk_channel_id?: (String_comparison_exp | null),category_channel_id?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),icon?: (String_comparison_exp | null),id?: (String_comparison_exp | null),matches?: (matches_bool_exp | null),matches_aggregate?: (matches_aggregate_bool_exp | null),name?: (String_comparison_exp | null),notification_channel_id?: (String_comparison_exp | null),owner_id?: (String_comparison_exp | null),queue_mix_channel_id?: (String_comparison_exp | null),scoreboard_channel_id?: (String_comparison_exp | null),updated_at?: (timestamptz_comparison_exp | null)}
 
 
 /** input type for inserting data into table "discord_guilds" */
-export interface discord_guilds_insert_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),matches?: (matches_arr_rel_insert_input | null),name?: (Scalars['String'] | null),notification_channel_id?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
+export interface discord_guilds_insert_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),matches?: (matches_arr_rel_insert_input | null),name?: (Scalars['String'] | null),notification_channel_id?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),scoreboard_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
 
 
 /** aggregate max on columns */
@@ -15865,6 +15880,7 @@ export interface discord_guilds_max_fieldsGenqlSelection{
     notification_channel_id?: boolean | number
     owner_id?: boolean | number
     queue_mix_channel_id?: boolean | number
+    scoreboard_channel_id?: boolean | number
     updated_at?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -15882,6 +15898,7 @@ export interface discord_guilds_min_fieldsGenqlSelection{
     notification_channel_id?: boolean | number
     owner_id?: boolean | number
     queue_mix_channel_id?: boolean | number
+    scoreboard_channel_id?: boolean | number
     updated_at?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -15904,7 +15921,7 @@ export interface discord_guilds_on_conflict {constraint: discord_guilds_constrai
 
 
 /** Ordering options when selecting data from "discord_guilds". */
-export interface discord_guilds_order_by {afk_channel_id?: (order_by | null),category_channel_id?: (order_by | null),created_at?: (order_by | null),icon?: (order_by | null),id?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),name?: (order_by | null),notification_channel_id?: (order_by | null),owner_id?: (order_by | null),queue_mix_channel_id?: (order_by | null),updated_at?: (order_by | null)}
+export interface discord_guilds_order_by {afk_channel_id?: (order_by | null),category_channel_id?: (order_by | null),created_at?: (order_by | null),icon?: (order_by | null),id?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),name?: (order_by | null),notification_channel_id?: (order_by | null),owner_id?: (order_by | null),queue_mix_channel_id?: (order_by | null),scoreboard_channel_id?: (order_by | null),updated_at?: (order_by | null)}
 
 
 /** primary key columns input for table: discord_guilds */
@@ -15912,7 +15929,7 @@ export interface discord_guilds_pk_columns_input {id: Scalars['String']}
 
 
 /** input type for updating data in table "discord_guilds" */
-export interface discord_guilds_set_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),name?: (Scalars['String'] | null),notification_channel_id?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
+export interface discord_guilds_set_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),name?: (Scalars['String'] | null),notification_channel_id?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),scoreboard_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
 
 
 /** Streaming cursor of the table "discord_guilds" */
@@ -15924,7 +15941,7 @@ ordering?: (cursor_ordering | null)}
 
 
 /** Initial value of the column from where the streaming should start */
-export interface discord_guilds_stream_cursor_value_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),name?: (Scalars['String'] | null),notification_channel_id?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
+export interface discord_guilds_stream_cursor_value_input {afk_channel_id?: (Scalars['String'] | null),category_channel_id?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),icon?: (Scalars['String'] | null),id?: (Scalars['String'] | null),name?: (Scalars['String'] | null),notification_channel_id?: (Scalars['String'] | null),owner_id?: (Scalars['String'] | null),queue_mix_channel_id?: (Scalars['String'] | null),scoreboard_channel_id?: (Scalars['String'] | null),updated_at?: (Scalars['timestamptz'] | null)}
 
 export interface discord_guilds_updates {
 /** sets the columns of the filtered rows to the given values */
@@ -22531,6 +22548,7 @@ export interface match_mapsGenqlSelection{
     /** An object relationship */
     match?: matchesGenqlSelection
     match_id?: boolean | number
+    mvp_steam_id?: boolean | number
     /** An array relationship */
     objectives?: (player_objectivesGenqlSelection & { __args?: {
     /** distinct select on columns */
@@ -22783,6 +22801,7 @@ export interface match_maps_avg_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -22790,19 +22809,19 @@ export interface match_maps_avg_fieldsGenqlSelection{
 
 
 /** order by avg() on columns of table "match_maps" */
-export interface match_maps_avg_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_avg_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** Boolean expression to filter rows from the table "match_maps". All fields are combined with a logical 'AND'. */
-export interface match_maps_bool_exp {_and?: (match_maps_bool_exp[] | null),_not?: (match_maps_bool_exp | null),_or?: (match_maps_bool_exp[] | null),clips?: (match_clips_bool_exp | null),clips_aggregate?: (match_clips_aggregate_bool_exp | null),created_at?: (timestamptz_comparison_exp | null),demos?: (match_map_demos_bool_exp | null),demos_aggregate?: (match_map_demos_aggregate_bool_exp | null),demos_download_url?: (String_comparison_exp | null),demos_total_size?: (Int_comparison_exp | null),e_match_map_status?: (e_match_map_status_bool_exp | null),ended_at?: (timestamptz_comparison_exp | null),flashes?: (player_flashes_bool_exp | null),flashes_aggregate?: (player_flashes_aggregate_bool_exp | null),id?: (uuid_comparison_exp | null),is_current_map?: (Boolean_comparison_exp | null),lineup_1_score?: (Int_comparison_exp | null),lineup_1_side?: (e_sides_enum_comparison_exp | null),lineup_1_timeouts_available?: (Int_comparison_exp | null),lineup_2_score?: (Int_comparison_exp | null),lineup_2_side?: (e_sides_enum_comparison_exp | null),lineup_2_timeouts_available?: (Int_comparison_exp | null),map?: (maps_bool_exp | null),map_id?: (uuid_comparison_exp | null),match?: (matches_bool_exp | null),match_id?: (uuid_comparison_exp | null),objectives?: (player_objectives_bool_exp | null),objectives_aggregate?: (player_objectives_aggregate_bool_exp | null),order?: (Int_comparison_exp | null),player_assists?: (player_assists_bool_exp | null),player_assists_aggregate?: (player_assists_aggregate_bool_exp | null),player_damages?: (player_damages_bool_exp | null),player_damages_aggregate?: (player_damages_aggregate_bool_exp | null),player_kills?: (player_kills_bool_exp | null),player_kills_aggregate?: (player_kills_aggregate_bool_exp | null),player_unused_utilities?: (player_unused_utility_bool_exp | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_bool_exp | null),rounds?: (match_map_rounds_bool_exp | null),rounds_aggregate?: (match_map_rounds_aggregate_bool_exp | null),started_at?: (timestamptz_comparison_exp | null),status?: (e_match_map_status_enum_comparison_exp | null),utility?: (player_utility_bool_exp | null),utility_aggregate?: (player_utility_aggregate_bool_exp | null),vetos?: (match_map_veto_picks_bool_exp | null),vetos_aggregate?: (match_map_veto_picks_aggregate_bool_exp | null),winning_lineup_id?: (uuid_comparison_exp | null)}
+export interface match_maps_bool_exp {_and?: (match_maps_bool_exp[] | null),_not?: (match_maps_bool_exp | null),_or?: (match_maps_bool_exp[] | null),clips?: (match_clips_bool_exp | null),clips_aggregate?: (match_clips_aggregate_bool_exp | null),created_at?: (timestamptz_comparison_exp | null),demos?: (match_map_demos_bool_exp | null),demos_aggregate?: (match_map_demos_aggregate_bool_exp | null),demos_download_url?: (String_comparison_exp | null),demos_total_size?: (Int_comparison_exp | null),e_match_map_status?: (e_match_map_status_bool_exp | null),ended_at?: (timestamptz_comparison_exp | null),flashes?: (player_flashes_bool_exp | null),flashes_aggregate?: (player_flashes_aggregate_bool_exp | null),id?: (uuid_comparison_exp | null),is_current_map?: (Boolean_comparison_exp | null),lineup_1_score?: (Int_comparison_exp | null),lineup_1_side?: (e_sides_enum_comparison_exp | null),lineup_1_timeouts_available?: (Int_comparison_exp | null),lineup_2_score?: (Int_comparison_exp | null),lineup_2_side?: (e_sides_enum_comparison_exp | null),lineup_2_timeouts_available?: (Int_comparison_exp | null),map?: (maps_bool_exp | null),map_id?: (uuid_comparison_exp | null),match?: (matches_bool_exp | null),match_id?: (uuid_comparison_exp | null),mvp_steam_id?: (bigint_comparison_exp | null),objectives?: (player_objectives_bool_exp | null),objectives_aggregate?: (player_objectives_aggregate_bool_exp | null),order?: (Int_comparison_exp | null),player_assists?: (player_assists_bool_exp | null),player_assists_aggregate?: (player_assists_aggregate_bool_exp | null),player_damages?: (player_damages_bool_exp | null),player_damages_aggregate?: (player_damages_aggregate_bool_exp | null),player_kills?: (player_kills_bool_exp | null),player_kills_aggregate?: (player_kills_aggregate_bool_exp | null),player_unused_utilities?: (player_unused_utility_bool_exp | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_bool_exp | null),rounds?: (match_map_rounds_bool_exp | null),rounds_aggregate?: (match_map_rounds_aggregate_bool_exp | null),started_at?: (timestamptz_comparison_exp | null),status?: (e_match_map_status_enum_comparison_exp | null),utility?: (player_utility_bool_exp | null),utility_aggregate?: (player_utility_aggregate_bool_exp | null),vetos?: (match_map_veto_picks_bool_exp | null),vetos_aggregate?: (match_map_veto_picks_aggregate_bool_exp | null),winning_lineup_id?: (uuid_comparison_exp | null)}
 
 
 /** input type for incrementing numeric columns in table "match_maps" */
-export interface match_maps_inc_input {lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),order?: (Scalars['Int'] | null)}
+export interface match_maps_inc_input {lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),mvp_steam_id?: (Scalars['bigint'] | null),order?: (Scalars['Int'] | null)}
 
 
 /** input type for inserting data into table "match_maps" */
-export interface match_maps_insert_input {clips?: (match_clips_arr_rel_insert_input | null),created_at?: (Scalars['timestamptz'] | null),demos?: (match_map_demos_arr_rel_insert_input | null),e_match_map_status?: (e_match_map_status_obj_rel_insert_input | null),ended_at?: (Scalars['timestamptz'] | null),flashes?: (player_flashes_arr_rel_insert_input | null),id?: (Scalars['uuid'] | null),lineup_1_side?: (e_sides_enum | null),lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_side?: (e_sides_enum | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),map?: (maps_obj_rel_insert_input | null),map_id?: (Scalars['uuid'] | null),match?: (matches_obj_rel_insert_input | null),match_id?: (Scalars['uuid'] | null),objectives?: (player_objectives_arr_rel_insert_input | null),order?: (Scalars['Int'] | null),player_assists?: (player_assists_arr_rel_insert_input | null),player_damages?: (player_damages_arr_rel_insert_input | null),player_kills?: (player_kills_arr_rel_insert_input | null),player_unused_utilities?: (player_unused_utility_arr_rel_insert_input | null),rounds?: (match_map_rounds_arr_rel_insert_input | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_map_status_enum | null),utility?: (player_utility_arr_rel_insert_input | null),vetos?: (match_map_veto_picks_arr_rel_insert_input | null),winning_lineup_id?: (Scalars['uuid'] | null)}
+export interface match_maps_insert_input {clips?: (match_clips_arr_rel_insert_input | null),created_at?: (Scalars['timestamptz'] | null),demos?: (match_map_demos_arr_rel_insert_input | null),e_match_map_status?: (e_match_map_status_obj_rel_insert_input | null),ended_at?: (Scalars['timestamptz'] | null),flashes?: (player_flashes_arr_rel_insert_input | null),id?: (Scalars['uuid'] | null),lineup_1_side?: (e_sides_enum | null),lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_side?: (e_sides_enum | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),map?: (maps_obj_rel_insert_input | null),map_id?: (Scalars['uuid'] | null),match?: (matches_obj_rel_insert_input | null),match_id?: (Scalars['uuid'] | null),mvp_steam_id?: (Scalars['bigint'] | null),objectives?: (player_objectives_arr_rel_insert_input | null),order?: (Scalars['Int'] | null),player_assists?: (player_assists_arr_rel_insert_input | null),player_damages?: (player_damages_arr_rel_insert_input | null),player_kills?: (player_kills_arr_rel_insert_input | null),player_unused_utilities?: (player_unused_utility_arr_rel_insert_input | null),rounds?: (match_map_rounds_arr_rel_insert_input | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_map_status_enum | null),utility?: (player_utility_arr_rel_insert_input | null),vetos?: (match_map_veto_picks_arr_rel_insert_input | null),winning_lineup_id?: (Scalars['uuid'] | null)}
 
 
 /** aggregate max on columns */
@@ -22822,6 +22841,7 @@ export interface match_maps_max_fieldsGenqlSelection{
     lineup_2_timeouts_available?: boolean | number
     map_id?: boolean | number
     match_id?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     started_at?: boolean | number
     winning_lineup_id?: boolean | number
@@ -22831,7 +22851,7 @@ export interface match_maps_max_fieldsGenqlSelection{
 
 
 /** order by max() on columns of table "match_maps" */
-export interface match_maps_max_order_by {created_at?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),map_id?: (order_by | null),match_id?: (order_by | null),order?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
+export interface match_maps_max_order_by {created_at?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),map_id?: (order_by | null),match_id?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
 
 
 /** aggregate min on columns */
@@ -22851,6 +22871,7 @@ export interface match_maps_min_fieldsGenqlSelection{
     lineup_2_timeouts_available?: boolean | number
     map_id?: boolean | number
     match_id?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     started_at?: boolean | number
     winning_lineup_id?: boolean | number
@@ -22860,7 +22881,7 @@ export interface match_maps_min_fieldsGenqlSelection{
 
 
 /** order by min() on columns of table "match_maps" */
-export interface match_maps_min_order_by {created_at?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),map_id?: (order_by | null),match_id?: (order_by | null),order?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
+export interface match_maps_min_order_by {created_at?: (order_by | null),ended_at?: (order_by | null),id?: (order_by | null),lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),map_id?: (order_by | null),match_id?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null),started_at?: (order_by | null),winning_lineup_id?: (order_by | null)}
 
 
 /** response of any mutation on the table "match_maps" */
@@ -22885,7 +22906,7 @@ export interface match_maps_on_conflict {constraint: match_maps_constraint,updat
 
 
 /** Ordering options when selecting data from "match_maps". */
-export interface match_maps_order_by {clips_aggregate?: (match_clips_aggregate_order_by | null),created_at?: (order_by | null),demos_aggregate?: (match_map_demos_aggregate_order_by | null),demos_download_url?: (order_by | null),demos_total_size?: (order_by | null),e_match_map_status?: (e_match_map_status_order_by | null),ended_at?: (order_by | null),flashes_aggregate?: (player_flashes_aggregate_order_by | null),id?: (order_by | null),is_current_map?: (order_by | null),lineup_1_score?: (order_by | null),lineup_1_side?: (order_by | null),lineup_1_timeouts_available?: (order_by | null),lineup_2_score?: (order_by | null),lineup_2_side?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),map?: (maps_order_by | null),map_id?: (order_by | null),match?: (matches_order_by | null),match_id?: (order_by | null),objectives_aggregate?: (player_objectives_aggregate_order_by | null),order?: (order_by | null),player_assists_aggregate?: (player_assists_aggregate_order_by | null),player_damages_aggregate?: (player_damages_aggregate_order_by | null),player_kills_aggregate?: (player_kills_aggregate_order_by | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_order_by | null),rounds_aggregate?: (match_map_rounds_aggregate_order_by | null),started_at?: (order_by | null),status?: (order_by | null),utility_aggregate?: (player_utility_aggregate_order_by | null),vetos_aggregate?: (match_map_veto_picks_aggregate_order_by | null),winning_lineup_id?: (order_by | null)}
+export interface match_maps_order_by {clips_aggregate?: (match_clips_aggregate_order_by | null),created_at?: (order_by | null),demos_aggregate?: (match_map_demos_aggregate_order_by | null),demos_download_url?: (order_by | null),demos_total_size?: (order_by | null),e_match_map_status?: (e_match_map_status_order_by | null),ended_at?: (order_by | null),flashes_aggregate?: (player_flashes_aggregate_order_by | null),id?: (order_by | null),is_current_map?: (order_by | null),lineup_1_score?: (order_by | null),lineup_1_side?: (order_by | null),lineup_1_timeouts_available?: (order_by | null),lineup_2_score?: (order_by | null),lineup_2_side?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),map?: (maps_order_by | null),map_id?: (order_by | null),match?: (matches_order_by | null),match_id?: (order_by | null),mvp_steam_id?: (order_by | null),objectives_aggregate?: (player_objectives_aggregate_order_by | null),order?: (order_by | null),player_assists_aggregate?: (player_assists_aggregate_order_by | null),player_damages_aggregate?: (player_damages_aggregate_order_by | null),player_kills_aggregate?: (player_kills_aggregate_order_by | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_order_by | null),rounds_aggregate?: (match_map_rounds_aggregate_order_by | null),started_at?: (order_by | null),status?: (order_by | null),utility_aggregate?: (player_utility_aggregate_order_by | null),vetos_aggregate?: (match_map_veto_picks_aggregate_order_by | null),winning_lineup_id?: (order_by | null)}
 
 
 /** primary key columns input for table: match_maps */
@@ -22893,7 +22914,7 @@ export interface match_maps_pk_columns_input {id: Scalars['uuid']}
 
 
 /** input type for updating data in table "match_maps" */
-export interface match_maps_set_input {created_at?: (Scalars['timestamptz'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),lineup_1_side?: (e_sides_enum | null),lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_side?: (e_sides_enum | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),map_id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),order?: (Scalars['Int'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_map_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
+export interface match_maps_set_input {created_at?: (Scalars['timestamptz'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),lineup_1_side?: (e_sides_enum | null),lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_side?: (e_sides_enum | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),map_id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),mvp_steam_id?: (Scalars['bigint'] | null),order?: (Scalars['Int'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_map_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
 
 
 /** aggregate stddev on columns */
@@ -22906,6 +22927,7 @@ export interface match_maps_stddev_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -22913,7 +22935,7 @@ export interface match_maps_stddev_fieldsGenqlSelection{
 
 
 /** order by stddev() on columns of table "match_maps" */
-export interface match_maps_stddev_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_stddev_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** aggregate stddev_pop on columns */
@@ -22926,6 +22948,7 @@ export interface match_maps_stddev_pop_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -22933,7 +22956,7 @@ export interface match_maps_stddev_pop_fieldsGenqlSelection{
 
 
 /** order by stddev_pop() on columns of table "match_maps" */
-export interface match_maps_stddev_pop_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_stddev_pop_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** aggregate stddev_samp on columns */
@@ -22946,6 +22969,7 @@ export interface match_maps_stddev_samp_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -22953,7 +22977,7 @@ export interface match_maps_stddev_samp_fieldsGenqlSelection{
 
 
 /** order by stddev_samp() on columns of table "match_maps" */
-export interface match_maps_stddev_samp_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_stddev_samp_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** Streaming cursor of the table "match_maps" */
@@ -22965,7 +22989,7 @@ ordering?: (cursor_ordering | null)}
 
 
 /** Initial value of the column from where the streaming should start */
-export interface match_maps_stream_cursor_value_input {created_at?: (Scalars['timestamptz'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),lineup_1_side?: (e_sides_enum | null),lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_side?: (e_sides_enum | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),map_id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),order?: (Scalars['Int'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_map_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
+export interface match_maps_stream_cursor_value_input {created_at?: (Scalars['timestamptz'] | null),ended_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),lineup_1_side?: (e_sides_enum | null),lineup_1_timeouts_available?: (Scalars['Int'] | null),lineup_2_side?: (e_sides_enum | null),lineup_2_timeouts_available?: (Scalars['Int'] | null),map_id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),mvp_steam_id?: (Scalars['bigint'] | null),order?: (Scalars['Int'] | null),started_at?: (Scalars['timestamptz'] | null),status?: (e_match_map_status_enum | null),winning_lineup_id?: (Scalars['uuid'] | null)}
 
 
 /** aggregate sum on columns */
@@ -22978,6 +23002,7 @@ export interface match_maps_sum_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -22985,7 +23010,7 @@ export interface match_maps_sum_fieldsGenqlSelection{
 
 
 /** order by sum() on columns of table "match_maps" */
-export interface match_maps_sum_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_sum_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 export interface match_maps_updates {
 /** increments the numeric columns with given value of the filtered values */
@@ -23006,6 +23031,7 @@ export interface match_maps_var_pop_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -23013,7 +23039,7 @@ export interface match_maps_var_pop_fieldsGenqlSelection{
 
 
 /** order by var_pop() on columns of table "match_maps" */
-export interface match_maps_var_pop_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_var_pop_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** aggregate var_samp on columns */
@@ -23026,6 +23052,7 @@ export interface match_maps_var_samp_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -23033,7 +23060,7 @@ export interface match_maps_var_samp_fieldsGenqlSelection{
 
 
 /** order by var_samp() on columns of table "match_maps" */
-export interface match_maps_var_samp_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_var_samp_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** aggregate variance on columns */
@@ -23046,6 +23073,7 @@ export interface match_maps_variance_fieldsGenqlSelection{
     /** A computed field, executes function "lineup_2_score" */
     lineup_2_score?: boolean | number
     lineup_2_timeouts_available?: boolean | number
+    mvp_steam_id?: boolean | number
     order?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -23053,7 +23081,7 @@ export interface match_maps_variance_fieldsGenqlSelection{
 
 
 /** order by variance() on columns of table "match_maps" */
-export interface match_maps_variance_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),order?: (order_by | null)}
+export interface match_maps_variance_order_by {lineup_1_timeouts_available?: (order_by | null),lineup_2_timeouts_available?: (order_by | null),mvp_steam_id?: (order_by | null),order?: (order_by | null)}
 
 
 /** columns and relationships of "match_options" */
@@ -51894,6 +51922,7 @@ export const enumDiscordGuildsSelectColumn = {
    notification_channel_id: 'notification_channel_id' as const,
    owner_id: 'owner_id' as const,
    queue_mix_channel_id: 'queue_mix_channel_id' as const,
+   scoreboard_channel_id: 'scoreboard_channel_id' as const,
    updated_at: 'updated_at' as const
 }
 
@@ -51907,6 +51936,7 @@ export const enumDiscordGuildsUpdateColumn = {
    notification_channel_id: 'notification_channel_id' as const,
    owner_id: 'owner_id' as const,
    queue_mix_channel_id: 'queue_mix_channel_id' as const,
+   scoreboard_channel_id: 'scoreboard_channel_id' as const,
    updated_at: 'updated_at' as const
 }
 
@@ -52910,6 +52940,7 @@ export const enumMatchMapsSelectColumn = {
    lineup_2_timeouts_available: 'lineup_2_timeouts_available' as const,
    map_id: 'map_id' as const,
    match_id: 'match_id' as const,
+   mvp_steam_id: 'mvp_steam_id' as const,
    order: 'order' as const,
    started_at: 'started_at' as const,
    status: 'status' as const,
@@ -52926,6 +52957,7 @@ export const enumMatchMapsUpdateColumn = {
    lineup_2_timeouts_available: 'lineup_2_timeouts_available' as const,
    map_id: 'map_id' as const,
    match_id: 'match_id' as const,
+   mvp_steam_id: 'mvp_steam_id' as const,
    order: 'order' as const,
    started_at: 'started_at' as const,
    status: 'status' as const,

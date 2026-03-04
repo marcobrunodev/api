@@ -2290,6 +2290,9 @@ export default {
             "queue_mix_channel_id": [
                 21
             ],
+            "scoreboard_channel_id": [
+                21
+            ],
             "updated_at": [
                 2209
             ],
@@ -2374,6 +2377,9 @@ export default {
             "queue_mix_channel_id": [
                 23
             ],
+            "scoreboard_channel_id": [
+                23
+            ],
             "updated_at": [
                 2210
             ],
@@ -2413,6 +2419,9 @@ export default {
             "queue_mix_channel_id": [
                 21
             ],
+            "scoreboard_channel_id": [
+                21
+            ],
             "updated_at": [
                 2209
             ],
@@ -2448,6 +2457,9 @@ export default {
             "queue_mix_channel_id": [
                 21
             ],
+            "scoreboard_channel_id": [
+                21
+            ],
             "updated_at": [
                 2209
             ],
@@ -2481,6 +2493,9 @@ export default {
                 21
             ],
             "queue_mix_channel_id": [
+                21
+            ],
+            "scoreboard_channel_id": [
                 21
             ],
             "updated_at": [
@@ -2546,6 +2561,9 @@ export default {
             "queue_mix_channel_id": [
                 1497
             ],
+            "scoreboard_channel_id": [
+                1497
+            ],
             "updated_at": [
                 1497
             ],
@@ -2588,6 +2606,9 @@ export default {
                 21
             ],
             "queue_mix_channel_id": [
+                21
+            ],
+            "scoreboard_channel_id": [
                 21
             ],
             "updated_at": [
@@ -2634,6 +2655,9 @@ export default {
                 21
             ],
             "queue_mix_channel_id": [
+                21
+            ],
+            "scoreboard_channel_id": [
                 21
             ],
             "updated_at": [
@@ -19016,6 +19040,9 @@ export default {
             "match_id": [
                 2511
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "objectives": [
                 1742,
                 {
@@ -19532,6 +19559,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -19544,6 +19574,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -19632,6 +19665,9 @@ export default {
             "match_id": [
                 2512
             ],
+            "mvp_steam_id": [
+                114
+            ],
             "objectives": [
                 1751
             ],
@@ -19704,6 +19740,9 @@ export default {
             "lineup_2_timeouts_available": [
                 12
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "order": [
                 12
             ],
@@ -19756,6 +19795,9 @@ export default {
             ],
             "match_id": [
                 2511
+            ],
+            "mvp_steam_id": [
+                113
             ],
             "objectives": [
                 1748
@@ -19831,6 +19873,9 @@ export default {
             "match_id": [
                 2511
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "order": [
                 12
             ],
@@ -19864,6 +19909,9 @@ export default {
                 1497
             ],
             "match_id": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -19913,6 +19961,9 @@ export default {
             "match_id": [
                 2511
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "order": [
                 12
             ],
@@ -19946,6 +19997,9 @@ export default {
                 1497
             ],
             "match_id": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20058,6 +20112,9 @@ export default {
             "match_id": [
                 1497
             ],
+            "mvp_steam_id": [
+                1497
+            ],
             "objectives_aggregate": [
                 1747
             ],
@@ -20135,6 +20192,9 @@ export default {
             "match_id": [
                 2511
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "order": [
                 12
             ],
@@ -20167,6 +20227,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -20179,6 +20242,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20204,6 +20270,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -20216,6 +20285,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20241,6 +20313,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -20253,6 +20328,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20301,6 +20379,9 @@ export default {
             "match_id": [
                 2511
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "order": [
                 12
             ],
@@ -20333,6 +20414,9 @@ export default {
             "lineup_2_timeouts_available": [
                 12
             ],
+            "mvp_steam_id": [
+                113
+            ],
             "order": [
                 12
             ],
@@ -20345,6 +20429,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20385,6 +20472,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -20397,6 +20487,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20422,6 +20515,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -20434,6 +20530,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [
@@ -20459,6 +20558,9 @@ export default {
             "lineup_2_timeouts_available": [
                 10
             ],
+            "mvp_steam_id": [
+                10
+            ],
             "order": [
                 10
             ],
@@ -20471,6 +20573,9 @@ export default {
                 1497
             ],
             "lineup_2_timeouts_available": [
+                1497
+            ],
+            "mvp_steam_id": [
                 1497
             ],
             "order": [

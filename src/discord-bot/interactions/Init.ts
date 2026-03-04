@@ -209,8 +209,8 @@ export default class Init extends DiscordInteraction {
         const scoreboardPermissionOverwrites: any[] = [
           {
             id: guild.roles.everyone.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
-            deny: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads, PermissionFlagsBits.AddReactions],
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AddReactions],
+            deny: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads],
           },
         ];
 
@@ -239,7 +239,7 @@ export default class Init extends DiscordInteraction {
           results.push('✅ Moved **🍌-scoreboard** to the correct category');
         }
 
-        // Ensure read-only permissions for @everyone
+        // Ensure read-only permissions for @everyone (but allow reactions)
         if ('permissionOverwrites' in scoreboardChannel) {
           await (scoreboardChannel as any).permissionOverwrites.edit(guild.roles.everyone, {
             ViewChannel: true,
@@ -247,7 +247,7 @@ export default class Init extends DiscordInteraction {
             SendMessages: false,
             CreatePublicThreads: false,
             CreatePrivateThreads: false,
-            AddReactions: false,
+            AddReactions: true,
           });
 
           // Ensure bot can send messages
@@ -310,6 +310,9 @@ export default class Init extends DiscordInteraction {
 
         results.push('✅ Guild information saved to database');
         this.initLogger.log(`Saved guild information for: ${guild.name} (${guild.id})`);
+
+        // Limpar cache de IDs de canais para que as novas configurações sejam usadas imediatamente
+        this.bot.clearGuildChannelIdsCache(guild.id);
       } catch (dbError) {
         this.initLogger.error('Error saving guild to database:', dbError);
         results.push('⚠️ Warning: Could not save guild information to database');
