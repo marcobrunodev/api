@@ -134,9 +134,8 @@ export default class ScheduleMix extends DiscordInteraction {
 
       const queueMixChannel = voiceChannel.id === discord_guilds_by_pk?.queue_mix_channel_id ? voiceChannel : null;
 
-      // Note: Warmup server will automatically stop when the queue becomes empty
-      // (when handlePlayerLeaveQueue is called for each player that leaves)
-      // This allows remaining players to keep playing warmup
+      // Note: Warmup server is stopped explicitly after moving players if queue becomes empty
+      // If players remain in the queue, they can continue playing warmup
 
       console.log('Fetching bot member...');
       const botMember = await guild.members.fetch(interaction.client.user.id);
@@ -169,6 +168,21 @@ export default class ScheduleMix extends DiscordInteraction {
 
       if (queueMixChannel) {
         movedPlayers = await this.bot.movePlayersToMix(queueMixChannel, playersArray, mixVoiceChannel);
+
+        // Check if Queue Mix is now empty and stop warmup server if so
+        // This prevents the warmup server from running indefinitely when all players are moved to the mix
+        const remainingInQueue = queueMixChannel.members?.size || 0;
+        if (remainingInQueue === 0) {
+          console.log('Queue Mix is now empty, stopping warmup server...');
+          await this.warmupServer.stopWarmupServer(
+            guild.id,
+            'mix_starting',
+            guild,
+            discord_guilds_by_pk?.notification_channel_id
+          );
+        } else {
+          console.log(`${remainingInQueue} players remaining in Queue Mix, warmup server continues`);
+        }
       } else {
         for (const member of playersArray) {
           await member.voice.setChannel(mixVoiceChannel.id);

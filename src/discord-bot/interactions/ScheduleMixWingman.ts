@@ -169,6 +169,21 @@ export default class ScheduleMixWingman extends DiscordInteraction {
 
       if (queueMixChannel) {
         movedPlayers = await this.bot.movePlayersToMix(queueMixChannel, wingmanPlayers, mixVoiceChannel);
+
+        // Check if Queue Mix is now empty and stop warmup server if so
+        // This prevents the warmup server from running indefinitely when all players are moved to the mix
+        const remainingInQueue = queueMixChannel.members?.size || 0;
+        if (remainingInQueue === 0) {
+          console.log('Queue Mix is now empty, stopping warmup server...');
+          await this.warmupServer.stopWarmupServer(
+            guild.id,
+            'mix_starting',
+            guild,
+            discord_guilds_by_pk?.notification_channel_id
+          );
+        } else {
+          console.log(`${remainingInQueue} players remaining in Queue Mix, warmup server continues`);
+        }
       } else {
         for (const member of wingmanPlayers) {
           await member.voice.setChannel(mixVoiceChannel.id);
