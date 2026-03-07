@@ -462,7 +462,9 @@ export class DiscordBotScoreboardService {
     // Formatar stats dos players
     const formatPlayerLine = (p: any, isMvp: boolean) => {
       const kd = p.deaths > 0 ? (p.kills / p.deaths).toFixed(2) : p.kills.toFixed(2);
-      const name = p.name.length > 12 ? p.name.slice(0, 12) : p.name;
+      // Sanitizar nome: remover backticks que quebram o bloco de código markdown
+      const sanitizedName = p.name.replace(/`/g, "'");
+      const name = sanitizedName.length > 12 ? sanitizedName.slice(0, 12) : sanitizedName;
       const mvpIcon = isMvp ? '⭐' : '  ';
       return `${mvpIcon}${name.padEnd(12)} ${String(p.kills).padStart(2)} ${String(p.deaths).padStart(2)} ${String(p.assists).padStart(2)} ${String(kd).padStart(4)}`;
     };
@@ -542,7 +544,9 @@ ${team2Table}
     // Formatar stats dos players em formato tabela (similar ao scoreboard in-game)
     const formatPlayerLine = (p: any) => {
       const kd = p.deaths > 0 ? (p.kills / p.deaths).toFixed(2) : p.kills.toFixed(2);
-      const name = p.name.length > 15 ? p.name.slice(0, 15) : p.name;
+      // Sanitizar nome: remover backticks que quebram o bloco de código markdown
+      const sanitizedName = p.name.replace(/`/g, "'");
+      const name = sanitizedName.length > 15 ? sanitizedName.slice(0, 15) : sanitizedName;
       return `${name.padEnd(15)} ${String(p.kills).padStart(2)} ${String(p.deaths).padStart(2)} ${String(p.assists).padStart(2)} ${String(kd).padStart(4)}`;
     };
 
