@@ -1,4 +1,4 @@
-import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ModalActionRowComponentBuilder, AttachmentBuilder, ChannelType, PermissionFlagsBits } from "discord.js";
+import { ButtonInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ChannelType, PermissionFlagsBits } from "discord.js";
 import { BotButtonInteraction } from "./interactions";
 import { ButtonActions } from "../enums/ButtonActions";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
@@ -380,54 +380,8 @@ export default class ReadyCheck extends DiscordInteraction {
     return;
   }
 
-  // Verificar se o usuário tem SteamID registrado
-  const { players } = await this.hasura.query({
-    players: {
-      __args: {
-        where: {
-          discord_id: {
-            _eq: userId,
-          },
-        },
-      },
-      steam_id: true,
-      name: true,
-    },
-  });
-
-  if (players.length === 0 || !players[0].steam_id) {
-    const registerButton = new ButtonBuilder()
-      .setCustomId(ButtonActions.OpenRegisterSteamIdModal)
-      .setLabel('📝 Register SteamID')
-      .setStyle(ButtonStyle.Primary);
-
-    const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(registerButton);
-
-    // Enviar mensagem ephemeral com botão de registro
-    await interaction.reply({
-      embeds: [{
-        title: '🎮 SteamID Registration Required',
-        description:
-          '**You need to register your SteamID64 to play!**\n\n' +
-          '**How to find your SteamID64:**\n' +
-          '1. Open your Steam client\n' +
-          '2. Click on your profile name\n' +
-          '3. Click "Account Details"\n' +
-          '4. Your SteamID64 will be shown there\n\n' +
-          'Click the button below to register!',
-        color: 0xFF9900,
-        footer: {
-          text: 'From BananaServer.xyz with 🍌',
-        },
-        timestamp: new Date().toISOString(),
-      }],
-      components: [row],
-      ephemeral: true,
-    });
-
-    return;
-  }
+  // Nota: SteamID já foi validado no ScheduleMix antes de criar o ready check
+  // Não precisamos verificar novamente aqui
 
   if (session.readyPlayers.has(userId)) {
     await interaction.reply({
