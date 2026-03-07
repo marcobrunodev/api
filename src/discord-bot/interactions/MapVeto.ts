@@ -345,44 +345,54 @@ ${bannedMapsList}
 
   private async addPlayersAndStartMatch(session: any, matchId: string, match: any, selectedMap: string, channel: any) {
 
-    // Buscar todos os players (team1 + team2)
-    const allPlayerIds = [...session.team1, ...session.team2];
     const guild = await this.bot.client.guilds.fetch(session.guildId);
 
-    const allPlayers = [];
-    for (const playerId of allPlayerIds) {
-      try {
-        const user = await guild.members.fetch(playerId);
-        allPlayers.push(user.user);
-      } catch (error) {
-        console.warn(`⚠️ [MAP VETO] Failed to fetch user ${playerId}:`, error);
-      }
-    }
+    // Buscar todos os players uma única vez (team1 + team2)
+    const allPlayerIds = [...session.team1, ...session.team2];
+    const memberPromises = allPlayerIds.map(id =>
+      guild.members.fetch(id).catch((error): null => {
+        console.warn(`⚠️ [MAP VETO] Failed to fetch user ${id}:`, error);
+        return null;
+      })
+    );
+    const members = await Promise.all(memberPromises);
 
-    // Adicionar players aos lineups
+    // Criar mapa de playerId -> user para acesso rápido
+    const playerMap = new Map<string, any>();
+    members.forEach((member, index) => {
+      if (member) {
+        playerMap.set(allPlayerIds[index], member.user);
+      }
+    });
+
+    // Adicionar players aos lineups usando o cache
     for (const playerId of session.team1) {
-      try {
-        const user = await guild.members.fetch(playerId);
-        await this.discordPickPlayer.addDiscordUserToLineup(
-          matchId,
-          match.lineup_1_id,
-          user.user
-        );
-      } catch (error) {
-        console.error(`❌ [MAP VETO] Error adding player ${playerId} to lineup 1:`, error);
+      const user = playerMap.get(playerId);
+      if (user) {
+        try {
+          await this.discordPickPlayer.addDiscordUserToLineup(
+            matchId,
+            match.lineup_1_id,
+            user
+          );
+        } catch (error) {
+          console.error(`❌ [MAP VETO] Error adding player ${playerId} to lineup 1:`, error);
+        }
       }
     }
 
     for (const playerId of session.team2) {
-      try {
-        const user = await guild.members.fetch(playerId);
-        await this.discordPickPlayer.addDiscordUserToLineup(
-          matchId,
-          match.lineup_2_id,
-          user.user
-        );
-      } catch (error) {
-        console.error(`❌ [MAP VETO] Error adding player ${playerId} to lineup 2:`, error);
+      const user = playerMap.get(playerId);
+      if (user) {
+        try {
+          await this.discordPickPlayer.addDiscordUserToLineup(
+            matchId,
+            match.lineup_2_id,
+            user
+          );
+        } catch (error) {
+          console.error(`❌ [MAP VETO] Error adding player ${playerId} to lineup 2:`, error);
+        }
       }
     }
 
