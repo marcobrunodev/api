@@ -459,21 +459,10 @@ Click the button below when you're ready!
 
     const waitingForVotesList = session.movedPlayers.map(p => `<@${p.id}>`).join(', ');
 
-    // Buscar guild para obter os displayNames
-    const guild = interaction.guild;
-
-    // Buscar todos os membros de uma vez (mais rápido que buscar um por um)
-    const memberPromises = session.movedPlayers.map(p =>
-      guild.members.fetch(p.id).catch((): null => null)
-    );
-    const members = await Promise.all(memberPromises);
-
-    // Criar mapa de ID -> displayName
+    // Criar mapa de ID -> displayName (movedPlayers já são GuildMember com displayName)
     const playerNames = new Map<string, string>();
-    members.forEach((member, index) => {
-      if (member) {
-        playerNames.set(session.movedPlayers[index].id, member.displayName);
-      }
+    session.movedPlayers.forEach((player) => {
+      playerNames.set(player.id, player.displayName || player.user?.username || 'Player');
     });
 
     const buttons = usedFruits.map((fruit) => {
@@ -691,25 +680,11 @@ ${updatedPlayersList}
             p => p.id !== captain1Id && p.id !== captain2Id
           );
 
-          // Buscar todos os membros disponíveis de uma vez (mais rápido)
-          const availableMemberPromises = availablePlayers.map(p =>
-            guild.members.fetch(p.id).catch((): null => null)
-          );
-          const availableMembers = await Promise.all(availableMemberPromises);
-
-          // Criar mapa de ID -> displayName
-          const availablePlayerNames = new Map<string, string>();
-          availableMembers.forEach((member, index) => {
-            if (member) {
-              availablePlayerNames.set(availablePlayers[index].id, member.displayName);
-            }
-          });
-
-          // Criar botões com as frutas dos players disponíveis
+          // Criar botões com as frutas dos players disponíveis (já temos displayName dos GuildMembers)
           const buttons = availablePlayers.map((player) => {
             const fruit = Array.from(session.fruitToPlayer.entries())
               .find(([, id]) => id === player.id)?.[0] || '❓';
-            const playerName = availablePlayerNames.get(player.id) || 'Player';
+            const playerName = player.displayName || player.user?.username || 'Player';
 
             return new ButtonBuilder()
               .setCustomId(`${ButtonActions.PickPlayer}:${fruit}`)
