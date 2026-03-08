@@ -1144,6 +1144,50 @@ export class DiscordBotService {
       if (queueMixChannel && 'id' in queueMixChannel) {
         this.logger.log(`[Mix Match] Moving players back to Queue Mix or AFK...`);
 
+        // PASSO 1.0: Mover primeiro outras pessoas que estão na categoria (espectadores, etc.)
+        // antes de mover os players da partida
+        try {
+          const category = await guild.channels.fetch(categoryId).catch((): null => null);
+          if (category && category.type === 4) { // 4 = CategoryChannel
+            const allMatchPlayerIds = new Set([...team1PlayerIds, ...team2PlayerIds]);
+            const voiceChannelsInCategory = guild.channels.cache.filter(
+              ch => ch.parentId === categoryId && ch.isVoiceBased()
+            );
+
+            for (const [, voiceChannel] of voiceChannelsInCategory) {
+              if (!voiceChannel.isVoiceBased()) continue;
+
+              const membersInChannel = voiceChannel.members;
+              for (const [memberId, member] of membersInChannel) {
+                // Se não é um player da partida, mover para Queue Mix primeiro
+                if (!allMatchPlayerIds.has(memberId)) {
+                  try {
+                    await member.voice.setChannel(queueMixChannel.id);
+                    this.logger.log(`[Mix Match] Moved spectator/other ${memberId} back to Queue Mix first`);
+                  } catch (error) {
+                    this.logger.error(`[Mix Match] Failed to move spectator ${memberId}:`, error);
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          this.logger.error(`[Mix Match] Error moving spectators:`, error);
+        }
+
+        // Mover vencedores primeiro para Queue Mix (prioridade)
+        for (const playerId of sortedWinners) {
+          try {
+            const member = await guild.members.fetch(playerId);
+            if (member.voice.channel && member.voice.channel.parent?.name?.startsWith('Banana Mix')) {
+              await member.voice.setChannel(queueMixChannel.id);
+              this.logger.log(`[Mix Match] Moved winner ${playerId} back to Queue Mix`);
+            }
+          } catch (error) {
+            this.logger.error(`[Mix Match] Failed to move winner ${playerId} back to Queue Mix:`, error);
+          }
+        }
+
         // Mover perdedores para AFK se a partida foi cancelada
         if (matches_by_pk.status === 'Canceled' && losingPlayerIds.length > 0) {
           this.logger.log(`[Mix Match] Moving ${losingPlayerIds.length} players who didn't ready to AFK`);
@@ -1162,19 +1206,6 @@ export class DiscordBotService {
             } catch (error) {
               this.logger.error(`[Mix Match] Failed to move loser ${playerId} back to Queue Mix:`, error);
             }
-          }
-        }
-
-        // Mover vencedores para Queue Mix
-        for (const playerId of sortedWinners) {
-          try {
-            const member = await guild.members.fetch(playerId);
-            if (member.voice.channel && member.voice.channel.parent?.name?.startsWith('Banana Mix')) {
-              await member.voice.setChannel(queueMixChannel.id);
-              this.logger.log(`[Mix Match] Moved winner ${playerId} back to Queue Mix`);
-            }
-          } catch (error) {
-            this.logger.error(`[Mix Match] Failed to move winner ${playerId} back to Queue Mix:`, error);
           }
         }
       }
