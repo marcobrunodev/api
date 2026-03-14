@@ -464,6 +464,9 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.ClearNotifications)
           .setDescription("Clear all messages from the notification channel"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.FixTeams)
+          .setDescription("Verify and fix all team channels and permissions"),
       ];
 
       if (process.env.ENABLE_MIGRATE_COMMAND === 'true') {

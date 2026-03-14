@@ -25,4 +25,5 @@ export enum ChatCommands {
   LfgMix = "lfg-mix",
   Warmup = "warmup",
   ClearNotifications = "clear",
+  FixTeams = "fix-teams",
 }

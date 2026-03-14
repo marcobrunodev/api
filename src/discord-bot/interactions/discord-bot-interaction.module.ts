@@ -52,6 +52,7 @@ import RegionVeto from "./RegionVeto";
 import DuelRegionVeto from "./DuelRegionVeto";
 import Warmup from "./Warmup";
 import ClearNotifications from "./ClearNotifications";
+import FixTeams from "./FixTeams";
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import ClearNotifications from "./ClearNotifications";
     DuelRegionVeto,
     Warmup,
     ClearNotifications,
+    FixTeams,
   ],
   providers: [
     LinkDiscord,
@@ -159,6 +161,7 @@ import ClearNotifications from "./ClearNotifications";
     DuelRegionVeto,
     Warmup,
     ClearNotifications,
+    FixTeams,
     loggerFactory(),
   ],
 })
