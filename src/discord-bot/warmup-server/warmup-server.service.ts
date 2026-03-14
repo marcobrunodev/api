@@ -39,6 +39,7 @@ export interface WarmupServerState {
 export class WarmupServerService {
   private rotationIntervals = new Map<string, NodeJS.Timeout>();
   private shutdownTimeouts = new Map<string, NodeJS.Timeout>();
+  private emptyCheckIntervals = new Map<string, NodeJS.Timeout>();
   private guildReferences = new Map<string, any>(); // Store guild references for cleanup
   private appConfig: AppConfig;
   private gameServerConfig: GameServersConfig;
@@ -199,6 +200,9 @@ export class WarmupServerService {
 
         // Rotation disabled - players can change mode manually via .mode command
         // this.startRotationTimer(guildId, state);
+
+        // Start periodic check to shutdown server if no players are connected
+        this.startEmptyServerCheck(guildId);
 
         this.logger.log(`[Warmup] Server started for guild ${guildId}: ${state.serverIp}:${state.serverPort}`);
       } else {
@@ -621,6 +625,9 @@ export class WarmupServerService {
 
       // Cancel any pending shutdown
       this.cancelShutdownTimeout(guildId);
+
+      // Cancel empty server check
+      this.stopEmptyServerCheck(guildId);
 
       // Get current state
       const state = await this.getState(guildId);
@@ -1136,5 +1143,87 @@ Play while waiting for the mix! 🍌
   private getRandomMap(_gameMode: WarmupGameMode): string {
     const index = Math.floor(Math.random() * WARMUP_MAPS_AR.length);
     return WARMUP_MAPS_AR[index];
+  }
+
+  /**
+   * Start periodic check for empty server via RCON
+   */
+  startEmptyServerCheck(guildId: string): void {
+    this.stopEmptyServerCheck(guildId);
+
+    const interval = setInterval(async () => {
+      try {
+        const state = await this.getState(guildId);
+        if (!state?.serverId) {
+          this.stopEmptyServerCheck(guildId);
+          return;
+        }
+
+        const playerCount = await this.getConnectedPlayerCount(state.serverId);
+        this.logger.log(`[Warmup] Empty server check for guild ${guildId}: ${playerCount} real players connected`);
+
+        if (playerCount === 0) {
+          this.logger.log(`[Warmup] No players connected to warmup server for guild ${guildId}, shutting down`);
+          this.stopEmptyServerCheck(guildId);
+          const guild = this.guildReferences.get(guildId);
+          await this.stopWarmupServer(guildId, 'empty', guild);
+        }
+      } catch (error) {
+        this.logger.error(`[Warmup] Error during empty server check:`, error);
+      }
+    }, 3 * 60 * 1000); // 3 minutes
+
+    this.emptyCheckIntervals.set(guildId, interval);
+  }
+
+  /**
+   * Stop periodic empty server check
+   */
+  private stopEmptyServerCheck(guildId: string): void {
+    const interval = this.emptyCheckIntervals.get(guildId);
+    if (interval) {
+      clearInterval(interval);
+      this.emptyCheckIntervals.delete(guildId);
+    }
+  }
+
+  /**
+   * Get the number of real (non-bot) players connected to the server via RCON status
+   */
+  private async getConnectedPlayerCount(serverId: string): Promise<number> {
+    const rconConnection = await this.rcon.connect(serverId);
+    if (!rconConnection) {
+      return -1;
+    }
+
+    try {
+      const statusOutput = await rconConnection.send('status');
+      await this.rcon.disconnect(serverId);
+
+      // Parse status output to count real players (not BOTs)
+      // CS2 status lines for players look like:
+      // <id> <name> <steamid> <time> <ping> <loss> <state> <rate> <adr>
+      // BOT lines contain "BOT" as the steamid
+      const lines = statusOutput.split('\n');
+      let realPlayers = 0;
+
+      for (const line of lines) {
+        // Player lines start with a number (their ID)
+        const trimmed = line.trim();
+        if (/^\d+\s/.test(trimmed) && !trimmed.includes(' BOT ')) {
+          realPlayers++;
+        }
+      }
+
+      return realPlayers;
+    } catch (error) {
+      this.logger.warn(`[Warmup] Error getting player count via RCON:`, error);
+      try {
+        await this.rcon.disconnect(serverId);
+      } catch {
+        // ignore cleanup error
+      }
+      return -1;
+    }
   }
 }

@@ -50,6 +50,7 @@ import Migrate from "./Migrate";
 import LfgMix from "./LfgMix";
 import RegionVeto from "./RegionVeto";
 import DuelRegionVeto from "./DuelRegionVeto";
+import Warmup from "./Warmup";
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
     LfgMix,
     RegionVeto,
     DuelRegionVeto,
+    Warmup,
   ],
   providers: [
     LinkDiscord,
@@ -153,6 +155,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
     LfgMix,
     RegionVeto,
     DuelRegionVeto,
+    Warmup,
     loggerFactory(),
   ],
 })

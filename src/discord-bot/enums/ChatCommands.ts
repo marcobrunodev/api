@@ -23,4 +23,5 @@ export enum ChatCommands {
   CreateTeam = "create-team",
   Migrate = "migrate",
   LfgMix = "lfg-mix",
+  Warmup = "warmup",
 }

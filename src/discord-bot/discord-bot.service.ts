@@ -25,7 +25,6 @@ import { DiscordBotQueues } from "./enums/DiscordBotQueues";
 import { InjectQueue } from "@nestjs/bullmq";
 import { RemoveArchivedThreads } from "./jobs/RemoveArchivedThreads";
 import { RedisManagerService } from "../redis/redis-manager/redis-manager.service";
-import { WarmupServerService } from "./warmup-server/warmup-server.service";
 
 let client: Client;
 
@@ -89,7 +88,6 @@ export class DiscordBotService {
     private readonly moduleRef: ModuleRef,
     @InjectQueue(DiscordBotQueues.DiscordBot) private queue: Queue,
     private readonly redisManager: RedisManagerService,
-    private readonly warmupServer: WarmupServerService,
     @Inject(forwardRef(() => DiscordBotScoreboardService))
     private readonly scoreboardService: DiscordBotScoreboardService,
   ) {
@@ -460,6 +458,9 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.LfgMix)
           .setDescription("Looking for group - Invite all players to join a mix"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.Warmup)
+          .setDescription("Start or show the warmup server"),
       ];
 
       if (process.env.ENABLE_MIGRATE_COMMAND === 'true') {
@@ -671,14 +672,6 @@ export class DiscordBotService {
         await this.addToQueueMix(guild.id, member.id);
         const position = await this.getQueueMixPosition(guild.id, member.id);
         this.logger.log(`${member.user.tag} joined Queue Mix - position: ${position}`);
-
-        // Trigger warmup server check
-        await this.warmupServer.handlePlayerJoinQueue(
-          guild.id,
-          member.id,
-          guild,
-          channelIds.notification_channel_id
-        );
       }
 
       if (isLeavingQueueMix && !isJoiningQueueMix) {
@@ -688,9 +681,6 @@ export class DiscordBotService {
         if (!isGoingToMixChannel) {
           await this.removeFromQueueMix(guild.id, member.id);
           this.logger.log(`${member.user.tag} left Queue Mix - removed from queue order`);
-
-          // Notify warmup server about player leaving (pass guild for cleanup reference)
-          await this.warmupServer.handlePlayerLeaveQueue(guild.id, member.id, guild);
         } else {
           this.logger.log(`${member.user.tag} moved from Queue Mix to Mix Voice - keeping queue position`);
         }
