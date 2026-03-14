@@ -24,4 +24,5 @@ export enum ChatCommands {
   Migrate = "migrate",
   LfgMix = "lfg-mix",
   Warmup = "warmup",
+  ClearNotifications = "clear",
 }

@@ -461,6 +461,9 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.Warmup)
           .setDescription("Start or show the warmup server"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.ClearNotifications)
+          .setDescription("Clear all messages from the notification channel"),
       ];
 
       if (process.env.ENABLE_MIGRATE_COMMAND === 'true') {

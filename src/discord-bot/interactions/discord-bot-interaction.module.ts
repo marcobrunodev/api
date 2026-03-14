@@ -51,6 +51,7 @@ import LfgMix from "./LfgMix";
 import RegionVeto from "./RegionVeto";
 import DuelRegionVeto from "./DuelRegionVeto";
 import Warmup from "./Warmup";
+import ClearNotifications from "./ClearNotifications";
 
 @Module({
   imports: [
@@ -107,6 +108,7 @@ import Warmup from "./Warmup";
     RegionVeto,
     DuelRegionVeto,
     Warmup,
+    ClearNotifications,
   ],
   providers: [
     LinkDiscord,
@@ -156,6 +158,7 @@ import Warmup from "./Warmup";
     RegionVeto,
     DuelRegionVeto,
     Warmup,
+    ClearNotifications,
     loggerFactory(),
   ],
 })
