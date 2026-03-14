@@ -1,4 +1,4 @@
-CREATE TABLE public.player_bananas (
+CREATE TABLE IF NOT EXISTS public.player_bananas (
     id UUID DEFAULT gen_random_uuid() NOT NULL,
     steam_id BIGINT NOT NULL,
     match_id UUID NOT NULL,
