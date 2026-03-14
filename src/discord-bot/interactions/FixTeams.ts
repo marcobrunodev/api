@@ -297,35 +297,32 @@ export default class FixTeams extends DiscordInteraction {
 
       if (!voiceChannel) {
         try {
+          const voicePermissions = [
+            {
+              id: guild.id,
+              deny: [PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+              allow: [PermissionsBitField.Flags.ViewChannel],
+            },
+            {
+              id: ownerDiscordId,
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+            },
+            {
+              id: this.bot.client.user.id,
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak, PermissionsBitField.Flags.ManageChannels],
+            },
+            ...memberDiscordIds.map((memberId) => ({
+              id: memberId,
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+            })),
+          ];
+
           voiceChannel = await guild.channels.create({
             name: "🔊-playing",
             type: ChannelType.GuildVoice,
             parent: category.id,
+            permissionOverwrites: voicePermissions,
           });
-
-          await voiceChannel.permissionOverwrites.edit(guild.id, {
-            ViewChannel: true,
-            Connect: false,
-            Speak: false,
-          });
-          await voiceChannel.permissionOverwrites.edit(ownerDiscordId, {
-            ViewChannel: true,
-            Connect: true,
-            Speak: true,
-          });
-          await voiceChannel.permissionOverwrites.edit(this.bot.client.user.id, {
-            ViewChannel: true,
-            Connect: true,
-            Speak: true,
-            ManageChannels: true,
-          });
-          for (const memberId of memberDiscordIds) {
-            await voiceChannel.permissionOverwrites.edit(memberId, {
-              ViewChannel: true,
-              Connect: true,
-              Speak: true,
-            });
-          }
 
           logs.push(`✅ **${team.name}** - Created voice channel.`);
           fixedCount++;
@@ -335,29 +332,26 @@ export default class FixTeams extends DiscordInteraction {
       } else {
         if (voiceChannel.type === ChannelType.GuildVoice) {
           try {
-            await voiceChannel.permissionOverwrites.edit(guild.id, {
-              ViewChannel: true,
-              Connect: false,
-              Speak: false,
-            });
-            await voiceChannel.permissionOverwrites.edit(ownerDiscordId, {
-              ViewChannel: true,
-              Connect: true,
-              Speak: true,
-            });
-            await voiceChannel.permissionOverwrites.edit(this.bot.client.user.id, {
-              ViewChannel: true,
-              Connect: true,
-              Speak: true,
-              ManageChannels: true,
-            });
-            for (const memberId of memberDiscordIds) {
-              await voiceChannel.permissionOverwrites.edit(memberId, {
-                ViewChannel: true,
-                Connect: true,
-                Speak: true,
-              });
-            }
+            // Use set() to replace all permissions at once, breaking any category sync
+            await voiceChannel.permissionOverwrites.set([
+              {
+                id: guild.id,
+                deny: [PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+                allow: [PermissionsBitField.Flags.ViewChannel],
+              },
+              {
+                id: ownerDiscordId,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+              },
+              {
+                id: this.bot.client.user.id,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak, PermissionsBitField.Flags.ManageChannels],
+              },
+              ...memberDiscordIds.map((memberId) => ({
+                id: memberId,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+              })),
+            ]);
 
             fixedCount++;
           } catch (error) {
