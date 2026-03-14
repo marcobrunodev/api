@@ -172,28 +172,6 @@ export default class LeaveTeam extends DiscordInteraction {
     team: { id: string; name: string; short_name: string; owner: { discord_id: string } },
   ) {
     try {
-      const guild = interaction.guild;
-      if (!guild) return;
-
-      const categoryName = `🏆 ${team.short_name}`;
-      const category = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildCategory &&
-          channel.name === categoryName,
-      );
-
-      if (!category) return;
-
-      // Find the recruitment channel
-      const recruitChannel = guild.channels.cache.find(
-        (channel) =>
-          channel.type === ChannelType.GuildText &&
-          channel.parentId === category.id &&
-          channel.name === "📢-recruitment",
-      );
-
-      if (!recruitChannel || recruitChannel.type !== ChannelType.GuildText) return;
-
       // Fetch all team members from the database
       const { team_roster: roster } = await this.hasura.query({
         team_roster: {
@@ -222,20 +200,6 @@ export default class LeaveTeam extends DiscordInteraction {
           return `${roleEmoji} ${playerName}`;
         })
         .join("\n");
-
-      // Fetch messages from recruitment channel to find the embed
-      const messages = await recruitChannel.messages.fetch({ limit: 10 });
-      const embedMessage = messages.find(
-        (msg) =>
-          msg.author.id === this.bot.client.user.id &&
-          msg.embeds.length > 0 &&
-          msg.embeds[0].title?.includes(team.name),
-      );
-
-      if (!embedMessage) {
-        console.warn(`Could not find recruitment embed for team ${team.name}`);
-        return;
-      }
 
       // Create updated embed
       const updatedEmbed = new EmbedBuilder()
@@ -269,7 +233,8 @@ export default class LeaveTeam extends DiscordInteraction {
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton, leaveButton);
 
-      await embedMessage.edit({
+      // Edit the recruitment message directly (the button was clicked on this message)
+      await interaction.message.edit({
         embeds: [updatedEmbed],
         components: [row],
       });
