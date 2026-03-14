@@ -42,6 +42,7 @@ import { NotificationsModule } from "../notifications/notifications.module";
 import { ChatModule } from "src/chat/chat.module";
 import { HasuraService } from "src/hasura/hasura.service";
 import { EloCalculation } from "./jobs/EloCalculation";
+import { BananaCalculation } from "./jobs/BananaCalculation";
 import { PostgresService } from "src/postgres/postgres.service";
 import { StopOnDemandServer } from "./jobs/StopOnDemandServer";
 import { MatchRelayController } from "./match-relay/match-relay.controller";
@@ -75,6 +76,9 @@ import { DiscordBotScoreboardService } from "../discord-bot/discord-bot-scoreboa
       {
         name: MatchQueues.EloCalculation,
       },
+      {
+        name: MatchQueues.BananaCalculation,
+      },
     ),
     BullBoardModule.forFeature(
       {
@@ -87,6 +91,10 @@ import { DiscordBotScoreboardService } from "../discord-bot/discord-bot-scoreboa
       },
       {
         name: MatchQueues.EloCalculation,
+        adapter: BullMQAdapter,
+      },
+      {
+        name: MatchQueues.BananaCalculation,
         adapter: BullMQAdapter,
       },
     ),
@@ -107,6 +115,7 @@ import { DiscordBotScoreboardService } from "../discord-bot/discord-bot-scoreboa
     CancelInvalidTournaments,
     CleanAbandonedMatches,
     EloCalculation,
+    BananaCalculation,
     DiscordBotScoreboardService,
     ...getQueuesProcessors("Matches"),
     ...Object.values(MatchEvents),

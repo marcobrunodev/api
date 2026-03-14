@@ -1,0 +1,3 @@
+table:
+  name: player_bananas
+  schema: public

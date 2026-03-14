@@ -27,6 +27,7 @@ import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
 import { MatchQueues } from "./enums/MatchQueues";
 import { EloCalculation } from "./jobs/EloCalculation";
+import { BananaCalculation } from "./jobs/BananaCalculation";
 import { StopOnDemandServer } from "./jobs/StopOnDemandServer";
 import { S3Service } from "src/s3/s3.service";
 import { ChatService } from "src/chat/chat.service";
@@ -51,6 +52,7 @@ export class MatchesController {
     private readonly notifications: NotificationsService,
     private readonly chatService: ChatService,
     @InjectQueue(MatchQueues.EloCalculation) private eloCalculationQueue: Queue,
+    @InjectQueue(MatchQueues.BananaCalculation) private bananaCalculationQueue: Queue,
     @InjectQueue(MatchQueues.ScheduledMatches)
     private scheduledMatchesQueue: Queue,
     private s3: S3Service,
@@ -341,6 +343,10 @@ export class MatchesController {
       await this.discordBotService.handleDuelMatchEnd(matchId);
 
       await this.eloCalculationQueue.add(EloCalculation.name, {
+        matchId,
+      });
+
+      await this.bananaCalculationQueue.add(BananaCalculation.name, {
         matchId,
       });
 
