@@ -72,47 +72,42 @@ export default class FixTeams extends DiscordInteraction {
           channel.name === categoryName,
       );
 
-      if (!category) {
+      if (!category || category.type !== ChannelType.GuildCategory) {
         logs.push(`⏭️ **${team.name}** - Category not found, skipping.`);
         continue;
       }
 
-      {
-        // Fix category permissions
-        if (category.type === ChannelType.GuildCategory) {
-          try {
-            await category.permissionOverwrites.set([
-              {
-                id: guild.id,
-                allow: [PermissionsBitField.Flags.ViewChannel],
-                deny: [PermissionsBitField.Flags.SendMessages],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageChannels,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageChannels,
-                ],
-              },
-              // Add all team members to category
-              ...this.getMemberPermissionOverwrites(team.roster, ownerDiscordId),
-            ]);
-          } catch (error) {
-            logs.push(`⚠️ **${team.name}** - Failed to fix category permissions: ${error.message}`);
-          }
-        }
-      }
+      // Get roster member discord IDs (excluding owner)
+      const memberDiscordIds = team.roster
+        .filter((r) => r.player?.discord_id && r.player.discord_id !== ownerDiscordId)
+        .map((r) => r.player.discord_id);
 
-      if (category.type !== ChannelType.GuildCategory) continue;
+      // Fix category permissions
+      try {
+        await category.permissionOverwrites.edit(guild.id, {
+          ViewChannel: true,
+          SendMessages: false,
+        });
+        await category.permissionOverwrites.edit(ownerDiscordId, {
+          ViewChannel: true,
+          SendMessages: true,
+          ManageChannels: true,
+        });
+        await category.permissionOverwrites.edit(this.bot.client.user.id, {
+          ViewChannel: true,
+          SendMessages: true,
+          ManageChannels: true,
+        });
+        for (const memberId of memberDiscordIds) {
+          await category.permissionOverwrites.edit(memberId, {
+            ViewChannel: true,
+            SendMessages: true,
+          });
+        }
+        fixedCount++;
+      } catch (error) {
+        logs.push(`⚠️ **${team.name}** - Failed to fix category permissions: ${error.message}`);
+      }
 
       // 2. Check/create recruitment channel
       let recruitChannel = guild.channels.cache.find(
@@ -128,62 +123,44 @@ export default class FixTeams extends DiscordInteraction {
             name: "📢-recruitment",
             type: ChannelType.GuildText,
             parent: category.id,
-            permissionOverwrites: [
-              {
-                id: guild.id,
-                allow: [PermissionsBitField.Flags.ViewChannel],
-                deny: [PermissionsBitField.Flags.SendMessages],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                ],
-              },
-            ],
           });
 
-          // Send recruitment embed
-          await this.sendRecruitmentEmbed(recruitChannel, team);
+          // Set permissions individually
+          await recruitChannel.permissionOverwrites.edit(guild.id, {
+            ViewChannel: true,
+            SendMessages: false,
+          });
+          await recruitChannel.permissionOverwrites.edit(ownerDiscordId, {
+            ViewChannel: true,
+            SendMessages: true,
+          });
+          await recruitChannel.permissionOverwrites.edit(this.bot.client.user.id, {
+            ViewChannel: true,
+            SendMessages: true,
+          });
 
+          await this.sendRecruitmentEmbed(recruitChannel, team);
           logs.push(`✅ **${team.name}** - Created recruitment channel.`);
           fixedCount++;
         } catch (error) {
           logs.push(`❌ **${team.name}** - Failed to create recruitment channel: ${error.message}`);
         }
       } else {
-        // Fix recruitment channel permissions
         if (recruitChannel.type === ChannelType.GuildText) {
           try {
-            await recruitChannel.permissionOverwrites.set([
-              {
-                id: guild.id,
-                allow: [PermissionsBitField.Flags.ViewChannel],
-                deny: [PermissionsBitField.Flags.SendMessages],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                ],
-              },
-            ]);
+            await recruitChannel.permissionOverwrites.edit(guild.id, {
+              ViewChannel: true,
+              SendMessages: false,
+            });
+            await recruitChannel.permissionOverwrites.edit(ownerDiscordId, {
+              ViewChannel: true,
+              SendMessages: true,
+            });
+            await recruitChannel.permissionOverwrites.edit(this.bot.client.user.id, {
+              ViewChannel: true,
+              SendMessages: true,
+            });
+            fixedCount++;
           } catch (error) {
             logs.push(`⚠️ **${team.name}** - Failed to fix recruitment permissions: ${error.message}`);
           }
@@ -203,7 +180,6 @@ export default class FixTeams extends DiscordInteraction {
               logs.push(`✅ **${team.name}** - Created missing recruitment embed.`);
               fixedCount++;
             } else {
-              // Update existing embed with current roster
               await this.updateRecruitmentEmbed(embedMessage, team);
               logs.push(`🔄 **${team.name}** - Updated recruitment embed.`);
             }
@@ -228,41 +204,34 @@ export default class FixTeams extends DiscordInteraction {
             name: privateChannelName,
             type: ChannelType.GuildText,
             parent: category.id,
-            permissionOverwrites: [
-              {
-                id: guild.id,
-                deny: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                ],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageMessages,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageMessages,
-                  PermissionsBitField.Flags.ManageChannels,
-                ],
-              },
-              // Add all team members
-              ...this.getPrivateChannelMemberOverwrites(team.roster, ownerDiscordId),
-            ],
           });
 
-          // Add admin role
+          await teamChannel.permissionOverwrites.edit(guild.id, {
+            ViewChannel: false,
+            SendMessages: false,
+          });
+          await teamChannel.permissionOverwrites.edit(ownerDiscordId, {
+            ViewChannel: true,
+            SendMessages: true,
+            ManageMessages: true,
+          });
+          await teamChannel.permissionOverwrites.edit(this.bot.client.user.id, {
+            ViewChannel: true,
+            SendMessages: true,
+            ManageMessages: true,
+            ManageChannels: true,
+          });
+          for (const memberId of memberDiscordIds) {
+            await teamChannel.permissionOverwrites.edit(memberId, {
+              ViewChannel: true,
+              SendMessages: true,
+            });
+          }
+
           const adminRole = guild.roles.cache.find(
             (role) => role.permissions.has(PermissionsBitField.Flags.Administrator),
           );
-          if (adminRole && teamChannel.type === ChannelType.GuildText) {
+          if (adminRole) {
             await teamChannel.permissionOverwrites.edit(adminRole.id, {
               ViewChannel: true,
               SendMessages: true,
@@ -276,52 +245,42 @@ export default class FixTeams extends DiscordInteraction {
           logs.push(`❌ **${team.name}** - Failed to create private channel: ${error.message}`);
         }
       } else {
-        // Fix private channel permissions
         if (teamChannel.type === ChannelType.GuildText) {
           try {
-            const overwrites = [
-              {
-                id: guild.id,
-                deny: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                ],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageMessages,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageMessages,
-                  PermissionsBitField.Flags.ManageChannels,
-                ],
-              },
-              ...this.getPrivateChannelMemberOverwrites(team.roster, ownerDiscordId),
-            ];
+            await teamChannel.permissionOverwrites.edit(guild.id, {
+              ViewChannel: false,
+              SendMessages: false,
+            });
+            await teamChannel.permissionOverwrites.edit(ownerDiscordId, {
+              ViewChannel: true,
+              SendMessages: true,
+              ManageMessages: true,
+            });
+            await teamChannel.permissionOverwrites.edit(this.bot.client.user.id, {
+              ViewChannel: true,
+              SendMessages: true,
+              ManageMessages: true,
+              ManageChannels: true,
+            });
+            for (const memberId of memberDiscordIds) {
+              await teamChannel.permissionOverwrites.edit(memberId, {
+                ViewChannel: true,
+                SendMessages: true,
+              });
+            }
 
             const adminRole = guild.roles.cache.find(
               (role) => role.permissions.has(PermissionsBitField.Flags.Administrator),
             );
             if (adminRole) {
-              overwrites.push({
-                id: adminRole.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.SendMessages,
-                  PermissionsBitField.Flags.ManageMessages,
-                ],
-              } as any);
+              await teamChannel.permissionOverwrites.edit(adminRole.id, {
+                ViewChannel: true,
+                SendMessages: true,
+                ManageMessages: true,
+              });
             }
 
-            await teamChannel.permissionOverwrites.set(overwrites);
+            fixedCount++;
           } catch (error) {
             logs.push(`⚠️ **${team.name}** - Failed to fix private channel permissions: ${error.message}`);
           }
@@ -342,36 +301,31 @@ export default class FixTeams extends DiscordInteraction {
             name: "🔊-playing",
             type: ChannelType.GuildVoice,
             parent: category.id,
-            permissionOverwrites: [
-              {
-                id: guild.id,
-                allow: [PermissionsBitField.Flags.ViewChannel],
-                deny: [
-                  PermissionsBitField.Flags.Connect,
-                  PermissionsBitField.Flags.Speak,
-                ],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.Connect,
-                  PermissionsBitField.Flags.Speak,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.Connect,
-                  PermissionsBitField.Flags.Speak,
-                  PermissionsBitField.Flags.ManageChannels,
-                ],
-              },
-              // Add all team members
-              ...this.getVoiceChannelMemberOverwrites(team.roster, ownerDiscordId),
-            ],
           });
+
+          await voiceChannel.permissionOverwrites.edit(guild.id, {
+            ViewChannel: true,
+            Connect: false,
+            Speak: false,
+          });
+          await voiceChannel.permissionOverwrites.edit(ownerDiscordId, {
+            ViewChannel: true,
+            Connect: true,
+            Speak: true,
+          });
+          await voiceChannel.permissionOverwrites.edit(this.bot.client.user.id, {
+            ViewChannel: true,
+            Connect: true,
+            Speak: true,
+            ManageChannels: true,
+          });
+          for (const memberId of memberDiscordIds) {
+            await voiceChannel.permissionOverwrites.edit(memberId, {
+              ViewChannel: true,
+              Connect: true,
+              Speak: true,
+            });
+          }
 
           logs.push(`✅ **${team.name}** - Created voice channel.`);
           fixedCount++;
@@ -379,37 +333,33 @@ export default class FixTeams extends DiscordInteraction {
           logs.push(`❌ **${team.name}** - Failed to create voice channel: ${error.message}`);
         }
       } else {
-        // Fix voice channel permissions
         if (voiceChannel.type === ChannelType.GuildVoice) {
           try {
-            await voiceChannel.permissionOverwrites.set([
-              {
-                id: guild.id,
-                allow: [PermissionsBitField.Flags.ViewChannel],
-                deny: [
-                  PermissionsBitField.Flags.Connect,
-                  PermissionsBitField.Flags.Speak,
-                ],
-              },
-              {
-                id: ownerDiscordId,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.Connect,
-                  PermissionsBitField.Flags.Speak,
-                ],
-              },
-              {
-                id: this.bot.client.user.id,
-                allow: [
-                  PermissionsBitField.Flags.ViewChannel,
-                  PermissionsBitField.Flags.Connect,
-                  PermissionsBitField.Flags.Speak,
-                  PermissionsBitField.Flags.ManageChannels,
-                ],
-              },
-              ...this.getVoiceChannelMemberOverwrites(team.roster, ownerDiscordId),
-            ]);
+            await voiceChannel.permissionOverwrites.edit(guild.id, {
+              ViewChannel: true,
+              Connect: false,
+              Speak: false,
+            });
+            await voiceChannel.permissionOverwrites.edit(ownerDiscordId, {
+              ViewChannel: true,
+              Connect: true,
+              Speak: true,
+            });
+            await voiceChannel.permissionOverwrites.edit(this.bot.client.user.id, {
+              ViewChannel: true,
+              Connect: true,
+              Speak: true,
+              ManageChannels: true,
+            });
+            for (const memberId of memberDiscordIds) {
+              await voiceChannel.permissionOverwrites.edit(memberId, {
+                ViewChannel: true,
+                Connect: true,
+                Speak: true,
+              });
+            }
+
+            fixedCount++;
           } catch (error) {
             logs.push(`⚠️ **${team.name}** - Failed to fix voice channel permissions: ${error.message}`);
           }
@@ -431,52 +381,6 @@ export default class FixTeams extends DiscordInteraction {
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
-  }
-
-  private getMemberPermissionOverwrites(
-    roster: Array<{ role: string; player: { name: string; discord_id: string; steam_id: string } }>,
-    ownerDiscordId: string,
-  ) {
-    return roster
-      .filter((member) => member.player?.discord_id && member.player.discord_id !== ownerDiscordId)
-      .map((member) => ({
-        id: member.player.discord_id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-        ],
-      }));
-  }
-
-  private getPrivateChannelMemberOverwrites(
-    roster: Array<{ role: string; player: { name: string; discord_id: string; steam_id: string } }>,
-    ownerDiscordId: string,
-  ) {
-    return roster
-      .filter((member) => member.player?.discord_id && member.player.discord_id !== ownerDiscordId)
-      .map((member) => ({
-        id: member.player.discord_id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-        ],
-      }));
-  }
-
-  private getVoiceChannelMemberOverwrites(
-    roster: Array<{ role: string; player: { name: string; discord_id: string; steam_id: string } }>,
-    ownerDiscordId: string,
-  ) {
-    return roster
-      .filter((member) => member.player?.discord_id && member.player.discord_id !== ownerDiscordId)
-      .map((member) => ({
-        id: member.player.discord_id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.Connect,
-          PermissionsBitField.Flags.Speak,
-        ],
-      }));
   }
 
   private async sendRecruitmentEmbed(
