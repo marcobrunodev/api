@@ -53,6 +53,7 @@ import DuelRegionVeto from "./DuelRegionVeto";
 import Warmup from "./Warmup";
 import ClearNotifications from "./ClearNotifications";
 import FixTeams from "./FixTeams";
+import Bananas from "./Bananas";
 
 @Module({
   imports: [
@@ -111,6 +112,7 @@ import FixTeams from "./FixTeams";
     Warmup,
     ClearNotifications,
     FixTeams,
+    Bananas,
   ],
   providers: [
     LinkDiscord,
@@ -162,6 +164,7 @@ import FixTeams from "./FixTeams";
     Warmup,
     ClearNotifications,
     FixTeams,
+    Bananas,
     loggerFactory(),
   ],
 })

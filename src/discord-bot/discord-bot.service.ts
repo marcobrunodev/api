@@ -467,6 +467,9 @@ export class DiscordBotService {
         new SlashCommandBuilder()
           .setName(ChatCommands.FixTeams)
           .setDescription("Verify and fix all team channels and permissions"),
+        new SlashCommandBuilder()
+          .setName(ChatCommands.Bananas)
+          .setDescription("Show your banana coins balance"),
       ];
 
       if (process.env.ENABLE_MIGRATE_COMMAND === 'true') {

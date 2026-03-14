@@ -26,4 +26,5 @@ export enum ChatCommands {
   Warmup = "warmup",
   ClearNotifications = "clear",
   FixTeams = "fix-teams",
+  Bananas = "bananas",
 }
