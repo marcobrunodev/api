@@ -122,7 +122,7 @@ export default class AcceptTeamMember extends DiscordInteraction {
         console.error("Error deleting join request message:", deleteError);
       }
 
-      // Add permission to the private team channel
+      // Add permissions to the team category and private channel
       const guild = interaction.guild;
       if (guild) {
         const categoryName = `🏆 ${team.short_name}`;
@@ -132,7 +132,18 @@ export default class AcceptTeamMember extends DiscordInteraction {
             channel.name === categoryName,
         );
 
-        if (category) {
+        if (category && category.type === ChannelType.GuildCategory) {
+          // Add permission to the category
+          try {
+            await category.permissionOverwrites.edit(discordPlayerId, {
+              ViewChannel: true,
+              SendMessages: true,
+            });
+            console.log(`Added ${discordPlayerId} to team category ${category.name}`);
+          } catch (permError) {
+            console.error("Error adding permission to team category:", permError);
+          }
+
           // Find the private team channel
           const teamChannel = guild.channels.cache.find(
             (channel) =>
@@ -150,6 +161,27 @@ export default class AcceptTeamMember extends DiscordInteraction {
               console.log(`Added ${discordPlayerId} to team channel ${teamChannel.name}`);
             } catch (permError) {
               console.error("Error adding permission to team channel:", permError);
+            }
+          }
+
+          // Find the voice channel
+          const voiceChannel = guild.channels.cache.find(
+            (channel) =>
+              channel.type === ChannelType.GuildVoice &&
+              channel.parentId === category.id &&
+              channel.name === `🔊-playing`,
+          );
+
+          if (voiceChannel && voiceChannel.type === ChannelType.GuildVoice) {
+            try {
+              await voiceChannel.permissionOverwrites.edit(discordPlayerId, {
+                ViewChannel: true,
+                Connect: true,
+                Speak: true,
+              });
+              console.log(`Added ${discordPlayerId} to voice channel ${voiceChannel.name}`);
+            } catch (permError) {
+              console.error("Error adding permission to voice channel:", permError);
             }
           }
         }
@@ -238,7 +270,7 @@ export default class AcceptTeamMember extends DiscordInteraction {
         .join("\n");
 
       // Fetch messages from recruitment channel to find the embed
-      const messages = await recruitChannel.messages.fetch({ limit: 10 });
+      const messages = await recruitChannel.messages.fetch({ limit: 50 });
       const embedMessage = messages.find(
         (msg) =>
           msg.author.id === this.bot.client.user.id &&

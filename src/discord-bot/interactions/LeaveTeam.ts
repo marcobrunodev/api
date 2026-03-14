@@ -118,7 +118,7 @@ export default class LeaveTeam extends DiscordInteraction {
         },
       });
 
-      // Remove permission from the private team channel
+      // Remove permissions from the team category and all channels inside it
       const guild = interaction.guild;
       if (guild) {
         const categoryName = `🏆 ${team.short_name}`;
@@ -128,21 +128,28 @@ export default class LeaveTeam extends DiscordInteraction {
             channel.name === categoryName,
         );
 
-        if (category) {
-          // Find the private team channel
-          const teamChannel = guild.channels.cache.find(
-            (channel) =>
-              channel.type === ChannelType.GuildText &&
-              channel.parentId === category.id &&
-              channel.name === `💬-${team.short_name.toLowerCase()}`,
+        if (category && category.type === ChannelType.GuildCategory) {
+          // Remove permission from the category
+          try {
+            await category.permissionOverwrites.delete(interaction.user.id);
+            console.log(`Removed ${interaction.user.id} from team category ${category.name}`);
+          } catch (permError) {
+            console.error("Error removing permission from team category:", permError);
+          }
+
+          // Remove permission from all channels inside the category
+          const childChannels = guild.channels.cache.filter(
+            (channel) => channel.parentId === category.id,
           );
 
-          if (teamChannel && teamChannel.type === ChannelType.GuildText) {
-            try {
-              await teamChannel.permissionOverwrites.delete(interaction.user.id);
-              console.log(`Removed ${interaction.user.id} from team channel ${teamChannel.name}`);
-            } catch (permError) {
-              console.error("Error removing permission from team channel:", permError);
+          for (const [, childChannel] of childChannels) {
+            if ('permissionOverwrites' in childChannel) {
+              try {
+                await childChannel.permissionOverwrites.delete(interaction.user.id);
+                console.log(`Removed ${interaction.user.id} from channel ${childChannel.name}`);
+              } catch (permError) {
+                // Permission override may not exist for this user, that's fine
+              }
             }
           }
         }

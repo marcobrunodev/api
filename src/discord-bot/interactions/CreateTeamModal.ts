@@ -316,6 +316,46 @@ export default class CreateTeamModal extends DiscordInteraction {
       } catch (teamChannelError) {
         console.error("Error creating private team channel:", teamChannelError);
       }
+
+      // Create a voice channel for team members
+      try {
+        await guild.channels.create({
+          name: `🔊-playing`,
+          type: ChannelType.GuildVoice,
+          parent: category.id,
+          permissionOverwrites: [
+            {
+              id: guild.id, // @everyone role - can see but cannot connect
+              allow: [PermissionsBitField.Flags.ViewChannel],
+              deny: [
+                PermissionsBitField.Flags.Connect,
+                PermissionsBitField.Flags.Speak,
+              ],
+            },
+            {
+              id: interaction.user.id, // Team owner
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.Connect,
+                PermissionsBitField.Flags.Speak,
+              ],
+            },
+            {
+              id: this.bot.client.user.id, // Bot
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.Connect,
+                PermissionsBitField.Flags.Speak,
+                PermissionsBitField.Flags.ManageChannels,
+              ],
+            },
+          ],
+        });
+
+        console.log(`Created voice channel for team ${team.name}`);
+      } catch (voiceChannelError) {
+        console.error("Error creating voice channel:", voiceChannelError);
+      }
     } catch (error) {
       console.error("Error creating team Discord category:", error);
       // Don't fail the team creation if Discord category fails
