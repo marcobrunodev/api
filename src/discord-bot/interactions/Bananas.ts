@@ -1,6 +1,5 @@
 import {
   ChatInputCommandInteraction,
-  MessageFlags,
   EmbedBuilder,
 } from "discord.js";
 import DiscordInteraction from "./abstracts/DiscordInteraction";
@@ -66,8 +65,9 @@ export default class Bananas extends DiscordInteraction {
         .setTimestamp();
 
       // Show last 5 matches breakdown
-      if (player.bananas && player.bananas.length > 0) {
-        const historyLines = player.bananas.map((entry) => {
+      const bananas = player.bananas as any[];
+      if (bananas && bananas.length > 0) {
+        const historyLines = bananas.map((entry: any) => {
           const breakdown = entry.breakdown || {};
           const parts: string[] = [];
 
