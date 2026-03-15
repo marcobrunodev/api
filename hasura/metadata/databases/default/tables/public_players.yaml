@@ -33,6 +33,15 @@ array_relationships:
         table:
           name: player_assists
           schema: public
+  - name: bananas
+    using:
+      manual_configuration:
+        column_mapping:
+          steam_id: steam_id
+        insertion_order: null
+        remote_table:
+          name: player_bananas
+          schema: public
   - name: coach_lineups
     using:
       foreign_key_constraint_on:
@@ -271,6 +280,11 @@ computed_fields:
     definition:
       function:
         name: get_player_teams
+        schema: public
+  - name: total_bananas
+    definition:
+      function:
+        name: player_total_bananas
         schema: public
   - name: total_matches
     definition:
