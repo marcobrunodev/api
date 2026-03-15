@@ -5950,6 +5950,10 @@ export interface mutation_root {
     delete_player_assists: (player_assists_mutation_response | null)
     /** delete single row from the table: "player_assists" */
     delete_player_assists_by_pk: (player_assists | null)
+    /** delete data from the table: "player_bananas" */
+    delete_player_bananas: (player_bananas_mutation_response | null)
+    /** delete single row from the table: "player_bananas" */
+    delete_player_bananas_by_pk: (player_bananas | null)
     /** delete data from the table: "player_damages" */
     delete_player_damages: (player_damages_mutation_response | null)
     /** delete single row from the table: "player_damages" */
@@ -6273,6 +6277,10 @@ export interface mutation_root {
     insert_player_assists: (player_assists_mutation_response | null)
     /** insert a single row into the table: "player_assists" */
     insert_player_assists_one: (player_assists | null)
+    /** insert data into the table: "player_bananas" */
+    insert_player_bananas: (player_bananas_mutation_response | null)
+    /** insert a single row into the table: "player_bananas" */
+    insert_player_bananas_one: (player_bananas | null)
     /** insert data into the table: "player_damages" */
     insert_player_damages: (player_damages_mutation_response | null)
     /** insert a single row into the table: "player_damages" */
@@ -6730,6 +6738,12 @@ export interface mutation_root {
     update_player_assists_by_pk: (player_assists | null)
     /** update multiples rows of table: "player_assists" */
     update_player_assists_many: ((player_assists_mutation_response | null)[] | null)
+    /** update data of the table: "player_bananas" */
+    update_player_bananas: (player_bananas_mutation_response | null)
+    /** update single row of the table: "player_bananas" */
+    update_player_bananas_by_pk: (player_bananas | null)
+    /** update multiples rows of table: "player_bananas" */
+    update_player_bananas_many: ((player_bananas_mutation_response | null)[] | null)
     /** update data of the table: "player_damages" */
     update_player_damages: (player_damages_mutation_response | null)
     /** update single row of the table: "player_damages" */
@@ -7414,6 +7428,151 @@ export interface player_assists_variance_fields {
     attacker_steam_id: (Scalars['Float'] | null)
     round: (Scalars['Float'] | null)
     __typename: 'player_assists_variance_fields'
+}
+
+
+/** columns and relationships of "player_bananas" */
+export interface player_bananas {
+    amount: Scalars['Int']
+    breakdown: Scalars['jsonb']
+    created_at: Scalars['timestamptz']
+    id: Scalars['uuid']
+    match_id: Scalars['uuid']
+    steam_id: Scalars['bigint']
+    __typename: 'player_bananas'
+}
+
+
+/** aggregated selection of "player_bananas" */
+export interface player_bananas_aggregate {
+    aggregate: (player_bananas_aggregate_fields | null)
+    nodes: player_bananas[]
+    __typename: 'player_bananas_aggregate'
+}
+
+
+/** aggregate fields of "player_bananas" */
+export interface player_bananas_aggregate_fields {
+    avg: (player_bananas_avg_fields | null)
+    count: Scalars['Int']
+    max: (player_bananas_max_fields | null)
+    min: (player_bananas_min_fields | null)
+    stddev: (player_bananas_stddev_fields | null)
+    stddev_pop: (player_bananas_stddev_pop_fields | null)
+    stddev_samp: (player_bananas_stddev_samp_fields | null)
+    sum: (player_bananas_sum_fields | null)
+    var_pop: (player_bananas_var_pop_fields | null)
+    var_samp: (player_bananas_var_samp_fields | null)
+    variance: (player_bananas_variance_fields | null)
+    __typename: 'player_bananas_aggregate_fields'
+}
+
+
+/** aggregate avg on columns */
+export interface player_bananas_avg_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_avg_fields'
+}
+
+
+/** unique or primary key constraints on table "player_bananas" */
+export type player_bananas_constraint = 'player_bananas_pkey' | 'player_bananas_steam_id_match_id_key'
+
+
+/** aggregate max on columns */
+export interface player_bananas_max_fields {
+    amount: (Scalars['Int'] | null)
+    created_at: (Scalars['timestamptz'] | null)
+    id: (Scalars['uuid'] | null)
+    match_id: (Scalars['uuid'] | null)
+    steam_id: (Scalars['bigint'] | null)
+    __typename: 'player_bananas_max_fields'
+}
+
+
+/** aggregate min on columns */
+export interface player_bananas_min_fields {
+    amount: (Scalars['Int'] | null)
+    created_at: (Scalars['timestamptz'] | null)
+    id: (Scalars['uuid'] | null)
+    match_id: (Scalars['uuid'] | null)
+    steam_id: (Scalars['bigint'] | null)
+    __typename: 'player_bananas_min_fields'
+}
+
+
+/** response of any mutation on the table "player_bananas" */
+export interface player_bananas_mutation_response {
+    /** number of rows affected by the mutation */
+    affected_rows: Scalars['Int']
+    /** data from the rows affected by the mutation */
+    returning: player_bananas[]
+    __typename: 'player_bananas_mutation_response'
+}
+
+
+/** select columns of table "player_bananas" */
+export type player_bananas_select_column = 'amount' | 'breakdown' | 'created_at' | 'id' | 'match_id' | 'steam_id'
+
+
+/** aggregate stddev on columns */
+export interface player_bananas_stddev_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_stddev_fields'
+}
+
+
+/** aggregate stddev_pop on columns */
+export interface player_bananas_stddev_pop_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_stddev_pop_fields'
+}
+
+
+/** aggregate stddev_samp on columns */
+export interface player_bananas_stddev_samp_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_stddev_samp_fields'
+}
+
+
+/** aggregate sum on columns */
+export interface player_bananas_sum_fields {
+    amount: (Scalars['Int'] | null)
+    steam_id: (Scalars['bigint'] | null)
+    __typename: 'player_bananas_sum_fields'
+}
+
+
+/** update columns of table "player_bananas" */
+export type player_bananas_update_column = 'amount' | 'breakdown' | 'created_at' | 'id' | 'match_id' | 'steam_id'
+
+
+/** aggregate var_pop on columns */
+export interface player_bananas_var_pop_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_var_pop_fields'
+}
+
+
+/** aggregate var_samp on columns */
+export interface player_bananas_var_samp_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_var_samp_fields'
+}
+
+
+/** aggregate variance on columns */
+export interface player_bananas_variance_fields {
+    amount: (Scalars['Float'] | null)
+    steam_id: (Scalars['Float'] | null)
+    __typename: 'player_bananas_variance_fields'
 }
 
 
@@ -9171,6 +9330,10 @@ export interface players {
     assited_by_players_aggregate: player_assists_aggregate
     avatar_url: (Scalars['String'] | null)
     /** An array relationship */
+    bananas: player_bananas[]
+    /** An aggregate relationship */
+    bananas_aggregate: player_bananas_aggregate
+    /** An array relationship */
     coach_lineups: match_lineups[]
     /** An aggregate relationship */
     coach_lineups_aggregate: match_lineups_aggregate
@@ -9288,6 +9451,8 @@ export interface players {
     team_members_aggregate: team_roster_aggregate
     /** A computed field, executes function "get_player_teams" */
     teams: (teams[] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** An array relationship */
@@ -9342,6 +9507,8 @@ export interface players_avg_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9371,6 +9538,8 @@ export interface players_max_fields {
     name: (Scalars['String'] | null)
     profile_url: (Scalars['String'] | null)
     steam_id: (Scalars['bigint'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9396,6 +9565,8 @@ export interface players_min_fields {
     name: (Scalars['String'] | null)
     profile_url: (Scalars['String'] | null)
     steam_id: (Scalars['bigint'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9423,6 +9594,8 @@ export interface players_stddev_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9436,6 +9609,8 @@ export interface players_stddev_pop_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9449,6 +9624,8 @@ export interface players_stddev_samp_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9462,6 +9639,8 @@ export interface players_sum_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['bigint'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9479,6 +9658,8 @@ export interface players_var_pop_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9492,6 +9673,8 @@ export interface players_var_samp_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9505,6 +9688,8 @@ export interface players_variance_fields {
     /** A computed field, executes function "get_total_player_losses" */
     losses: (Scalars['Int'] | null)
     steam_id: (Scalars['Float'] | null)
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_matches" */
     total_matches: (Scalars['Int'] | null)
     /** A computed field, executes function "get_total_player_wins" */
@@ -9972,6 +10157,12 @@ export interface query_root {
     player_assists_aggregate: player_assists_aggregate
     /** fetch data from the table: "player_assists" using primary key columns */
     player_assists_by_pk: (player_assists | null)
+    /** fetch data from the table: "player_bananas" */
+    player_bananas: player_bananas[]
+    /** fetch aggregated fields from the table: "player_bananas" */
+    player_bananas_aggregate: player_bananas_aggregate
+    /** fetch data from the table: "player_bananas" using primary key columns */
+    player_bananas_by_pk: (player_bananas | null)
     /** An array relationship */
     player_damages: player_damages[]
     /** An aggregate relationship */
@@ -11064,6 +11255,14 @@ export interface subscription_root {
     player_assists_by_pk: (player_assists | null)
     /** fetch data from the table in a streaming manner: "player_assists" */
     player_assists_stream: player_assists[]
+    /** fetch data from the table: "player_bananas" */
+    player_bananas: player_bananas[]
+    /** fetch aggregated fields from the table: "player_bananas" */
+    player_bananas_aggregate: player_bananas_aggregate
+    /** fetch data from the table: "player_bananas" using primary key columns */
+    player_bananas_by_pk: (player_bananas | null)
+    /** fetch data from the table in a streaming manner: "player_bananas" */
+    player_bananas_stream: player_bananas[]
     /** An array relationship */
     player_damages: player_damages[]
     /** An aggregate relationship */
@@ -25094,6 +25293,12 @@ export interface mutation_rootGenqlSelection{
     where: player_assists_bool_exp} })
     /** delete single row from the table: "player_assists" */
     delete_player_assists_by_pk?: (player_assistsGenqlSelection & { __args: {attacked_steam_id: Scalars['bigint'], attacker_steam_id: Scalars['bigint'], match_map_id: Scalars['uuid'], time: Scalars['timestamptz']} })
+    /** delete data from the table: "player_bananas" */
+    delete_player_bananas?: (player_bananas_mutation_responseGenqlSelection & { __args: {
+    /** filter the rows which have to be deleted */
+    where: player_bananas_bool_exp} })
+    /** delete single row from the table: "player_bananas" */
+    delete_player_bananas_by_pk?: (player_bananasGenqlSelection & { __args: {id: Scalars['uuid']} })
     /** delete data from the table: "player_damages" */
     delete_player_damages?: (player_damages_mutation_responseGenqlSelection & { __args: {
     /** filter the rows which have to be deleted */
@@ -25899,6 +26104,18 @@ export interface mutation_rootGenqlSelection{
     object: player_assists_insert_input, 
     /** upsert condition */
     on_conflict?: (player_assists_on_conflict | null)} })
+    /** insert data into the table: "player_bananas" */
+    insert_player_bananas?: (player_bananas_mutation_responseGenqlSelection & { __args: {
+    /** the rows to be inserted */
+    objects: player_bananas_insert_input[], 
+    /** upsert condition */
+    on_conflict?: (player_bananas_on_conflict | null)} })
+    /** insert a single row into the table: "player_bananas" */
+    insert_player_bananas_one?: (player_bananasGenqlSelection & { __args: {
+    /** the row to be inserted */
+    object: player_bananas_insert_input, 
+    /** upsert condition */
+    on_conflict?: (player_bananas_on_conflict | null)} })
     /** insert data into the table: "player_damages" */
     insert_player_damages?: (player_damages_mutation_responseGenqlSelection & { __args: {
     /** the rows to be inserted */
@@ -27162,6 +27379,44 @@ export interface mutation_rootGenqlSelection{
     update_player_assists_many?: (player_assists_mutation_responseGenqlSelection & { __args: {
     /** updates to execute, in order */
     updates: player_assists_updates[]} })
+    /** update data of the table: "player_bananas" */
+    update_player_bananas?: (player_bananas_mutation_responseGenqlSelection & { __args: {
+    /** append existing jsonb value of filtered columns with new jsonb value */
+    _append?: (player_bananas_append_input | null), 
+    /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+    _delete_at_path?: (player_bananas_delete_at_path_input | null), 
+    /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+    _delete_elem?: (player_bananas_delete_elem_input | null), 
+    /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+    _delete_key?: (player_bananas_delete_key_input | null), 
+    /** increments the numeric columns with given value of the filtered values */
+    _inc?: (player_bananas_inc_input | null), 
+    /** prepend existing jsonb value of filtered columns with new jsonb value */
+    _prepend?: (player_bananas_prepend_input | null), 
+    /** sets the columns of the filtered rows to the given values */
+    _set?: (player_bananas_set_input | null), 
+    /** filter the rows which have to be updated */
+    where: player_bananas_bool_exp} })
+    /** update single row of the table: "player_bananas" */
+    update_player_bananas_by_pk?: (player_bananasGenqlSelection & { __args: {
+    /** append existing jsonb value of filtered columns with new jsonb value */
+    _append?: (player_bananas_append_input | null), 
+    /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+    _delete_at_path?: (player_bananas_delete_at_path_input | null), 
+    /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+    _delete_elem?: (player_bananas_delete_elem_input | null), 
+    /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+    _delete_key?: (player_bananas_delete_key_input | null), 
+    /** increments the numeric columns with given value of the filtered values */
+    _inc?: (player_bananas_inc_input | null), 
+    /** prepend existing jsonb value of filtered columns with new jsonb value */
+    _prepend?: (player_bananas_prepend_input | null), 
+    /** sets the columns of the filtered rows to the given values */
+    _set?: (player_bananas_set_input | null), pk_columns: player_bananas_pk_columns_input} })
+    /** update multiples rows of table: "player_bananas" */
+    update_player_bananas_many?: (player_bananas_mutation_responseGenqlSelection & { __args: {
+    /** updates to execute, in order */
+    updates: player_bananas_updates[]} })
     /** update data of the table: "player_damages" */
     update_player_damages?: (player_damages_mutation_responseGenqlSelection & { __args: {
     /** increments the numeric columns with given value of the filtered values */
@@ -28536,6 +28791,287 @@ export interface player_assists_variance_fieldsGenqlSelection{
 
 /** order by variance() on columns of table "player_assists" */
 export interface player_assists_variance_order_by {attacked_steam_id?: (order_by | null),attacker_steam_id?: (order_by | null),round?: (order_by | null)}
+
+
+/** columns and relationships of "player_bananas" */
+export interface player_bananasGenqlSelection{
+    amount?: boolean | number
+    breakdown?: { __args: {
+    /** JSON select path */
+    path?: (Scalars['String'] | null)} } | boolean | number
+    created_at?: boolean | number
+    id?: boolean | number
+    match_id?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** aggregated selection of "player_bananas" */
+export interface player_bananas_aggregateGenqlSelection{
+    aggregate?: player_bananas_aggregate_fieldsGenqlSelection
+    nodes?: player_bananasGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface player_bananas_aggregate_bool_exp {count?: (player_bananas_aggregate_bool_exp_count | null)}
+
+export interface player_bananas_aggregate_bool_exp_count {arguments?: (player_bananas_select_column[] | null),distinct?: (Scalars['Boolean'] | null),filter?: (player_bananas_bool_exp | null),predicate: Int_comparison_exp}
+
+
+/** aggregate fields of "player_bananas" */
+export interface player_bananas_aggregate_fieldsGenqlSelection{
+    avg?: player_bananas_avg_fieldsGenqlSelection
+    count?: { __args: {columns?: (player_bananas_select_column[] | null), distinct?: (Scalars['Boolean'] | null)} } | boolean | number
+    max?: player_bananas_max_fieldsGenqlSelection
+    min?: player_bananas_min_fieldsGenqlSelection
+    stddev?: player_bananas_stddev_fieldsGenqlSelection
+    stddev_pop?: player_bananas_stddev_pop_fieldsGenqlSelection
+    stddev_samp?: player_bananas_stddev_samp_fieldsGenqlSelection
+    sum?: player_bananas_sum_fieldsGenqlSelection
+    var_pop?: player_bananas_var_pop_fieldsGenqlSelection
+    var_samp?: player_bananas_var_samp_fieldsGenqlSelection
+    variance?: player_bananas_variance_fieldsGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by aggregate values of table "player_bananas" */
+export interface player_bananas_aggregate_order_by {avg?: (player_bananas_avg_order_by | null),count?: (order_by | null),max?: (player_bananas_max_order_by | null),min?: (player_bananas_min_order_by | null),stddev?: (player_bananas_stddev_order_by | null),stddev_pop?: (player_bananas_stddev_pop_order_by | null),stddev_samp?: (player_bananas_stddev_samp_order_by | null),sum?: (player_bananas_sum_order_by | null),var_pop?: (player_bananas_var_pop_order_by | null),var_samp?: (player_bananas_var_samp_order_by | null),variance?: (player_bananas_variance_order_by | null)}
+
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export interface player_bananas_append_input {breakdown?: (Scalars['jsonb'] | null)}
+
+
+/** input type for inserting array relation for remote table "player_bananas" */
+export interface player_bananas_arr_rel_insert_input {data: player_bananas_insert_input[],
+/** upsert condition */
+on_conflict?: (player_bananas_on_conflict | null)}
+
+
+/** aggregate avg on columns */
+export interface player_bananas_avg_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by avg() on columns of table "player_bananas" */
+export interface player_bananas_avg_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** Boolean expression to filter rows from the table "player_bananas". All fields are combined with a logical 'AND'. */
+export interface player_bananas_bool_exp {_and?: (player_bananas_bool_exp[] | null),_not?: (player_bananas_bool_exp | null),_or?: (player_bananas_bool_exp[] | null),amount?: (Int_comparison_exp | null),breakdown?: (jsonb_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),id?: (uuid_comparison_exp | null),match_id?: (uuid_comparison_exp | null),steam_id?: (bigint_comparison_exp | null)}
+
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export interface player_bananas_delete_at_path_input {breakdown?: (Scalars['String'][] | null)}
+
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export interface player_bananas_delete_elem_input {breakdown?: (Scalars['Int'] | null)}
+
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export interface player_bananas_delete_key_input {breakdown?: (Scalars['String'] | null)}
+
+
+/** input type for incrementing numeric columns in table "player_bananas" */
+export interface player_bananas_inc_input {amount?: (Scalars['Int'] | null),steam_id?: (Scalars['bigint'] | null)}
+
+
+/** input type for inserting data into table "player_bananas" */
+export interface player_bananas_insert_input {amount?: (Scalars['Int'] | null),breakdown?: (Scalars['jsonb'] | null),created_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),steam_id?: (Scalars['bigint'] | null)}
+
+
+/** aggregate max on columns */
+export interface player_bananas_max_fieldsGenqlSelection{
+    amount?: boolean | number
+    created_at?: boolean | number
+    id?: boolean | number
+    match_id?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by max() on columns of table "player_bananas" */
+export interface player_bananas_max_order_by {amount?: (order_by | null),created_at?: (order_by | null),id?: (order_by | null),match_id?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** aggregate min on columns */
+export interface player_bananas_min_fieldsGenqlSelection{
+    amount?: boolean | number
+    created_at?: boolean | number
+    id?: boolean | number
+    match_id?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by min() on columns of table "player_bananas" */
+export interface player_bananas_min_order_by {amount?: (order_by | null),created_at?: (order_by | null),id?: (order_by | null),match_id?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** response of any mutation on the table "player_bananas" */
+export interface player_bananas_mutation_responseGenqlSelection{
+    /** number of rows affected by the mutation */
+    affected_rows?: boolean | number
+    /** data from the rows affected by the mutation */
+    returning?: player_bananasGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** on_conflict condition type for table "player_bananas" */
+export interface player_bananas_on_conflict {constraint: player_bananas_constraint,update_columns?: player_bananas_update_column[],where?: (player_bananas_bool_exp | null)}
+
+
+/** Ordering options when selecting data from "player_bananas". */
+export interface player_bananas_order_by {amount?: (order_by | null),breakdown?: (order_by | null),created_at?: (order_by | null),id?: (order_by | null),match_id?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** primary key columns input for table: player_bananas */
+export interface player_bananas_pk_columns_input {id: Scalars['uuid']}
+
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export interface player_bananas_prepend_input {breakdown?: (Scalars['jsonb'] | null)}
+
+
+/** input type for updating data in table "player_bananas" */
+export interface player_bananas_set_input {amount?: (Scalars['Int'] | null),breakdown?: (Scalars['jsonb'] | null),created_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),steam_id?: (Scalars['bigint'] | null)}
+
+
+/** aggregate stddev on columns */
+export interface player_bananas_stddev_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by stddev() on columns of table "player_bananas" */
+export interface player_bananas_stddev_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** aggregate stddev_pop on columns */
+export interface player_bananas_stddev_pop_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by stddev_pop() on columns of table "player_bananas" */
+export interface player_bananas_stddev_pop_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** aggregate stddev_samp on columns */
+export interface player_bananas_stddev_samp_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by stddev_samp() on columns of table "player_bananas" */
+export interface player_bananas_stddev_samp_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** Streaming cursor of the table "player_bananas" */
+export interface player_bananas_stream_cursor_input {
+/** Stream column input with initial value */
+initial_value: player_bananas_stream_cursor_value_input,
+/** cursor ordering */
+ordering?: (cursor_ordering | null)}
+
+
+/** Initial value of the column from where the streaming should start */
+export interface player_bananas_stream_cursor_value_input {amount?: (Scalars['Int'] | null),breakdown?: (Scalars['jsonb'] | null),created_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),steam_id?: (Scalars['bigint'] | null)}
+
+
+/** aggregate sum on columns */
+export interface player_bananas_sum_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by sum() on columns of table "player_bananas" */
+export interface player_bananas_sum_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+export interface player_bananas_updates {
+/** append existing jsonb value of filtered columns with new jsonb value */
+_append?: (player_bananas_append_input | null),
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+_delete_at_path?: (player_bananas_delete_at_path_input | null),
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+_delete_elem?: (player_bananas_delete_elem_input | null),
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+_delete_key?: (player_bananas_delete_key_input | null),
+/** increments the numeric columns with given value of the filtered values */
+_inc?: (player_bananas_inc_input | null),
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+_prepend?: (player_bananas_prepend_input | null),
+/** sets the columns of the filtered rows to the given values */
+_set?: (player_bananas_set_input | null),
+/** filter the rows which have to be updated */
+where: player_bananas_bool_exp}
+
+
+/** aggregate var_pop on columns */
+export interface player_bananas_var_pop_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by var_pop() on columns of table "player_bananas" */
+export interface player_bananas_var_pop_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** aggregate var_samp on columns */
+export interface player_bananas_var_samp_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by var_samp() on columns of table "player_bananas" */
+export interface player_bananas_var_samp_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
+
+
+/** aggregate variance on columns */
+export interface player_bananas_variance_fieldsGenqlSelection{
+    amount?: boolean | number
+    steam_id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** order by variance() on columns of table "player_bananas" */
+export interface player_bananas_variance_order_by {amount?: (order_by | null),steam_id?: (order_by | null)}
 
 
 /** columns and relationships of "player_damages" */
@@ -31282,6 +31818,30 @@ export interface playersGenqlSelection{
     where?: (player_assists_bool_exp | null)} })
     avatar_url?: boolean | number
     /** An array relationship */
+    bananas?: (player_bananasGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (player_bananas_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (player_bananas_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
+    /** An aggregate relationship */
+    bananas_aggregate?: (player_bananas_aggregateGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (player_bananas_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (player_bananas_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
+    /** An array relationship */
     coach_lineups?: (match_lineupsGenqlSelection & { __args?: {
     /** distinct select on columns */
     distinct_on?: (match_lineups_select_column[] | null), 
@@ -31841,6 +32401,8 @@ export interface playersGenqlSelection{
     order_by?: (teams_order_by[] | null), 
     /** filter the rows returned */
     where?: (teams_bool_exp | null)} })
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** An array relationship */
@@ -31978,6 +32540,8 @@ export interface players_avg_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -31988,7 +32552,7 @@ export interface players_avg_fieldsGenqlSelection{
 
 
 /** Boolean expression to filter rows from the table "players". All fields are combined with a logical 'AND'. */
-export interface players_bool_exp {_and?: (players_bool_exp[] | null),_not?: (players_bool_exp | null),_or?: (players_bool_exp[] | null),abandoned_matches?: (abandoned_matches_bool_exp | null),abandoned_matches_aggregate?: (abandoned_matches_aggregate_bool_exp | null),assists?: (player_assists_bool_exp | null),assists_aggregate?: (player_assists_aggregate_bool_exp | null),assited_by_players?: (player_assists_bool_exp | null),assited_by_players_aggregate?: (player_assists_aggregate_bool_exp | null),avatar_url?: (String_comparison_exp | null),coach_lineups?: (match_lineups_bool_exp | null),coach_lineups_aggregate?: (match_lineups_aggregate_bool_exp | null),country?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),current_lobby_id?: (uuid_comparison_exp | null),damage_dealt?: (player_damages_bool_exp | null),damage_dealt_aggregate?: (player_damages_aggregate_bool_exp | null),damage_taken?: (player_damages_bool_exp | null),damage_taken_aggregate?: (player_damages_aggregate_bool_exp | null),deaths?: (player_kills_bool_exp | null),deaths_aggregate?: (player_kills_aggregate_bool_exp | null),discord_id?: (String_comparison_exp | null),elo?: (jsonb_comparison_exp | null),elo_history?: (v_player_elo_bool_exp | null),elo_history_aggregate?: (v_player_elo_aggregate_bool_exp | null),flashed_by_players?: (player_flashes_bool_exp | null),flashed_by_players_aggregate?: (player_flashes_aggregate_bool_exp | null),flashed_players?: (player_flashes_bool_exp | null),flashed_players_aggregate?: (player_flashes_aggregate_bool_exp | null),friends?: (my_friends_bool_exp | null),friends_aggregate?: (my_friends_aggregate_bool_exp | null),invited_players?: (team_invites_bool_exp | null),invited_players_aggregate?: (team_invites_aggregate_bool_exp | null),is_banned?: (Boolean_comparison_exp | null),is_gagged?: (Boolean_comparison_exp | null),is_in_another_match?: (Boolean_comparison_exp | null),is_in_lobby?: (Boolean_comparison_exp | null),is_muted?: (Boolean_comparison_exp | null),kills?: (player_kills_bool_exp | null),kills_aggregate?: (player_kills_aggregate_bool_exp | null),kills_by_weapons?: (player_kills_by_weapon_bool_exp | null),kills_by_weapons_aggregate?: (player_kills_by_weapon_aggregate_bool_exp | null),language?: (String_comparison_exp | null),last_sign_in_at?: (timestamptz_comparison_exp | null),lobby_players?: (lobby_players_bool_exp | null),lobby_players_aggregate?: (lobby_players_aggregate_bool_exp | null),losses?: (Int_comparison_exp | null),matches?: (matches_bool_exp | null),matchmaking_cooldown?: (timestamptz_comparison_exp | null),multi_kills?: (v_player_multi_kills_bool_exp | null),multi_kills_aggregate?: (v_player_multi_kills_aggregate_bool_exp | null),name?: (String_comparison_exp | null),name_registered?: (Boolean_comparison_exp | null),notifications?: (notifications_bool_exp | null),notifications_aggregate?: (notifications_aggregate_bool_exp | null),objectives?: (player_objectives_bool_exp | null),objectives_aggregate?: (player_objectives_aggregate_bool_exp | null),owned_teams?: (teams_bool_exp | null),owned_teams_aggregate?: (teams_aggregate_bool_exp | null),player_lineup?: (match_lineup_players_bool_exp | null),player_lineup_aggregate?: (match_lineup_players_aggregate_bool_exp | null),player_unused_utilities?: (player_unused_utility_bool_exp | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_bool_exp | null),profile_url?: (String_comparison_exp | null),role?: (e_player_roles_enum_comparison_exp | null),sanctions?: (player_sanctions_bool_exp | null),sanctions_aggregate?: (player_sanctions_aggregate_bool_exp | null),stats?: (player_stats_bool_exp | null),steam_id?: (bigint_comparison_exp | null),team_invites?: (team_invites_bool_exp | null),team_invites_aggregate?: (team_invites_aggregate_bool_exp | null),team_members?: (team_roster_bool_exp | null),team_members_aggregate?: (team_roster_aggregate_bool_exp | null),teams?: (teams_bool_exp | null),total_matches?: (Int_comparison_exp | null),tournament_organizers?: (tournament_organizers_bool_exp | null),tournament_organizers_aggregate?: (tournament_organizers_aggregate_bool_exp | null),tournament_rosters?: (tournament_team_roster_bool_exp | null),tournament_rosters_aggregate?: (tournament_team_roster_aggregate_bool_exp | null),tournaments?: (tournaments_bool_exp | null),tournaments_aggregate?: (tournaments_aggregate_bool_exp | null),utility_thrown?: (player_utility_bool_exp | null),utility_thrown_aggregate?: (player_utility_aggregate_bool_exp | null),wins?: (Int_comparison_exp | null)}
+export interface players_bool_exp {_and?: (players_bool_exp[] | null),_not?: (players_bool_exp | null),_or?: (players_bool_exp[] | null),abandoned_matches?: (abandoned_matches_bool_exp | null),abandoned_matches_aggregate?: (abandoned_matches_aggregate_bool_exp | null),assists?: (player_assists_bool_exp | null),assists_aggregate?: (player_assists_aggregate_bool_exp | null),assited_by_players?: (player_assists_bool_exp | null),assited_by_players_aggregate?: (player_assists_aggregate_bool_exp | null),avatar_url?: (String_comparison_exp | null),bananas?: (player_bananas_bool_exp | null),bananas_aggregate?: (player_bananas_aggregate_bool_exp | null),coach_lineups?: (match_lineups_bool_exp | null),coach_lineups_aggregate?: (match_lineups_aggregate_bool_exp | null),country?: (String_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),current_lobby_id?: (uuid_comparison_exp | null),damage_dealt?: (player_damages_bool_exp | null),damage_dealt_aggregate?: (player_damages_aggregate_bool_exp | null),damage_taken?: (player_damages_bool_exp | null),damage_taken_aggregate?: (player_damages_aggregate_bool_exp | null),deaths?: (player_kills_bool_exp | null),deaths_aggregate?: (player_kills_aggregate_bool_exp | null),discord_id?: (String_comparison_exp | null),elo?: (jsonb_comparison_exp | null),elo_history?: (v_player_elo_bool_exp | null),elo_history_aggregate?: (v_player_elo_aggregate_bool_exp | null),flashed_by_players?: (player_flashes_bool_exp | null),flashed_by_players_aggregate?: (player_flashes_aggregate_bool_exp | null),flashed_players?: (player_flashes_bool_exp | null),flashed_players_aggregate?: (player_flashes_aggregate_bool_exp | null),friends?: (my_friends_bool_exp | null),friends_aggregate?: (my_friends_aggregate_bool_exp | null),invited_players?: (team_invites_bool_exp | null),invited_players_aggregate?: (team_invites_aggregate_bool_exp | null),is_banned?: (Boolean_comparison_exp | null),is_gagged?: (Boolean_comparison_exp | null),is_in_another_match?: (Boolean_comparison_exp | null),is_in_lobby?: (Boolean_comparison_exp | null),is_muted?: (Boolean_comparison_exp | null),kills?: (player_kills_bool_exp | null),kills_aggregate?: (player_kills_aggregate_bool_exp | null),kills_by_weapons?: (player_kills_by_weapon_bool_exp | null),kills_by_weapons_aggregate?: (player_kills_by_weapon_aggregate_bool_exp | null),language?: (String_comparison_exp | null),last_sign_in_at?: (timestamptz_comparison_exp | null),lobby_players?: (lobby_players_bool_exp | null),lobby_players_aggregate?: (lobby_players_aggregate_bool_exp | null),losses?: (Int_comparison_exp | null),matches?: (matches_bool_exp | null),matchmaking_cooldown?: (timestamptz_comparison_exp | null),multi_kills?: (v_player_multi_kills_bool_exp | null),multi_kills_aggregate?: (v_player_multi_kills_aggregate_bool_exp | null),name?: (String_comparison_exp | null),name_registered?: (Boolean_comparison_exp | null),notifications?: (notifications_bool_exp | null),notifications_aggregate?: (notifications_aggregate_bool_exp | null),objectives?: (player_objectives_bool_exp | null),objectives_aggregate?: (player_objectives_aggregate_bool_exp | null),owned_teams?: (teams_bool_exp | null),owned_teams_aggregate?: (teams_aggregate_bool_exp | null),player_lineup?: (match_lineup_players_bool_exp | null),player_lineup_aggregate?: (match_lineup_players_aggregate_bool_exp | null),player_unused_utilities?: (player_unused_utility_bool_exp | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_bool_exp | null),profile_url?: (String_comparison_exp | null),role?: (e_player_roles_enum_comparison_exp | null),sanctions?: (player_sanctions_bool_exp | null),sanctions_aggregate?: (player_sanctions_aggregate_bool_exp | null),stats?: (player_stats_bool_exp | null),steam_id?: (bigint_comparison_exp | null),team_invites?: (team_invites_bool_exp | null),team_invites_aggregate?: (team_invites_aggregate_bool_exp | null),team_members?: (team_roster_bool_exp | null),team_members_aggregate?: (team_roster_aggregate_bool_exp | null),teams?: (teams_bool_exp | null),total_bananas?: (Int_comparison_exp | null),total_matches?: (Int_comparison_exp | null),tournament_organizers?: (tournament_organizers_bool_exp | null),tournament_organizers_aggregate?: (tournament_organizers_aggregate_bool_exp | null),tournament_rosters?: (tournament_team_roster_bool_exp | null),tournament_rosters_aggregate?: (tournament_team_roster_aggregate_bool_exp | null),tournaments?: (tournaments_bool_exp | null),tournaments_aggregate?: (tournaments_aggregate_bool_exp | null),utility_thrown?: (player_utility_bool_exp | null),utility_thrown_aggregate?: (player_utility_aggregate_bool_exp | null),wins?: (Int_comparison_exp | null)}
 
 
 /** input type for incrementing numeric columns in table "players" */
@@ -31996,7 +32560,7 @@ export interface players_inc_input {steam_id?: (Scalars['bigint'] | null)}
 
 
 /** input type for inserting data into table "players" */
-export interface players_insert_input {abandoned_matches?: (abandoned_matches_arr_rel_insert_input | null),assists?: (player_assists_arr_rel_insert_input | null),assited_by_players?: (player_assists_arr_rel_insert_input | null),avatar_url?: (Scalars['String'] | null),coach_lineups?: (match_lineups_arr_rel_insert_input | null),country?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),damage_dealt?: (player_damages_arr_rel_insert_input | null),damage_taken?: (player_damages_arr_rel_insert_input | null),deaths?: (player_kills_arr_rel_insert_input | null),discord_id?: (Scalars['String'] | null),elo_history?: (v_player_elo_arr_rel_insert_input | null),flashed_by_players?: (player_flashes_arr_rel_insert_input | null),flashed_players?: (player_flashes_arr_rel_insert_input | null),friends?: (my_friends_arr_rel_insert_input | null),invited_players?: (team_invites_arr_rel_insert_input | null),kills?: (player_kills_arr_rel_insert_input | null),kills_by_weapons?: (player_kills_by_weapon_arr_rel_insert_input | null),language?: (Scalars['String'] | null),last_sign_in_at?: (Scalars['timestamptz'] | null),lobby_players?: (lobby_players_arr_rel_insert_input | null),multi_kills?: (v_player_multi_kills_arr_rel_insert_input | null),name?: (Scalars['String'] | null),name_registered?: (Scalars['Boolean'] | null),notifications?: (notifications_arr_rel_insert_input | null),objectives?: (player_objectives_arr_rel_insert_input | null),owned_teams?: (teams_arr_rel_insert_input | null),player_lineup?: (match_lineup_players_arr_rel_insert_input | null),player_unused_utilities?: (player_unused_utility_arr_rel_insert_input | null),profile_url?: (Scalars['String'] | null),role?: (e_player_roles_enum | null),sanctions?: (player_sanctions_arr_rel_insert_input | null),stats?: (player_stats_obj_rel_insert_input | null),steam_id?: (Scalars['bigint'] | null),team_invites?: (team_invites_arr_rel_insert_input | null),team_members?: (team_roster_arr_rel_insert_input | null),tournament_organizers?: (tournament_organizers_arr_rel_insert_input | null),tournament_rosters?: (tournament_team_roster_arr_rel_insert_input | null),tournaments?: (tournaments_arr_rel_insert_input | null),utility_thrown?: (player_utility_arr_rel_insert_input | null)}
+export interface players_insert_input {abandoned_matches?: (abandoned_matches_arr_rel_insert_input | null),assists?: (player_assists_arr_rel_insert_input | null),assited_by_players?: (player_assists_arr_rel_insert_input | null),avatar_url?: (Scalars['String'] | null),bananas?: (player_bananas_arr_rel_insert_input | null),coach_lineups?: (match_lineups_arr_rel_insert_input | null),country?: (Scalars['String'] | null),created_at?: (Scalars['timestamptz'] | null),damage_dealt?: (player_damages_arr_rel_insert_input | null),damage_taken?: (player_damages_arr_rel_insert_input | null),deaths?: (player_kills_arr_rel_insert_input | null),discord_id?: (Scalars['String'] | null),elo_history?: (v_player_elo_arr_rel_insert_input | null),flashed_by_players?: (player_flashes_arr_rel_insert_input | null),flashed_players?: (player_flashes_arr_rel_insert_input | null),friends?: (my_friends_arr_rel_insert_input | null),invited_players?: (team_invites_arr_rel_insert_input | null),kills?: (player_kills_arr_rel_insert_input | null),kills_by_weapons?: (player_kills_by_weapon_arr_rel_insert_input | null),language?: (Scalars['String'] | null),last_sign_in_at?: (Scalars['timestamptz'] | null),lobby_players?: (lobby_players_arr_rel_insert_input | null),multi_kills?: (v_player_multi_kills_arr_rel_insert_input | null),name?: (Scalars['String'] | null),name_registered?: (Scalars['Boolean'] | null),notifications?: (notifications_arr_rel_insert_input | null),objectives?: (player_objectives_arr_rel_insert_input | null),owned_teams?: (teams_arr_rel_insert_input | null),player_lineup?: (match_lineup_players_arr_rel_insert_input | null),player_unused_utilities?: (player_unused_utility_arr_rel_insert_input | null),profile_url?: (Scalars['String'] | null),role?: (e_player_roles_enum | null),sanctions?: (player_sanctions_arr_rel_insert_input | null),stats?: (player_stats_obj_rel_insert_input | null),steam_id?: (Scalars['bigint'] | null),team_invites?: (team_invites_arr_rel_insert_input | null),team_members?: (team_roster_arr_rel_insert_input | null),tournament_organizers?: (tournament_organizers_arr_rel_insert_input | null),tournament_rosters?: (tournament_team_roster_arr_rel_insert_input | null),tournaments?: (tournaments_arr_rel_insert_input | null),utility_thrown?: (player_utility_arr_rel_insert_input | null)}
 
 
 /** aggregate max on columns */
@@ -32016,6 +32580,8 @@ export interface players_max_fieldsGenqlSelection{
     name?: boolean | number
     profile_url?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32042,6 +32608,8 @@ export interface players_min_fieldsGenqlSelection{
     name?: boolean | number
     profile_url?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32073,7 +32641,7 @@ export interface players_on_conflict {constraint: players_constraint,update_colu
 
 
 /** Ordering options when selecting data from "players". */
-export interface players_order_by {abandoned_matches_aggregate?: (abandoned_matches_aggregate_order_by | null),assists_aggregate?: (player_assists_aggregate_order_by | null),assited_by_players_aggregate?: (player_assists_aggregate_order_by | null),avatar_url?: (order_by | null),coach_lineups_aggregate?: (match_lineups_aggregate_order_by | null),country?: (order_by | null),created_at?: (order_by | null),current_lobby_id?: (order_by | null),damage_dealt_aggregate?: (player_damages_aggregate_order_by | null),damage_taken_aggregate?: (player_damages_aggregate_order_by | null),deaths_aggregate?: (player_kills_aggregate_order_by | null),discord_id?: (order_by | null),elo?: (order_by | null),elo_history_aggregate?: (v_player_elo_aggregate_order_by | null),flashed_by_players_aggregate?: (player_flashes_aggregate_order_by | null),flashed_players_aggregate?: (player_flashes_aggregate_order_by | null),friends_aggregate?: (my_friends_aggregate_order_by | null),invited_players_aggregate?: (team_invites_aggregate_order_by | null),is_banned?: (order_by | null),is_gagged?: (order_by | null),is_in_another_match?: (order_by | null),is_in_lobby?: (order_by | null),is_muted?: (order_by | null),kills_aggregate?: (player_kills_aggregate_order_by | null),kills_by_weapons_aggregate?: (player_kills_by_weapon_aggregate_order_by | null),language?: (order_by | null),last_sign_in_at?: (order_by | null),lobby_players_aggregate?: (lobby_players_aggregate_order_by | null),losses?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),matchmaking_cooldown?: (order_by | null),multi_kills_aggregate?: (v_player_multi_kills_aggregate_order_by | null),name?: (order_by | null),name_registered?: (order_by | null),notifications_aggregate?: (notifications_aggregate_order_by | null),objectives_aggregate?: (player_objectives_aggregate_order_by | null),owned_teams_aggregate?: (teams_aggregate_order_by | null),player_lineup_aggregate?: (match_lineup_players_aggregate_order_by | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_order_by | null),profile_url?: (order_by | null),role?: (order_by | null),sanctions_aggregate?: (player_sanctions_aggregate_order_by | null),stats?: (player_stats_order_by | null),steam_id?: (order_by | null),team_invites_aggregate?: (team_invites_aggregate_order_by | null),team_members_aggregate?: (team_roster_aggregate_order_by | null),teams_aggregate?: (teams_aggregate_order_by | null),total_matches?: (order_by | null),tournament_organizers_aggregate?: (tournament_organizers_aggregate_order_by | null),tournament_rosters_aggregate?: (tournament_team_roster_aggregate_order_by | null),tournaments_aggregate?: (tournaments_aggregate_order_by | null),utility_thrown_aggregate?: (player_utility_aggregate_order_by | null),wins?: (order_by | null)}
+export interface players_order_by {abandoned_matches_aggregate?: (abandoned_matches_aggregate_order_by | null),assists_aggregate?: (player_assists_aggregate_order_by | null),assited_by_players_aggregate?: (player_assists_aggregate_order_by | null),avatar_url?: (order_by | null),bananas_aggregate?: (player_bananas_aggregate_order_by | null),coach_lineups_aggregate?: (match_lineups_aggregate_order_by | null),country?: (order_by | null),created_at?: (order_by | null),current_lobby_id?: (order_by | null),damage_dealt_aggregate?: (player_damages_aggregate_order_by | null),damage_taken_aggregate?: (player_damages_aggregate_order_by | null),deaths_aggregate?: (player_kills_aggregate_order_by | null),discord_id?: (order_by | null),elo?: (order_by | null),elo_history_aggregate?: (v_player_elo_aggregate_order_by | null),flashed_by_players_aggregate?: (player_flashes_aggregate_order_by | null),flashed_players_aggregate?: (player_flashes_aggregate_order_by | null),friends_aggregate?: (my_friends_aggregate_order_by | null),invited_players_aggregate?: (team_invites_aggregate_order_by | null),is_banned?: (order_by | null),is_gagged?: (order_by | null),is_in_another_match?: (order_by | null),is_in_lobby?: (order_by | null),is_muted?: (order_by | null),kills_aggregate?: (player_kills_aggregate_order_by | null),kills_by_weapons_aggregate?: (player_kills_by_weapon_aggregate_order_by | null),language?: (order_by | null),last_sign_in_at?: (order_by | null),lobby_players_aggregate?: (lobby_players_aggregate_order_by | null),losses?: (order_by | null),matches_aggregate?: (matches_aggregate_order_by | null),matchmaking_cooldown?: (order_by | null),multi_kills_aggregate?: (v_player_multi_kills_aggregate_order_by | null),name?: (order_by | null),name_registered?: (order_by | null),notifications_aggregate?: (notifications_aggregate_order_by | null),objectives_aggregate?: (player_objectives_aggregate_order_by | null),owned_teams_aggregate?: (teams_aggregate_order_by | null),player_lineup_aggregate?: (match_lineup_players_aggregate_order_by | null),player_unused_utilities_aggregate?: (player_unused_utility_aggregate_order_by | null),profile_url?: (order_by | null),role?: (order_by | null),sanctions_aggregate?: (player_sanctions_aggregate_order_by | null),stats?: (player_stats_order_by | null),steam_id?: (order_by | null),team_invites_aggregate?: (team_invites_aggregate_order_by | null),team_members_aggregate?: (team_roster_aggregate_order_by | null),teams_aggregate?: (teams_aggregate_order_by | null),total_bananas?: (order_by | null),total_matches?: (order_by | null),tournament_organizers_aggregate?: (tournament_organizers_aggregate_order_by | null),tournament_rosters_aggregate?: (tournament_team_roster_aggregate_order_by | null),tournaments_aggregate?: (tournaments_aggregate_order_by | null),utility_thrown_aggregate?: (player_utility_aggregate_order_by | null),wins?: (order_by | null)}
 
 
 /** primary key columns input for table: players */
@@ -32089,6 +32657,8 @@ export interface players_stddev_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32103,6 +32673,8 @@ export interface players_stddev_pop_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32117,6 +32689,8 @@ export interface players_stddev_samp_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32143,6 +32717,8 @@ export interface players_sum_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32165,6 +32741,8 @@ export interface players_var_pop_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32179,6 +32757,8 @@ export interface players_var_samp_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -32193,6 +32773,8 @@ export interface players_variance_fieldsGenqlSelection{
     /** A computed field, executes function "get_total_player_losses" */
     losses?: boolean | number
     steam_id?: boolean | number
+    /** A computed field, executes function "player_total_bananas" */
+    total_bananas?: boolean | number
     /** A computed field, executes function "get_total_player_matches" */
     total_matches?: boolean | number
     /** A computed field, executes function "get_total_player_wins" */
@@ -33791,6 +34373,32 @@ export interface query_rootGenqlSelection{
     where?: (player_assists_bool_exp | null)} })
     /** fetch data from the table: "player_assists" using primary key columns */
     player_assists_by_pk?: (player_assistsGenqlSelection & { __args: {attacked_steam_id: Scalars['bigint'], attacker_steam_id: Scalars['bigint'], match_map_id: Scalars['uuid'], time: Scalars['timestamptz']} })
+    /** fetch data from the table: "player_bananas" */
+    player_bananas?: (player_bananasGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (player_bananas_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (player_bananas_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
+    /** fetch aggregated fields from the table: "player_bananas" */
+    player_bananas_aggregate?: (player_bananas_aggregateGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (player_bananas_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (player_bananas_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
+    /** fetch data from the table: "player_bananas" using primary key columns */
+    player_bananas_by_pk?: (player_bananasGenqlSelection & { __args: {id: Scalars['uuid']} })
     /** An array relationship */
     player_damages?: (player_damagesGenqlSelection & { __args?: {
     /** distinct select on columns */
@@ -37240,6 +37848,40 @@ export interface subscription_rootGenqlSelection{
     cursor: (player_assists_stream_cursor_input | null)[], 
     /** filter the rows returned */
     where?: (player_assists_bool_exp | null)} })
+    /** fetch data from the table: "player_bananas" */
+    player_bananas?: (player_bananasGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (player_bananas_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (player_bananas_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
+    /** fetch aggregated fields from the table: "player_bananas" */
+    player_bananas_aggregate?: (player_bananas_aggregateGenqlSelection & { __args?: {
+    /** distinct select on columns */
+    distinct_on?: (player_bananas_select_column[] | null), 
+    /** limit the number of rows returned */
+    limit?: (Scalars['Int'] | null), 
+    /** skip the first n rows. Use only with order_by */
+    offset?: (Scalars['Int'] | null), 
+    /** sort the rows by one or more columns */
+    order_by?: (player_bananas_order_by[] | null), 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
+    /** fetch data from the table: "player_bananas" using primary key columns */
+    player_bananas_by_pk?: (player_bananasGenqlSelection & { __args: {id: Scalars['uuid']} })
+    /** fetch data from the table in a streaming manner: "player_bananas" */
+    player_bananas_stream?: (player_bananasGenqlSelection & { __args: {
+    /** maximum number of rows returned in a single batch */
+    batch_size: Scalars['Int'], 
+    /** cursor to stream the results returned by the query */
+    cursor: (player_bananas_stream_cursor_input | null)[], 
+    /** filter the rows returned */
+    where?: (player_bananas_bool_exp | null)} })
     /** An array relationship */
     player_damages?: (player_damagesGenqlSelection & { __args?: {
     /** distinct select on columns */
@@ -47988,6 +48630,118 @@ export type SubscriptionGenqlSelection = subscription_rootGenqlSelection
     
 
 
+    const player_bananas_possibleTypes: string[] = ['player_bananas']
+    export const isplayer_bananas = (obj?: { __typename?: any } | null): obj is player_bananas => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas"')
+      return player_bananas_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_aggregate_possibleTypes: string[] = ['player_bananas_aggregate']
+    export const isplayer_bananas_aggregate = (obj?: { __typename?: any } | null): obj is player_bananas_aggregate => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_aggregate"')
+      return player_bananas_aggregate_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_aggregate_fields_possibleTypes: string[] = ['player_bananas_aggregate_fields']
+    export const isplayer_bananas_aggregate_fields = (obj?: { __typename?: any } | null): obj is player_bananas_aggregate_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_aggregate_fields"')
+      return player_bananas_aggregate_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_avg_fields_possibleTypes: string[] = ['player_bananas_avg_fields']
+    export const isplayer_bananas_avg_fields = (obj?: { __typename?: any } | null): obj is player_bananas_avg_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_avg_fields"')
+      return player_bananas_avg_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_max_fields_possibleTypes: string[] = ['player_bananas_max_fields']
+    export const isplayer_bananas_max_fields = (obj?: { __typename?: any } | null): obj is player_bananas_max_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_max_fields"')
+      return player_bananas_max_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_min_fields_possibleTypes: string[] = ['player_bananas_min_fields']
+    export const isplayer_bananas_min_fields = (obj?: { __typename?: any } | null): obj is player_bananas_min_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_min_fields"')
+      return player_bananas_min_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_mutation_response_possibleTypes: string[] = ['player_bananas_mutation_response']
+    export const isplayer_bananas_mutation_response = (obj?: { __typename?: any } | null): obj is player_bananas_mutation_response => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_mutation_response"')
+      return player_bananas_mutation_response_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_stddev_fields_possibleTypes: string[] = ['player_bananas_stddev_fields']
+    export const isplayer_bananas_stddev_fields = (obj?: { __typename?: any } | null): obj is player_bananas_stddev_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_stddev_fields"')
+      return player_bananas_stddev_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_stddev_pop_fields_possibleTypes: string[] = ['player_bananas_stddev_pop_fields']
+    export const isplayer_bananas_stddev_pop_fields = (obj?: { __typename?: any } | null): obj is player_bananas_stddev_pop_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_stddev_pop_fields"')
+      return player_bananas_stddev_pop_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_stddev_samp_fields_possibleTypes: string[] = ['player_bananas_stddev_samp_fields']
+    export const isplayer_bananas_stddev_samp_fields = (obj?: { __typename?: any } | null): obj is player_bananas_stddev_samp_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_stddev_samp_fields"')
+      return player_bananas_stddev_samp_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_sum_fields_possibleTypes: string[] = ['player_bananas_sum_fields']
+    export const isplayer_bananas_sum_fields = (obj?: { __typename?: any } | null): obj is player_bananas_sum_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_sum_fields"')
+      return player_bananas_sum_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_var_pop_fields_possibleTypes: string[] = ['player_bananas_var_pop_fields']
+    export const isplayer_bananas_var_pop_fields = (obj?: { __typename?: any } | null): obj is player_bananas_var_pop_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_var_pop_fields"')
+      return player_bananas_var_pop_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_var_samp_fields_possibleTypes: string[] = ['player_bananas_var_samp_fields']
+    export const isplayer_bananas_var_samp_fields = (obj?: { __typename?: any } | null): obj is player_bananas_var_samp_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_var_samp_fields"')
+      return player_bananas_var_samp_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const player_bananas_variance_fields_possibleTypes: string[] = ['player_bananas_variance_fields']
+    export const isplayer_bananas_variance_fields = (obj?: { __typename?: any } | null): obj is player_bananas_variance_fields => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_bananas_variance_fields"')
+      return player_bananas_variance_fields_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const player_damages_possibleTypes: string[] = ['player_damages']
     export const isplayer_damages = (obj?: { __typename?: any } | null): obj is player_damages => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isplayer_damages"')
@@ -53245,6 +53999,29 @@ export const enumPlayerAssistsUpdateColumn = {
    match_map_id: 'match_map_id' as const,
    round: 'round' as const,
    time: 'time' as const
+}
+
+export const enumPlayerBananasConstraint = {
+   player_bananas_pkey: 'player_bananas_pkey' as const,
+   player_bananas_steam_id_match_id_key: 'player_bananas_steam_id_match_id_key' as const
+}
+
+export const enumPlayerBananasSelectColumn = {
+   amount: 'amount' as const,
+   breakdown: 'breakdown' as const,
+   created_at: 'created_at' as const,
+   id: 'id' as const,
+   match_id: 'match_id' as const,
+   steam_id: 'steam_id' as const
+}
+
+export const enumPlayerBananasUpdateColumn = {
+   amount: 'amount' as const,
+   breakdown: 'breakdown' as const,
+   created_at: 'created_at' as const,
+   id: 'id' as const,
+   match_id: 'match_id' as const,
+   steam_id: 'steam_id' as const
 }
 
 export const enumPlayerDamagesConstraint = {
