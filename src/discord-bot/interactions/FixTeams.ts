@@ -77,10 +77,29 @@ export default class FixTeams extends DiscordInteraction {
         continue;
       }
 
-      // Get roster member discord IDs (excluding owner)
-      const memberDiscordIds = team.roster
+      // Get roster member discord IDs (excluding owner) and validate they exist in the guild
+      const rosterDiscordIds = team.roster
         .filter((r) => r.player?.discord_id && r.player.discord_id !== ownerDiscordId)
         .map((r) => r.player.discord_id);
+
+      const validMemberDiscordIds: string[] = [];
+      for (const memberId of rosterDiscordIds) {
+        try {
+          await guild.members.fetch(memberId);
+          validMemberDiscordIds.push(memberId);
+        } catch {
+          logs.push(`⚠️ **${team.name}** - Member ${memberId} not found in guild, skipping.`);
+        }
+      }
+
+      // Validate owner exists in guild
+      let ownerValid = true;
+      try {
+        await guild.members.fetch(ownerDiscordId);
+      } catch {
+        ownerValid = false;
+        logs.push(`⚠️ **${team.name}** - Owner ${ownerDiscordId} not found in guild, skipping owner permissions.`);
+      }
 
       // Fix category permissions
       try {
@@ -88,17 +107,20 @@ export default class FixTeams extends DiscordInteraction {
           ViewChannel: true,
           SendMessages: false,
         });
-        await category.permissionOverwrites.edit(ownerDiscordId, {
-          ViewChannel: true,
-          SendMessages: true,
-          ManageChannels: true,
-        });
+        if (ownerValid) {
+          await category.permissionOverwrites.edit(ownerDiscordId, {
+            ViewChannel: true,
+            SendMessages: true,
+            ManageChannels: true,
+          });
+        }
         await category.permissionOverwrites.edit(this.bot.client.user.id, {
           ViewChannel: true,
           SendMessages: true,
           ManageChannels: true,
+          ManageRoles: true,
         });
-        for (const memberId of memberDiscordIds) {
+        for (const memberId of validMemberDiscordIds) {
           await category.permissionOverwrites.edit(memberId, {
             ViewChannel: true,
             SendMessages: true,
@@ -130,10 +152,12 @@ export default class FixTeams extends DiscordInteraction {
             ViewChannel: true,
             SendMessages: false,
           });
-          await recruitChannel.permissionOverwrites.edit(ownerDiscordId, {
-            ViewChannel: true,
-            SendMessages: true,
-          });
+          if (ownerValid) {
+            await recruitChannel.permissionOverwrites.edit(ownerDiscordId, {
+              ViewChannel: true,
+              SendMessages: true,
+            });
+          }
           await recruitChannel.permissionOverwrites.edit(this.bot.client.user.id, {
             ViewChannel: true,
             SendMessages: true,
@@ -152,10 +176,12 @@ export default class FixTeams extends DiscordInteraction {
               ViewChannel: true,
               SendMessages: false,
             });
-            await recruitChannel.permissionOverwrites.edit(ownerDiscordId, {
-              ViewChannel: true,
-              SendMessages: true,
-            });
+            if (ownerValid) {
+              await recruitChannel.permissionOverwrites.edit(ownerDiscordId, {
+                ViewChannel: true,
+                SendMessages: true,
+              });
+            }
             await recruitChannel.permissionOverwrites.edit(this.bot.client.user.id, {
               ViewChannel: true,
               SendMessages: true,
@@ -210,18 +236,20 @@ export default class FixTeams extends DiscordInteraction {
             ViewChannel: false,
             SendMessages: false,
           });
-          await teamChannel.permissionOverwrites.edit(ownerDiscordId, {
-            ViewChannel: true,
-            SendMessages: true,
-            ManageMessages: true,
-          });
+          if (ownerValid) {
+            await teamChannel.permissionOverwrites.edit(ownerDiscordId, {
+              ViewChannel: true,
+              SendMessages: true,
+              ManageMessages: true,
+            });
+          }
           await teamChannel.permissionOverwrites.edit(this.bot.client.user.id, {
             ViewChannel: true,
             SendMessages: true,
             ManageMessages: true,
             ManageChannels: true,
           });
-          for (const memberId of memberDiscordIds) {
+          for (const memberId of validMemberDiscordIds) {
             await teamChannel.permissionOverwrites.edit(memberId, {
               ViewChannel: true,
               SendMessages: true,
@@ -251,18 +279,20 @@ export default class FixTeams extends DiscordInteraction {
               ViewChannel: false,
               SendMessages: false,
             });
-            await teamChannel.permissionOverwrites.edit(ownerDiscordId, {
-              ViewChannel: true,
-              SendMessages: true,
-              ManageMessages: true,
-            });
+            if (ownerValid) {
+              await teamChannel.permissionOverwrites.edit(ownerDiscordId, {
+                ViewChannel: true,
+                SendMessages: true,
+                ManageMessages: true,
+              });
+            }
             await teamChannel.permissionOverwrites.edit(this.bot.client.user.id, {
               ViewChannel: true,
               SendMessages: true,
               ManageMessages: true,
               ManageChannels: true,
             });
-            for (const memberId of memberDiscordIds) {
+            for (const memberId of validMemberDiscordIds) {
               await teamChannel.permissionOverwrites.edit(memberId, {
                 ViewChannel: true,
                 SendMessages: true,
@@ -297,25 +327,27 @@ export default class FixTeams extends DiscordInteraction {
 
       if (!voiceChannel) {
         try {
-          const voicePermissions = [
+          const voicePermissions: any[] = [
             {
               id: guild.id,
               deny: [PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
               allow: [PermissionsBitField.Flags.ViewChannel],
             },
             {
-              id: ownerDiscordId,
-              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
-            },
-            {
               id: this.bot.client.user.id,
-              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak, PermissionsBitField.Flags.ManageChannels],
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak, PermissionsBitField.Flags.ManageChannels, PermissionsBitField.Flags.ManageRoles],
             },
-            ...memberDiscordIds.map((memberId) => ({
+            ...validMemberDiscordIds.map((memberId) => ({
               id: memberId,
               allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
             })),
           ];
+          if (ownerValid) {
+            voicePermissions.push({
+              id: ownerDiscordId,
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+            });
+          }
 
           voiceChannel = await guild.channels.create({
             name: "🔊-playing",
@@ -333,25 +365,28 @@ export default class FixTeams extends DiscordInteraction {
         if (voiceChannel.type === ChannelType.GuildVoice) {
           try {
             // Use set() to replace all permissions at once, breaking any category sync
-            await voiceChannel.permissionOverwrites.set([
+            const existingVoicePerms: any[] = [
               {
                 id: guild.id,
                 deny: [PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
                 allow: [PermissionsBitField.Flags.ViewChannel],
               },
               {
-                id: ownerDiscordId,
-                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
-              },
-              {
                 id: this.bot.client.user.id,
-                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak, PermissionsBitField.Flags.ManageChannels],
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak, PermissionsBitField.Flags.ManageChannels, PermissionsBitField.Flags.ManageRoles],
               },
-              ...memberDiscordIds.map((memberId) => ({
+              ...validMemberDiscordIds.map((memberId) => ({
                 id: memberId,
                 allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
               })),
-            ]);
+            ];
+            if (ownerValid) {
+              existingVoicePerms.push({
+                id: ownerDiscordId,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak],
+              });
+            }
+            await voiceChannel.permissionOverwrites.set(existingVoicePerms);
 
             fixedCount++;
           } catch (error) {
