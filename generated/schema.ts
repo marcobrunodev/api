@@ -7437,6 +7437,8 @@ export interface player_bananas {
     breakdown: Scalars['jsonb']
     created_at: Scalars['timestamptz']
     id: Scalars['uuid']
+    /** An object relationship */
+    match: (matches | null)
     match_id: Scalars['uuid']
     steam_id: Scalars['bigint']
     __typename: 'player_bananas'
@@ -28801,6 +28803,8 @@ export interface player_bananasGenqlSelection{
     path?: (Scalars['String'] | null)} } | boolean | number
     created_at?: boolean | number
     id?: boolean | number
+    /** An object relationship */
+    match?: matchesGenqlSelection
     match_id?: boolean | number
     steam_id?: boolean | number
     __typename?: boolean | number
@@ -28867,7 +28871,7 @@ export interface player_bananas_avg_order_by {amount?: (order_by | null),steam_i
 
 
 /** Boolean expression to filter rows from the table "player_bananas". All fields are combined with a logical 'AND'. */
-export interface player_bananas_bool_exp {_and?: (player_bananas_bool_exp[] | null),_not?: (player_bananas_bool_exp | null),_or?: (player_bananas_bool_exp[] | null),amount?: (Int_comparison_exp | null),breakdown?: (jsonb_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),id?: (uuid_comparison_exp | null),match_id?: (uuid_comparison_exp | null),steam_id?: (bigint_comparison_exp | null)}
+export interface player_bananas_bool_exp {_and?: (player_bananas_bool_exp[] | null),_not?: (player_bananas_bool_exp | null),_or?: (player_bananas_bool_exp[] | null),amount?: (Int_comparison_exp | null),breakdown?: (jsonb_comparison_exp | null),created_at?: (timestamptz_comparison_exp | null),id?: (uuid_comparison_exp | null),match?: (matches_bool_exp | null),match_id?: (uuid_comparison_exp | null),steam_id?: (bigint_comparison_exp | null)}
 
 
 /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
@@ -28887,7 +28891,7 @@ export interface player_bananas_inc_input {amount?: (Scalars['Int'] | null),stea
 
 
 /** input type for inserting data into table "player_bananas" */
-export interface player_bananas_insert_input {amount?: (Scalars['Int'] | null),breakdown?: (Scalars['jsonb'] | null),created_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),match_id?: (Scalars['uuid'] | null),steam_id?: (Scalars['bigint'] | null)}
+export interface player_bananas_insert_input {amount?: (Scalars['Int'] | null),breakdown?: (Scalars['jsonb'] | null),created_at?: (Scalars['timestamptz'] | null),id?: (Scalars['uuid'] | null),match?: (matches_obj_rel_insert_input | null),match_id?: (Scalars['uuid'] | null),steam_id?: (Scalars['bigint'] | null)}
 
 
 /** aggregate max on columns */
@@ -28938,7 +28942,7 @@ export interface player_bananas_on_conflict {constraint: player_bananas_constrai
 
 
 /** Ordering options when selecting data from "player_bananas". */
-export interface player_bananas_order_by {amount?: (order_by | null),breakdown?: (order_by | null),created_at?: (order_by | null),id?: (order_by | null),match_id?: (order_by | null),steam_id?: (order_by | null)}
+export interface player_bananas_order_by {amount?: (order_by | null),breakdown?: (order_by | null),created_at?: (order_by | null),id?: (order_by | null),match?: (matches_order_by | null),match_id?: (order_by | null),steam_id?: (order_by | null)}
 
 
 /** primary key columns input for table: player_bananas */

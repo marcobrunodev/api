@@ -25146,6 +25146,9 @@ type player_bananas {
   ): jsonb!
   created_at: timestamptz!
   id: uuid!
+
+  """An object relationship"""
+  match: matches
   match_id: uuid!
   steam_id: bigint!
 }
@@ -25243,6 +25246,7 @@ input player_bananas_bool_exp {
   breakdown: jsonb_comparison_exp
   created_at: timestamptz_comparison_exp
   id: uuid_comparison_exp
+  match: matches_bool_exp
   match_id: uuid_comparison_exp
   steam_id: bigint_comparison_exp
 }
@@ -25299,6 +25303,7 @@ input player_bananas_insert_input {
   breakdown: jsonb
   created_at: timestamptz
   id: uuid
+  match: matches_obj_rel_insert_input
   match_id: uuid
   steam_id: bigint
 }
@@ -25369,6 +25374,7 @@ input player_bananas_order_by {
   breakdown: order_by
   created_at: order_by
   id: order_by
+  match: matches_order_by
   match_id: order_by
   steam_id: order_by
 }
