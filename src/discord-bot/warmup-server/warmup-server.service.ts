@@ -31,7 +31,7 @@ export interface WarmupServerState {
   lastActivityAt: number;
   isProvisioning: boolean;
   jobName?: string;
-  notificationMessageId?: string;
+  notificationMessageIds?: string[];
   notificationChannelId?: string;
 }
 
@@ -671,8 +671,8 @@ export class WarmupServerService implements OnModuleInit {
       }
 
       // Delete the warmup notification message
-      if (state?.notificationMessageId && state?.notificationChannelId && guild) {
-        await this.deleteNotificationMessage(guild, state.notificationChannelId, state.notificationMessageId);
+      if (state?.notificationMessageIds?.length && state?.notificationChannelId && guild) {
+        await this.deleteNotificationMessages(guild, state.notificationChannelId, state.notificationMessageIds);
       }
 
       // Clear Redis state
@@ -789,7 +789,7 @@ export class WarmupServerService implements OnModuleInit {
       lastActivityAt: parseInt(data.lastActivityAt) || Date.now(),
       isProvisioning: data.isProvisioning === 'true',
       jobName: data.jobName || undefined,
-      notificationMessageId: data.notificationMessageId || undefined,
+      notificationMessageIds: data.notificationMessageIds ? JSON.parse(data.notificationMessageIds) : undefined,
       notificationChannelId: data.notificationChannelId || undefined,
     };
   }
@@ -817,7 +817,7 @@ export class WarmupServerService implements OnModuleInit {
     if (state.serverPassword) data.serverPassword = state.serverPassword;
     if (state.connectInfo) data.connectInfo = state.connectInfo;
     if (state.jobName) data.jobName = state.jobName;
-    if (state.notificationMessageId) data.notificationMessageId = state.notificationMessageId;
+    if (state.notificationMessageIds?.length) data.notificationMessageIds = JSON.stringify(state.notificationMessageIds);
     if (state.notificationChannelId) data.notificationChannelId = state.notificationChannelId;
 
     await redis.hset(key, data);
@@ -964,8 +964,9 @@ Play while waiting for the mix! 🍌
         }],
       });
 
-      // Store message ID and channel ID for later deletion
-      state.notificationMessageId = message.id;
+      // Store message ID for later deletion
+      if (!state.notificationMessageIds) state.notificationMessageIds = [];
+      state.notificationMessageIds.push(message.id);
       state.notificationChannelId = notificationChannelId;
       await this.saveState(guildId, state);
     } catch (error) {
@@ -974,24 +975,44 @@ Play while waiting for the mix! 🍌
   }
 
   /**
-   * Delete the warmup notification message
+   * Track a message ID for cleanup when warmup server is stopped
    */
-  private async deleteNotificationMessage(
+  async trackNotificationMessage(guildId: string, messageId: string, channelId: string): Promise<void> {
+    const state = await this.getState(guildId);
+    if (!state) return;
+
+    if (!state.notificationMessageIds) state.notificationMessageIds = [];
+    state.notificationMessageIds.push(messageId);
+    state.notificationChannelId = channelId;
+    await this.saveState(guildId, state);
+  }
+
+  /**
+   * Delete all warmup notification messages
+   * Safely handles already-deleted messages (e.g. manually deleted by admin)
+   */
+  private async deleteNotificationMessages(
     guild: any,
     channelId: string,
-    messageId: string
+    messageIds: string[]
   ): Promise<void> {
     try {
       const channel = await guild.channels.fetch(channelId).catch((): null => null);
       if (!channel || !('messages' in channel)) return;
 
-      const message = await channel.messages.fetch(messageId).catch((): null => null);
-      if (message) {
-        await message.delete();
-        this.logger.log(`[Warmup] Deleted notification message ${messageId}`);
+      for (const messageId of messageIds) {
+        try {
+          const message = await channel.messages.fetch(messageId).catch((): null => null);
+          if (message) {
+            await message.delete();
+            this.logger.log(`[Warmup] Deleted notification message ${messageId}`);
+          }
+        } catch {
+          // Message already deleted by admin or bot - ignore
+        }
       }
     } catch (error) {
-      this.logger.warn(`[Warmup] Could not delete notification message:`, error);
+      this.logger.warn(`[Warmup] Could not delete notification messages:`, error);
     }
   }
 

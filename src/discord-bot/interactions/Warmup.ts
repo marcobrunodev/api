@@ -71,7 +71,7 @@ export default class Warmup extends DiscordInteraction {
           ? `connect ${state.serverIp}:${state.serverPort}; password ${state.serverPassword}`
           : `connect ${state.serverIp}:${state.serverPort}`;
 
-        await interaction.editReply({
+        const reply = await interaction.editReply({
           embeds: [{
             title: '🎮 Warmup Server Running!',
             description: [
@@ -90,6 +90,9 @@ export default class Warmup extends DiscordInteraction {
             timestamp: new Date().toISOString(),
           }],
         });
+
+        // Track this message for cleanup when warmup server stops
+        await this.warmupServer.trackNotificationMessage(guild.id, reply.id, interaction.channelId);
         return;
       }
 
@@ -134,7 +137,7 @@ export default class Warmup extends DiscordInteraction {
         ? `connect ${newState.serverIp}:${newState.serverPort}; password ${newState.serverPassword}`
         : `connect ${newState.serverIp}:${newState.serverPort}`;
 
-      await interaction.editReply({
+      const reply = await interaction.editReply({
         embeds: [{
           title: '🎮 Warmup Server Ready!',
           description: [
@@ -153,6 +156,9 @@ export default class Warmup extends DiscordInteraction {
           timestamp: new Date().toISOString(),
         }],
       });
+
+      // Track this message for cleanup when warmup server stops
+      await this.warmupServer.trackNotificationMessage(guild.id, reply.id, interaction.channelId);
     } catch (error) {
       this.logger.error('[Warmup Command] Error:', error);
       await interaction.editReply({
