@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject, forwardRef } from "@nestjs/common";
+import { Injectable, Logger, Inject, forwardRef, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisManagerService } from "../../redis/redis-manager/redis-manager.service";
 import { HasuraService } from "../../hasura/hasura.service";
@@ -36,7 +36,7 @@ export interface WarmupServerState {
 }
 
 @Injectable()
-export class WarmupServerService {
+export class WarmupServerService implements OnModuleInit {
   private rotationIntervals = new Map<string, NodeJS.Timeout>();
   private shutdownTimeouts = new Map<string, NodeJS.Timeout>();
   private emptyCheckIntervals = new Map<string, NodeJS.Timeout>();
@@ -58,6 +58,39 @@ export class WarmupServerService {
     this.appConfig = this.config.get<AppConfig>("app");
     this.gameServerConfig = this.config.get<GameServersConfig>("gameServers");
     this.namespace = this.gameServerConfig?.namespace || "5stack";
+  }
+
+  /**
+   * On module init, recover any orphaned warmup servers from Redis state
+   * This handles the case where the API restarted while warmup servers were running
+   */
+  async onModuleInit(): Promise<void> {
+    try {
+      const redis = this.redisManager.getConnection();
+      const keys = await redis.keys(`${WARMUP_REDIS_KEYS.SERVER_STATE}:*`);
+
+      if (keys.length === 0) return;
+
+      this.logger.log(`[Warmup] Found ${keys.length} warmup server state(s) in Redis after restart`);
+
+      for (const key of keys) {
+        const guildId = key.replace(`${WARMUP_REDIS_KEYS.SERVER_STATE}:`, '');
+        const state = await this.getState(guildId);
+
+        if (!state?.serverId || state.isProvisioning) {
+          // Stale provisioning state - clean it up
+          this.logger.warn(`[Warmup] Cleaning up stale state for guild ${guildId}`);
+          await this.cleanupState(guildId);
+          continue;
+        }
+
+        // Server has a valid ID - restart the empty server check
+        this.logger.log(`[Warmup] Recovering empty server check for guild ${guildId} (serverId: ${state.serverId})`);
+        this.startEmptyServerCheck(guildId);
+      }
+    } catch (error) {
+      this.logger.error(`[Warmup] Error recovering warmup servers on init:`, error);
+    }
   }
 
   /**
@@ -1147,9 +1180,13 @@ Play while waiting for the mix! 🍌
 
   /**
    * Start periodic check for empty server via RCON
+   * Includes a grace period after server start to allow players to connect
    */
   startEmptyServerCheck(guildId: string): void {
     this.stopEmptyServerCheck(guildId);
+
+    const GRACE_PERIOD_MS = 10 * 60 * 1000; // 10 minutes grace period before checking
+    const CHECK_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes between checks
 
     const interval = setInterval(async () => {
       try {
@@ -1159,19 +1196,39 @@ Play while waiting for the mix! 🍌
           return;
         }
 
+        // Don't check during the grace period - allow time for players to connect
+        const uptime = Date.now() - state.createdAt;
+        if (uptime < GRACE_PERIOD_MS) {
+          this.logger.log(`[Warmup] Skipping empty check for guild ${guildId} - server is within grace period (${Math.round(uptime / 1000)}s / ${GRACE_PERIOD_MS / 1000}s)`);
+          // Refresh Redis TTL while server is alive
+          await this.saveState(guildId, { ...state, lastActivityAt: Date.now() });
+          return;
+        }
+
         const playerCount = await this.getConnectedPlayerCount(state.serverId);
         this.logger.log(`[Warmup] Empty server check for guild ${guildId}: ${playerCount} real players connected`);
 
         if (playerCount === 0) {
-          this.logger.log(`[Warmup] No players connected to warmup server for guild ${guildId}, shutting down`);
-          this.stopEmptyServerCheck(guildId);
-          const guild = this.guildReferences.get(guildId);
-          await this.stopWarmupServer(guildId, 'empty', guild);
+          // Check if server has exceeded max idle time
+          const idleTime = Date.now() - state.lastActivityAt;
+          if (idleTime >= WARMUP_CONFIG.MAX_IDLE_TIME_MS) {
+            this.logger.log(`[Warmup] No players connected and idle timeout exceeded for guild ${guildId}, shutting down`);
+            this.stopEmptyServerCheck(guildId);
+            const guild = this.guildReferences.get(guildId);
+            await this.stopWarmupServer(guildId, 'timeout', guild);
+          } else {
+            this.logger.log(`[Warmup] No real players but idle timeout not reached yet for guild ${guildId} (${Math.round(idleTime / 1000)}s / ${WARMUP_CONFIG.MAX_IDLE_TIME_MS / 1000}s)`);
+            // Refresh Redis TTL to prevent state expiration while server is alive
+            await this.saveState(guildId, state);
+          }
+        } else {
+          // Players connected - update last activity and refresh TTL
+          await this.saveState(guildId, { ...state, lastActivityAt: Date.now() });
         }
       } catch (error) {
         this.logger.error(`[Warmup] Error during empty server check:`, error);
       }
-    }, 3 * 60 * 1000); // 3 minutes
+    }, CHECK_INTERVAL_MS);
 
     this.emptyCheckIntervals.set(guildId, interval);
   }
@@ -1189,6 +1246,10 @@ Play while waiting for the mix! 🍌
 
   /**
    * Get the number of real (non-bot) players connected to the server via RCON status
+   *
+   * CS2 status output format varies, but real players have a valid SteamID
+   * in the format STEAM_X:Y:Z or [U:1:XXXXX]. Bots do not have valid SteamIDs.
+   * We count lines that contain a valid SteamID pattern to identify real players.
    */
   private async getConnectedPlayerCount(serverId: string): Promise<number> {
     const rconConnection = await this.rcon.connect(serverId);
@@ -1200,17 +1261,16 @@ Play while waiting for the mix! 🍌
       const statusOutput = await rconConnection.send('status');
       await this.rcon.disconnect(serverId);
 
-      // Parse status output to count real players (not BOTs)
-      // CS2 status lines for players look like:
-      // <id> <name> <steamid> <time> <ping> <loss> <state> <rate> <adr>
-      // BOT lines contain "BOT" as the steamid
       const lines = statusOutput.split('\n');
       let realPlayers = 0;
 
+      // Match real players by valid SteamID patterns (bots won't have these)
+      const steamIdPattern = /STEAM_\d:\d:\d+|\[U:\d:\d+\]/;
+
       for (const line of lines) {
-        // Player lines start with a number (their ID)
         const trimmed = line.trim();
-        if (/^\d+\s/.test(trimmed) && !trimmed.includes(' BOT ')) {
+        // Player lines start with a number (their slot ID)
+        if (/^\d+\s/.test(trimmed) && steamIdPattern.test(trimmed)) {
           realPlayers++;
         }
       }
