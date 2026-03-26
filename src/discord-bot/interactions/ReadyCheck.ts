@@ -91,6 +91,14 @@ export async function startCountdown(messageId: string, bot: any, channel: any) 
 
     // Atualizar embed
     const readyCount = currentSession.readyPlayers.size;
+
+    // Check if all players are ready (last player readied between ticks)
+    if (readyCount === currentSession.totalPlayers) {
+      clearInterval(currentSession.intervalId);
+      // Don't update the message here - the button handler already did it
+      return;
+    }
+
     const playersList = currentSession.movedPlayers.map((p) => {
       const isReady = currentSession.readyPlayers.has(p.id);
       const status = isReady ? '✅' : '⏳';
@@ -393,50 +401,47 @@ export default class ReadyCheck extends DiscordInteraction {
 
   session.readyPlayers.add(userId);
 
-  // Acknowledge the interaction silently (no message shown to user)
+  // Acknowledge the interaction silently - the countdown tick (every 1s) will
+  // reflect the updated readyPlayers on the next iteration, avoiding race
+  // conditions from concurrent message.edit() calls.
   await interaction.deferUpdate();
 
   const readyCount = session.readyPlayers.size;
   const totalCount = session.totalPlayers;
 
-  const playersList = session.movedPlayers.map((p) => {
-    const isReady = session.readyPlayers.has(p.id);
-    const status = isReady ? '✅' : '⏳';
-    return `${status} <@${p.id}>`;
-  }).join('\n');
+  // If all players are ready, the countdown will handle it on the next tick.
+  // We only proceed here for the "all ready" case to avoid waiting up to 1s.
+  if (readyCount < totalCount) {
+    return;
+  }
 
-  const timeDisplay = session.timeRemaining > 0
-    ? `**⏰ Time Remaining: ${session.timeRemaining} seconds**\n`
-    : '';
+  // All players ready - stop countdown immediately
+  if (session.intervalId) {
+    clearInterval(session.intervalId);
+    session.intervalId = undefined;
+  }
+
+  // Update message one final time to show all ready + remove buttons
+  const readyPlayersList = session.movedPlayers.map((p) => {
+    return `✅ <@${p.id}>`;
+  }).join('\n');
 
   await interaction.message.edit({
     embeds: [{
-      title: '⏳ Ready Check',
+      title: '✅ All Players Ready!',
       description: `
-${timeDisplay}**Players Ready: ${readyCount}/${totalCount}**
+**Players Ready: ${readyCount}/${totalCount}**
 
-${playersList}
-
-Click the button below when you're ready!
+${readyPlayersList}
       `,
-      color: readyCount === totalCount ? 0x00FF00 : getColorByTimeRemaining(session.timeRemaining),
+      color: 0x00FF00,
       timestamp: new Date().toISOString(),
       footer: {
         text: 'From BananaServer.xyz with 🍌',
       }
     }],
-    components: interaction.message.components,
+    components: [],
   });
-
-  if (readyCount === totalCount) {
-    // Parar countdown
-    if (session.intervalId) {
-      clearInterval(session.intervalId);
-      session.intervalId = undefined;
-    }
-    await interaction.message.edit({
-      components: [],
-    });
 
     const channel = interaction.channel;
     if (!channel || !('send' in channel)) return;
@@ -787,6 +792,5 @@ ${availablePlayers.map(p => {
         });
       }
     }, 10 * 1000);
-  }
   }
 }
